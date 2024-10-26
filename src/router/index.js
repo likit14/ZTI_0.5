@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import App from '../App'
 import Signup from "../View/Signup";
 import ErrorPageContainer from "../View/ErrorPageContainer";
-import DeploymentOptions from "../View/DeploymentOptions";
+import NewCloud from "../View/NewCloud";
 import NetworkScanner from "../View/NetworkScanner";
 import DesignatedNode from "../View/DesignatedNode";
 import Dashboard  from "../View/Dashboard";
@@ -17,7 +17,7 @@ export const router=createBrowserRouter([
     children:[
     {
         path: '/',
-        element: <DeploymentOptions/>
+        element: <NewCloud/>
     },
     {
         path: '/networkscanner',

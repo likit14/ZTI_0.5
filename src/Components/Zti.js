@@ -19,9 +19,20 @@ import {
   WifiOutlined,
   FileSearchOutlined,
   ProfileOutlined,
+  CloudTwoTone
 } from "@ant-design/icons";
-import { Button, Layout, Menu, theme, Dropdown , notification} from "antd";
+import { Button, Layout, Menu, theme, Dropdown, Col, Divider, Row } from "antd";
+const style = {
+  background: '#fff',
+  padding: '36px 20px',
+  marginTop: '19px',
+  marginRight: '13px',
+  marginLeft: '39px',
+  borderRadius: '10px',
+  // boxShadow: '10px'
 
+
+};
 const { Header, Content, Footer, Sider } = Layout;
 const { SubMenu } = Menu;
 
@@ -33,25 +44,15 @@ const AppLayout = ({ children }) => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
-  useEffect(() => {
-    const loginNotification = localStorage.getItem('loginNotification');
-
-    if (loginNotification) {
-      notification.success({
-        message: 'Notification',
-        description: 'Login Successful!',
-        placement: 'topRight',
-      });
-      localStorage.removeItem('loginNotification'); // Clear the notification flag
-    }
-  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
     window.location.reload();
     // navigate('/');
   };
-
+  const handleRedirect = () => {
+    navigate('/'); // replace with your actual path
+  };
   const items = [
     {
       key: "1",
@@ -89,11 +90,11 @@ const AppLayout = ({ children }) => {
       key: "2",
       label: "ZTi Wizard",
       icon: <DeploymentUnitOutlined />,
-      children: [
-        { key: "3", label: "New Cloud" },
-        { key: "4", label: "Add Nodes" },
-        { key: "5", label: "Remove Nodes" },
-      ],
+      // children: [
+      //   { key: "3", label: "New Cloud" },
+      //   { key: "4", label: "Add Nodes" },
+      //   { key: "5", label: "Remove Nodes" },
+      // ],
     },
     {
       key: "6",
@@ -190,7 +191,7 @@ const AppLayout = ({ children }) => {
                   {item.children.map((child) => (
                     <Menu.Item
                       key={child.key}
-                      
+
                     >
                       {child.label}
                     </Menu.Item>
@@ -260,7 +261,33 @@ const AppLayout = ({ children }) => {
             </a>
           </Dropdown>
         </Header>
-
+        <Row
+          gutter={{
+            xs: 1,
+            sm: 16,
+            md: 30,
+            lg: 32,
+          }}
+        >
+          <Col className="gutter-row" span={6} onClick={handleRedirect} style={style}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <CloudTwoTone style={{ fontSize: '45px', marginRight: '8px' }} /> {/* Increase icon size and add spacing */}
+              <span style={{ fontSize: '16px', fontWeight: '500', marginLeft: '17px' }}>New Cloud</span> {/* Add text with styling */}
+            </div>
+          </Col>
+          <Col className="gutter-row" span={6} style={style} >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <CloudTwoTone style={{ fontSize: '45px', marginRight: '8px' }}/> {/* Increase icon size and add spacing */}
+              <span style={{ fontSize: '16px', fontWeight: '500' ,marginLeft: '17px'}}>Add Nodes</span> {/* Add text with styling */}
+            </div>
+          </Col>
+          <Col className="gutter-row" span={6} style={style} >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <CloudTwoTone style={{ fontSize: '45px', marginRight: '8px' }} /> {/* Increase icon size and add spacing */}
+              <span style={{ fontSize: '16px', fontWeight: '500', marginLeft: '17px' }}>Remove Nodes</span> {/* Add text with styling */}
+            </div>
+          </Col>
+        </Row>
         <Content style={{ margin: "16px 16px" }}>
           <div
             style={{
