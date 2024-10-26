@@ -1,33 +1,32 @@
-import React, { Component } from "react";
-import '../Styles/NotFound.css';
+import React from 'react';
+import { Button, Result } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import Layout1 from '../Components/layout';
 
-export class ErrorPageContainer extends Component {
-  render() {
-    return (
-      <div>
-        <section className="page_404">
-          <div>
-            <div className="row">
-              <div className="col-sm-12 ">
-                <div className="col-sm-10 col-sm-offset-1  text-center">
-                  <div className="four_zero_four_bg">
-                    <h1 className="text-center ">404 ERROR</h1>
-                  </div>
-                  <div className="contentBox">
-                    <h3 className="h2">Something Went Wrong..!</h3>
-                    <p>The page Not Available!</p>
-                    <a href={"/"} className="link_404" onClick={this.goHome}>
-                      Go Back
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-    );
-  }
-}
+const App = () => {
+  const navigate = useNavigate();
 
-export default ErrorPageContainer;
+  const handleBackHome = () => {
+    navigate('/'); // Redirects to the home page or specify any route as needed
+  };
+
+  return (
+    <Layout1>
+    <Result
+      status="404"
+      title="404"
+      subTitle="Sorry, the page you visited does not exist."
+      extra={ <Button
+        size={'middle'}
+        style={{ width: '85px' }}
+        type="primary"
+        onClick={handleBackHome}
+    > Back Home
+        
+    </Button>}
+    />
+    </Layout1>
+  );
+};
+
+export default App;

@@ -21,7 +21,7 @@ const App = () => {
     <Zti>
         <h2>Add Nodes</h2>
       <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key)}>
-        <Tabs.TabPane tab="Discovery" key="1" disabled={disabledTabs["1"]}>
+        <Tabs.TabPane tab="Tab 1" key="1" disabled={disabledTabs["1"]}>
           <DeploymentOptions onStart={() => handleTabStart(1)} />
         </Tabs.TabPane>
         {/* <Tabs.TabPane tab="Tab 2" key="3" disabled={disabledTabs["3"]}> */}

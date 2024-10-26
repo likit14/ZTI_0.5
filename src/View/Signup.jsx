@@ -160,7 +160,7 @@ const Signup = () => {
                                             required
                                         />
                                     </div>
-                                    {error && <p className="error">{error}</p>}
+                                    {error && <Alert message={error} type="error" showIcon />}
                                     <Button type="primary" htmlType="submit">Register</Button>
                                 </form>
                                 )}

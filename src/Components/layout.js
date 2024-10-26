@@ -21,37 +21,24 @@ import {
   FileSearchOutlined,
   ProfileOutlined,
 } from "@ant-design/icons";
-import { Button, Layout, Menu, theme, Dropdown, notification } from "antd";
+import { Button, Layout, Menu, theme, Dropdown } from "antd";
 
 const { Header, Content, Footer, Sider } = Layout;
-const { SubMenu } = Menu;
 
 const AppLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(
     () => JSON.parse(localStorage.getItem("isSiderCollapsed")) || false
-  ); // Initialize from localStorage if available
+  );
   const [selectedKey, setSelectedKey] = useState("1");
   const [userData, setUserData] = useState({});
-  const [, updateState] = useState(); // force update
+  const [, updateState] = useState();
   const forceUpdate = useCallback(() => updateState({}), []);
-
 
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
   useEffect(() => {
-    const loginNotification = localStorage.getItem("loginNotification");
-
-    if (loginNotification) {
-      notification.success({
-        message: "Notification",
-        description: "Login Successful!",
-        placement: "topRight",
-      });
-      localStorage.removeItem("loginNotification"); // Clear the notification flag
-    }
-
     const savedSelectedKey = localStorage.getItem("selectedMenuKey");
     if (savedSelectedKey) {
       setSelectedKey(savedSelectedKey);
@@ -65,16 +52,15 @@ const AppLayout = ({ children }) => {
 
   const handleMenuClick = (e) => {
     setSelectedKey(e.key);
-    localStorage.setItem("selectedMenuKey", e.key); // Save the selected key to localStorage
-    forceUpdate(); // Force a re-render after setting the selected key
+    localStorage.setItem("selectedMenuKey", e.key);
+    forceUpdate();
   };
 
   const toggleSider = () => {
     setCollapsed(!collapsed);
-    localStorage.setItem("isSiderCollapsed", JSON.stringify(!collapsed)); // Save the state to localStorage
+    localStorage.setItem("isSiderCollapsed", JSON.stringify(!collapsed));
   };
 
-  
   const items = [
     {
       key: "1",
