@@ -68,7 +68,7 @@ const DataTable = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2 style={{ margin: 0 }}>Discovery</h2>
                 <a
-                    style={{ marginRight: '86%', marginTop: '0.5%' }}
+                    style={{ marginRight: '83%', marginTop: '0.5%' }}
                     className={`button ${isRotating ? 'rotating' : ''}`}
                     onClick={handleRefresh}
                 >

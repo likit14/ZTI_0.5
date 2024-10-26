@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import img1 from "../Images/ZTi.png";
 import img2 from "../Images/favicon.png";
-import { useNavigate } from 'react-router-dom';
+import logo from "../Images/logo.png";
+import { Link } from "react-router-dom";
 import {
   MenuFoldOutlined,
   CheckCircleOutlined,
@@ -20,38 +21,60 @@ import {
   FileSearchOutlined,
   ProfileOutlined,
 } from "@ant-design/icons";
-import { Button, Layout, Menu, theme, Dropdown , notification} from "antd";
+import { Button, Layout, Menu, theme, Dropdown, notification } from "antd";
 
 const { Header, Content, Footer, Sider } = Layout;
 const { SubMenu } = Menu;
 
 const AppLayout = ({ children }) => {
-  const navigate = useNavigate(); // Move here
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    () => JSON.parse(localStorage.getItem("isSiderCollapsed")) || false
+  ); // Initialize from localStorage if available
   const [selectedKey, setSelectedKey] = useState("1");
   const [userData, setUserData] = useState({});
+  const [, updateState] = useState(); // force update
+  const forceUpdate = useCallback(() => updateState({}), []);
+
+
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+
   useEffect(() => {
-    const loginNotification = localStorage.getItem('loginNotification');
+    const loginNotification = localStorage.getItem("loginNotification");
 
     if (loginNotification) {
       notification.success({
-        message: 'Notification',
-        description: 'Login Successful!',
-        placement: 'topRight',
+        message: "Notification",
+        description: "Login Successful!",
+        placement: "topRight",
       });
-      localStorage.removeItem('loginNotification'); // Clear the notification flag
+      localStorage.removeItem("loginNotification"); // Clear the notification flag
+    }
+
+    const savedSelectedKey = localStorage.getItem("selectedMenuKey");
+    if (savedSelectedKey) {
+      setSelectedKey(savedSelectedKey);
     }
   }, []);
 
   const handleLogout = () => {
     localStorage.clear();
     window.location.reload();
-    // navigate('/');
   };
 
+  const handleMenuClick = (e) => {
+    setSelectedKey(e.key);
+    localStorage.setItem("selectedMenuKey", e.key); // Save the selected key to localStorage
+    forceUpdate(); // Force a re-render after setting the selected key
+  };
+
+  const toggleSider = () => {
+    setCollapsed(!collapsed);
+    localStorage.setItem("isSiderCollapsed", JSON.stringify(!collapsed)); // Save the state to localStorage
+  };
+
+  
   const items = [
     {
       key: "1",
@@ -83,17 +106,20 @@ const AppLayout = ({ children }) => {
     {
       key: "1",
       icon: <DashboardOutlined />,
-      label: "Dashboard",
+      label: (
+        <Link to="/" style={{ textDecoration: "none" }}>
+          Dashboard
+        </Link>
+      ),
     },
     {
       key: "2",
-      label: "ZTi Wizard",
       icon: <DeploymentUnitOutlined />,
-      children: [
-        { key: "3", label: "New Cloud" },
-        { key: "4", label: "Add Nodes" },
-        { key: "5", label: "Remove Nodes" },
-      ],
+      label: (
+        <Link to="/newcloud" style={{ textDecoration: "none" }}>
+          Zti Wizard
+        </Link>
+      ),
     },
     {
       key: "6",
@@ -177,36 +203,15 @@ const AppLayout = ({ children }) => {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={["1"]}
+          onClick={handleMenuClick}
           selectedKeys={[selectedKey]}
-          onClick={(e) => setSelectedKey(e.key)}
-          inlineCollapsed={collapsed}
           style={{ backgroundColor: "transparent" }}
         >
-          {menuItems.map((item) => {
-            if (item.children) {
-              return (
-                <SubMenu key={item.key} icon={item.icon} title={item.label}>
-                  {item.children.map((child) => (
-                    <Menu.Item
-                      key={child.key}
-                      
-                    >
-                      {child.label}
-                    </Menu.Item>
-                  ))}
-                </SubMenu>
-              );
-            }
-            return (
-              <Menu.Item
-                key={item.key}
-                icon={item.icon}
-              >
-                {item.label}
-              </Menu.Item>
-            );
-          })}
+          {menuItems.map((item) => (
+            <Menu.Item key={item.key} icon={item.icon}>
+              {item.label}
+            </Menu.Item>
+          ))}
         </Menu>
       </Sider>
       <Layout>
@@ -222,7 +227,7 @@ const AppLayout = ({ children }) => {
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={toggleSider}
             style={{
               fontSize: "16px",
               width: 64,
@@ -238,9 +243,7 @@ const AppLayout = ({ children }) => {
             </span>
           </div>
           <Dropdown
-            menu={{
-              items,
-            }}
+            menu={{ items }}
             style={{
               width: "30px",
               height: "30px",
@@ -252,36 +255,30 @@ const AppLayout = ({ children }) => {
               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
               backgroundColor: "#fff",
               marginRight: "14px",
-              color: "black"
+              color: "black",
             }}
           >
-            <a onClick={(e) => e.preventDefault()} style={{ marginRight: '10px' }}>
+            <a
+              onClick={(e) => e.preventDefault()}
+              style={{ marginRight: "10px" }}
+            >
               <UserOutlined style={{ fontSize: "16px" }} />
             </a>
           </Dropdown>
         </Header>
-
-        <Content style={{ margin: "16px 16px" }}>
-          <div
-            style={{
-              padding: 30,
-              minHeight: "auto",
-              background: colorBgContainer,
-              borderRadius: borderRadiusLG,
-            }}
-          >
-            {children}
+        <Content style={{ margin: "16px 16px" }}>{children}</Content>
+        <Footer
+          style={{ textAlign: "center", color: "#4A90E2", padding: "1px" }}
+        >
+          <img
+            src={logo}
+            alt="Pinakastra Logo"
+            style={{ width: "90px", marginBottom: "5px" }}
+          />
+          <div style={{ marginTop: "3px", fontSize: "9px", color: "#4A90E2" }}>
+            &copy;2023 Pinakastra, Inc. All rights reserved. Pinakastra is a
+            trademark of Pinakastra Computing Pvt Ltd.
           </div>
-        </Content>
-        <Footer style={{ textAlign: "center" }}>
-          &copy;
-          <a
-            href="https://pinakastra.com"
-            style={{ color: "black", textDecoration: "none" }}
-          >
-            {" "}
-            Turn-Key Cloud Platform for Academia, Research & Enterprises
-          </a>
         </Footer>
       </Layout>
     </Layout>
