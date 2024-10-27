@@ -108,17 +108,17 @@ const AppLayout = ({ children }) => {
       ),
     },
     {
-      key: "6",
+      key: "3",
       icon: <CloudServerOutlined />,
       label: "Iaas",
     },
     {
-      key: "7",
+      key: "4",
       icon: <FileDoneOutlined />,
       label: "HPC/AI Workbench",
     },
     {
-      key: "8",
+      key: "5",
       icon: <DatabaseOutlined />,
       label: "DaaS/VDI",
     },

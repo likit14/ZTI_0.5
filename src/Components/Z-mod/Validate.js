@@ -3,11 +3,11 @@ import { Divider, Table, Button, Breadcrumb, Input, Space } from 'antd';
 import { HomeOutlined, SearchOutlined } from '@ant-design/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
-import Highlighter from 'react-highlight-words';
+// import Highlighter from 'react-highlight-words';
 import axios from 'axios';
 
-const DataTable = ({ onStart }) => { 
-    const [isScanning, setIsScanning] = useState(false);
+const DataTable = ({ onStart }) => { // Accepting onStart prop
+    // const [isScanning, setIsScanning] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
     const [nodes, setNodes] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -17,24 +17,9 @@ const DataTable = ({ onStart }) => {
     const searchInput = useRef(null);
 
     useEffect(() => {
-        scanNetwork();
+ 
     }, []);
 
-    const scanNetwork = async () => {
-        setIsScanning(true);
-        try {
-            const response = await axios.get('http://localhost:8000/scan');
-            setNodes(response.data);
-        } catch (error) {
-            console.error('Error scanning network:', error);
-        } finally {
-            setIsScanning(false);
-        }
-    };
-
-    const handleRefresh = () => {
-        scanNetwork();
-    };
 
     const handleSearch = (selectedKeys, confirm, dataIndex) => {
         confirm();
@@ -68,16 +53,27 @@ const DataTable = ({ onStart }) => {
             ...getColumnSearchProps('ip'),
         },
         {
-            title: 'MAC Address',
-            dataIndex: 'mac',
-            key: 'mac',
-            ...getColumnSearchProps('mac'),
+            title: 'Validate',
+            dataIndex: 'validate',
+            key: 'validate',
+            ...getColumnSearchProps('validate'),
         },
         {
-            title: 'Last Seen',
-            dataIndex: 'last_seen',
-            key: 'last_seen',
-            ...getColumnSearchProps('last_seen'),
+            title: 'Status',
+            dataIndex: 'Status',
+            key: 'status',
+            ...getColumnSearchProps('status'),
+        },
+        {
+            title: 'Result',
+            dataIndex: 'result',
+            key: 'result',
+            ...getColumnSearchProps('result'),
+        },        {
+            title: 'Deploy',
+            dataIndex: 'deploy',
+            key: 'deploy',
+            ...getColumnSearchProps('deploy'),
         },
     ];
 
@@ -87,16 +83,15 @@ const DataTable = ({ onStart }) => {
                 <Breadcrumb.Item><HomeOutlined /></Breadcrumb.Item>
                 <Breadcrumb.Item>Deployment</Breadcrumb.Item>
                 <Breadcrumb.Item>Discovery</Breadcrumb.Item>
+                <Breadcrumb.Item>Validation</Breadcrumb.Item>
             </Breadcrumb>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0 }}>Discovery</h2>
+                <h2 style={{ margin: 0 }}>Validation</h2>
                 <a
                     style={{ marginRight: '83%', marginTop: '0.5%', color:'#1677FF' }}
-                    onClick={handleRefresh}
                 >
-                    <FontAwesomeIcon icon={faArrowsRotate} size="1x" />
                 </a>
-                <Button
+                {/* <Button
                     size="middle"
                     style={{ marginLeft: '-10%', width: '75px' }}
                     type="primary"
@@ -104,7 +99,7 @@ const DataTable = ({ onStart }) => {
                     onClick={handleNextClick} // Call handleNextClick on button click
                 >
                     Next
-                </Button>
+                </Button> */}
             </div>
             <Divider />
             <Table
@@ -122,17 +117,13 @@ const DataTable = ({ onStart }) => {
                         setSelectedRows(selectedRows);
                     },
                 }}
-                loading={{
-                    spinning: isScanning,
-                    tip: "Scanning...",
-                }}
             />
         </div>
     );
 };
 
-export const Discovery = ({ onStart }) => {
+export const Validation = ({ onStart }) => {
     return <DataTable onStart={onStart} />;
 };
 
-export default Discovery;
+export default Validation;

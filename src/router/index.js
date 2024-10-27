@@ -9,7 +9,6 @@ import NewCloud from '../View/NewCloud'
 import Dashboard from "../View/Dashboard";
 import AddNodes from "../View/AddNodes";
 import RemoveNodes from "../View/RemoveNodes";
-import Validation from "../View/Validation";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -27,10 +26,6 @@ export const router = createBrowserRouter([
       {
         path: "/networkscanner",
         element: <NetworkScanner />,
-      },
-      {
-        path: "/validation",
-        element: <Validation />,
       },
       {
         path: "/designatednode",

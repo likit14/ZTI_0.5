@@ -3,6 +3,7 @@ import { Tabs } from 'antd';
 import Zti from '../Components/Z-mod/Zti';
 import DeploymentOptions from '../Components/Z-mod/Deployop';
 import TabTwo from '../Components/Z-mod/NwtScan';
+import TabThree from '../Components/Z-mod/Validate'
 
 const App = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -13,7 +14,7 @@ const App = () => {
     setDisabledTabs((prevState) => ({
       ...prevState,
       [nextTab]: false,
-    }));
+    }));  
     setActiveTab(nextTab);
   };
 
@@ -27,9 +28,9 @@ const App = () => {
         <Tabs.TabPane tab="Discovery" key="2" disabled={disabledTabs["2"]}>
           <TabTwo onStart={() => handleTabStart(2)} />
         </Tabs.TabPane>
-        {/* <Tabs.TabPane tab="Tab 3" key="3" disabled={disabledTabs["3"]}>
+        <Tabs.TabPane tab="Validation" key="3" disabled={disabledTabs["3"]}>
           <TabThree onStart={() => handleTabStart(3)} />
-        </Tabs.TabPane> */}
+        </Tabs.TabPane>
       </Tabs>
     </Zti>
   );
