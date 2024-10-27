@@ -5,13 +5,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 import Highlighter from 'react-highlight-words';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const DataTable = ({ onStart }) => { 
+const DataTable = ({  onNodeSelect }) => {
     const [isScanning, setIsScanning] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
     const [nodes, setNodes] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 4;
+    const navigate = useNavigate();
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
     const searchInput = useRef(null);
@@ -19,6 +21,11 @@ const DataTable = ({ onStart }) => {
     useEffect(() => {
         scanNetwork();
     }, []);
+
+    const handleNextClick = () => {
+        onNodeSelect(selectedRows); // Pass selected nodes to the parent
+        // onNext();
+    };
 
     const scanNetwork = async () => {
         setIsScanning(true);
@@ -47,17 +54,67 @@ const DataTable = ({ onStart }) => {
         setSearchText('');
     };
 
-    const handleNextClick = () => {
-        if (selectedRows.length > 0) {
-            onStart(); // Call the function passed from App.js to go to the next tab
-        } else {
-            // Optionally, you can handle cases where no rows are selected
-            console.log("No rows selected!");
-        }
-    };
-
     const getColumnSearchProps = (dataIndex) => ({
-        // ... existing column search props
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+            <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+                <Input
+                    ref={searchInput}
+                    placeholder={`Search ${dataIndex}`}
+                    value={selectedKeys[0]}
+                    onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                    style={{ marginBottom: 8, display: 'block' }}
+                />
+                <Space>
+                    <Button
+                        type="primary"
+                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                        icon={<SearchOutlined />}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Search
+                    </Button>
+                    <Button
+                        onClick={() => clearFilters && handleReset(clearFilters)}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Reset
+                    </Button>
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            close();
+                        }}
+                    >
+                        Close
+                    </Button>
+                </Space>
+            </div>
+        ),
+        filterIcon: (filtered) => (
+            <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
+        ),
+        onFilter: (value, record) =>
+            record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+        onFilterDropdownOpenChange: (visible) => {
+            if (visible) {
+                setTimeout(() => searchInput.current?.select(), 100);
+            }
+        },
+        render: (text) =>
+            searchedColumn === dataIndex ? (
+                <Highlighter
+                    highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+                    searchWords={[searchText]}
+                    autoEscape
+                    textToHighlight={text ? text.toString() : ''}
+                />
+            ) : (
+                text
+            ),
     });
 
     const columns = [
@@ -91,7 +148,7 @@ const DataTable = ({ onStart }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2 style={{ margin: 0 }}>Discovery</h2>
                 <a
-                    style={{ marginRight: '83%', marginTop: '0.5%', color:'#1677FF' }}
+                    style={{ marginRight: '83%', marginTop: '0.5%' }}
                     onClick={handleRefresh}
                 >
                     <FontAwesomeIcon icon={faArrowsRotate} size="1x" />
@@ -100,8 +157,8 @@ const DataTable = ({ onStart }) => {
                     size="middle"
                     style={{ marginLeft: '-10%', width: '75px' }}
                     type="primary"
+                    onClick={handleNextClick}
                     disabled={selectedRows.length === 0}
-                    onClick={handleNextClick} // Call handleNextClick on button click
                 >
                     Next
                 </Button>
@@ -118,9 +175,7 @@ const DataTable = ({ onStart }) => {
                     onChange: page => setCurrentPage(page),
                 }}
                 rowSelection={{
-                    onChange: (selectedRowKeys, selectedRows) => {
-                        setSelectedRows(selectedRows);
-                    },
+                    onChange: (_, selectedRows) => setSelectedRows(selectedRows),
                 }}
                 loading={{
                     spinning: isScanning,
@@ -131,8 +186,7 @@ const DataTable = ({ onStart }) => {
     );
 };
 
-export const Discovery = ({ onStart }) => {
-    return <DataTable onStart={onStart} />;
+export const Discovery = ({ onNodeSelect }) => {
+    return <DataTable onNodeSelect={onNodeSelect} />;
 };
-
 export default Discovery;
