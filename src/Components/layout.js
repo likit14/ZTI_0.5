@@ -110,52 +110,92 @@ const AppLayout = ({ children }) => {
     {
       key: "3",
       icon: <CloudServerOutlined />,
-      label: "Iaas",
+      label: (
+        <Link to="/iaas" style={{ textDecoration: "none" }}>
+          IaaS
+        </Link>
+      ),
     },
     {
       key: "4",
       icon: <FileDoneOutlined />,
-      label: "HPC/AI Workbench",
+      label: (
+        <Link to="/aiworkbench" style={{ textDecoration: "none" }}>
+          HPC/AI Workbench
+        </Link>
+      ),
     },
     {
       key: "5",
       icon: <DatabaseOutlined />,
-      label: "DaaS/VDI",
+      label: (
+        <Link to="/daas" style={{ textDecoration: "none" }}>
+          DaaS/VDI
+        </Link>
+      ),
     },
     {
       key: "9",
       icon: <FileSearchOutlined />,
-      label: "SIEM",
+      label: (
+        <Link to="/siem" style={{ textDecoration: "none" }}>
+          SIEM
+        </Link>
+      ),
     },
     {
       key: "10",
       icon: <WifiOutlined />,
-      label: "NOC",
+      label: (
+        <Link to="/noc" style={{ textDecoration: "none" }}>
+          NOC
+        </Link>
+      ),
     },
     {
       key: "11",
       icon: <SyncOutlined />,
-      label: "Lifecycle Mgmt",
+      label: (
+        <Link to="/lifecyclemgmt" style={{ textDecoration: "none" }}>
+          Lifecycle Mgmt
+        </Link>
+      ),
     },
     {
       key: "12",
       icon: <TruckOutlined />,
-      label: "Migration(v-v)",
+      label: (
+        <Link to="/migration" style={{ textDecoration: "none" }}>
+          Migration
+        </Link>
+      ),
     },
     {
       key: "13",
       icon: <CheckCircleOutlined />,
-      label: "Compliance",
+      label: (
+        <Link to="/compliance" style={{ textDecoration: "none" }}>
+          Compliance
+        </Link>
+      ),
     },
     {
       key: "14",
       icon: <SettingOutlined />,
-      label: "Settings",
+      label: (
+        <Link to="/setting" style={{ textDecoration: "none" }}>
+          Settings
+        </Link>
+      ),
     },
     {
       key: "15",
       icon: <ProfileOutlined />,
-      label: "Administration",
+      label: (
+        <Link to="/administration" style={{ textDecoration: "none" }}>
+          Administration
+        </Link>
+      ),
     },
   ];
 
