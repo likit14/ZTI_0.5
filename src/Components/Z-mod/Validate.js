@@ -80,7 +80,7 @@ const Validation = ({ selectedNodes }) => {
                     placement="right" // Set popover to appear on the right
                 >
                     <Button type="primary" style={{ width: "80px" }}>
-                        Validate
+                        Start
                     </Button>
                 </Popover>
             ),
