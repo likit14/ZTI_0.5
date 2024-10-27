@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styles from '../Styles/Login.module.css';
 import { LockOutlined, UserOutlined, HomeOutlined, } from '@ant-design/icons';
-import { Button, Alert, notification, Input } from 'antd';
+import { Button, Alert, Input } from 'antd';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
 import img1 from '../Images/ZTi.png';

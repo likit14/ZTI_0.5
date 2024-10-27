@@ -4,7 +4,7 @@ import { Divider, Table, Button } from 'antd';
 import { HomeOutlined } from '@ant-design/icons';
 import { Breadcrumb } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowsRotate, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsRotate,} from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,7 +15,7 @@ const DataTable = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 4;
     const navigate = useNavigate();
-    const [isRotating, setIsRotating] = useState(false);
+    const [isRotating] = useState(false);
 
     useEffect(() => {
         scanNetwork();

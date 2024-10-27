@@ -148,7 +148,7 @@ const DataTable = ({  onNodeSelect }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2 style={{ margin: 0 }}>Discovery</h2>
                 <a
-                    style={{ marginRight: '83%', marginTop: '0.5%' }}
+                    style={{ marginRight: '83%', marginTop: '0.5%', color:'#1677ff' }}
                     onClick={handleRefresh}
                 >
                     <FontAwesomeIcon icon={faArrowsRotate} size="1x" />

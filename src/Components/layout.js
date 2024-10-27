@@ -13,7 +13,7 @@ import {
   SyncOutlined,
   TruckOutlined,
   CloudServerOutlined,
-  FormOutlined,
+  // FormOutlined,
   SettingOutlined,
   FileDoneOutlined,
   DatabaseOutlined,

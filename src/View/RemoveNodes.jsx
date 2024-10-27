@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Tabs } from 'antd';
 import Zti from '../Components/Z-mod/Zti';
 import DeploymentOptions from '../Components/Z-mod/Scaleup';
-import TabThree from '../Components/Z-mod/Scaledown';
+// import TabThree from '../Components/Z-mod/Scaledown';
 
 const App = () => {
   const [activeTab, setActiveTab] = useState("1");

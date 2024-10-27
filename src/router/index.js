@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
 import Signup from "../View/Signup";
 import ErrorPageContainer from "../View/ErrorPageContainer";
-import Zti from "../Components/Z-mod/Zti";
+// import Zti from "../Components/Z-mod/Zti";
 import NetworkScanner from "../View/NetworkScanner";
 import DesignatedNode from "../View/DesignatedNode";
 import NewCloud from '../View/NewCloud'

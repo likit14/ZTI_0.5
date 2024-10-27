@@ -1,42 +1,26 @@
 import React, { useEffect } from "react";
 import Layout1 from "../layout";
-import { Button, Menu, theme,Layout, Dropdown, Col, Divider, Row } from "antd";
+import {theme, Layout,Col,Row } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
-    MenuFoldOutlined,
-    CheckCircleOutlined,
-    MenuUnfoldOutlined,
-    UserOutlined,
-    DashboardOutlined,
-    DeploymentUnitOutlined,
-    SyncOutlined,
-    TruckOutlined,
-    CloudServerOutlined,
-    FormOutlined,
-    SettingOutlined,
-    FileDoneOutlined,
-    DatabaseOutlined,
-    WifiOutlined,
-    FileSearchOutlined,
-    ProfileOutlined,
-    CloudTwoTone
-  } from "@ant-design/icons";
+  CloudTwoTone
+} from "@ant-design/icons";
 
-  const style = {
-    background: '#fff',
-    padding: '36px 20px',
-    marginTop: '19px',
-    marginRight: '13px',
-    marginLeft: '39px',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    boxShadow: '10px'
-  
-  
-  };
+const style = {
+  background: '#fff',
+  padding: '36px 20px',
+  marginTop: '19px',
+  marginRight: '13px',
+  marginLeft: '39px',
+  borderRadius: '10px',
+  cursor: 'pointer',
+  boxShadow: '10px'
 
-  const {Content} = Layout;
-export default function Zti({children}) {
+
+};
+
+const { Content } = Layout;
+export default function Zti({ children }) {
   const navigate = useNavigate();
   const handleRedirect = () => {
     navigate("/newcloud"); // replace with your actual path

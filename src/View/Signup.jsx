@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import '../Styles/Signup.css';
 import { LockOutlined, HomeOutlined, MailOutlined } from '@ant-design/icons';
-import { Button, Checkbox, Form, Input, Alert } from 'antd';
+import { Button, Input, Alert } from 'antd';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
 import tick from '../Images/tick.gif';
 import img1 from '../Images/ZTi.png';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link} from 'react-router-dom';
 
 const Signup = () => {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const [formData, setFormData] = useState({
         companyName: '',
         email: '',
@@ -20,7 +20,7 @@ const Signup = () => {
     const [error, setError] = useState('');
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
     const [registeredUser, setRegisteredUser] = useState('');
-    const [userId, setUserId] = useState('');
+    const [setUserId] = useState('');
 
     const handleChange = (e) => {
         setFormData({
@@ -82,13 +82,13 @@ const Signup = () => {
         }
     };
 
-    const handleNavigate = () => {
-        const loginDetails = {
-            loginStatus: false
-        };
-        localStorage.setItem('loginDetails', JSON.stringify(loginDetails));
-        navigate('/');
-    };
+    // const handleNavigate = () => {
+    //     const loginDetails = {
+    //         loginStatus: false
+    //     };
+    //     localStorage.setItem('loginDetails', JSON.stringify(loginDetails));
+    //     navigate('/');
+    // };
 
     return (
         <div className="App">
