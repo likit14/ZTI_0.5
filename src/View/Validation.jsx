@@ -65,12 +65,6 @@ const Validation = () => {
             setSelectedRows(selectedRows.filter(selectedRow => selectedRow.ip !== node.ip));
         }
     };
-
-    // const handleDeploy = () => {
-    //     navigate('/designatednode', { state: { selectedNodes: selectedRows } });
-    //     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // };
-
     const handlePageChange = (newPage) => {
         setCurrentPage(newPage);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -98,7 +92,7 @@ const Validation = () => {
             // Submit BMC details to the server
             const response = await axios.post('http://192.168.249.101:8000/set_pxe_boot', bmcDetails);
             console.log('BMC Details submitted:', bmcDetails);
-            console.log('Server response:', response.data); // Log the server response for debugging
+            console.log('Server response:', response.data); 
 
 
 

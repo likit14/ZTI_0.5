@@ -4,7 +4,6 @@ import Signup from "../View/Signup";
 import ErrorPageContainer from "../View/ErrorPageContainer";
 import Siem from "../View/Siem";
 import Iaas from "../View/Iaas";
-import NetworkScanner from "../View/NetworkScanner";
 import DesignatedNode from "../View/DesignatedNode";
 import NewCloud from "../View/NewCloud";
 import Dashboard from "../View/Dashboard";
@@ -18,6 +17,7 @@ import Migration from "../View/Migration";
 import Compliance from "../View/Compliance";
 import Setting from "../View/Setting";
 import Administration from "../View/Administration";
+import Validation from "../View/Validation";
 
 export const router = createBrowserRouter([
   {
@@ -34,10 +34,6 @@ export const router = createBrowserRouter([
         element: <NewCloud />,
       },
       {
-        path: "/networkscanner",
-        element: <NetworkScanner />,
-      },
-      {
         path: "/iaas",
         element: <Iaas />,
       },
@@ -52,6 +48,10 @@ export const router = createBrowserRouter([
       {
         path: "/designatednode",
         element: <DesignatedNode />,
+      },
+      {
+        path: "/validation",
+        element: <Validation />,
       },
       {
         path: "/siem",
