@@ -7,9 +7,9 @@ import Highlighter from 'react-highlight-words';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const DataTable = ({  onNodeSelect }) => {
+const DataTable = ({ onNodeSelect }) => {
     const [isScanning, setIsScanning] = useState(false);
-    const [selectedRows, setSelectedRows] = useState([]);
+    const [selectedNodes, setSelectedNodes] = useState([]);
     const [nodes, setNodes] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 4;
@@ -23,7 +23,7 @@ const DataTable = ({  onNodeSelect }) => {
     }, []);
 
     const handleNextClick = () => {
-        onNodeSelect(selectedRows); // Pass selected nodes to the parent
+        onNodeSelect(selectedNodes); // Pass selected nodes to the parent
         // onNext();
     };
 
@@ -158,7 +158,7 @@ const DataTable = ({  onNodeSelect }) => {
                     style={{ marginLeft: '-10%', width: '75px' }}
                     type="primary"
                     onClick={handleNextClick}
-                    disabled={selectedRows.length === 0}
+                    disabled={selectedNodes.length === 0}
                 >
                     Next
                 </Button>
@@ -175,7 +175,7 @@ const DataTable = ({  onNodeSelect }) => {
                     onChange: page => setCurrentPage(page),
                 }}
                 rowSelection={{
-                    onChange: (_, selectedRows) => setSelectedRows(selectedRows),
+                    onChange: (_, selectedNodes) => setSelectedNodes(selectedNodes),
                 }}
                 loading={{
                     spinning: isScanning,

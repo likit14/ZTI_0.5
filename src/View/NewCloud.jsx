@@ -8,7 +8,7 @@ import Validation from '../Components/Z-mod/Validate';
 const App = () => {
   const [activeTab, setActiveTab] = useState("1");
   const [disabledTabs, setDisabledTabs] = useState({ "2": true, "3": true });
-  const [selectedNodes, setSelectedNodes] = useState([]); // New state for selected nodes
+  const [selectedNodes, setSelectedNodes] = useState([]); // State for selected nodes
 
   const handleTabStart = (currentTab) => {
     const nextTab = (currentTab + 1).toString();
@@ -19,10 +19,13 @@ const App = () => {
     setActiveTab(nextTab);
   };
 
-  // Function to handle selected nodes from Discovery
   const handleNodeSelection = (nodes) => {
     setSelectedNodes(nodes);
-    handleTabStart(2); // Move to Validation tab
+    setDisabledTabs((prevState) => ({
+      ...prevState,
+      "3": false, // Enable Validation tab
+    }));
+    setActiveTab("3"); // Move to Validation tab
   };
 
   return (
@@ -36,7 +39,7 @@ const App = () => {
           <Discovery onNodeSelect={handleNodeSelection} onStart={() => handleTabStart(2)} />
         </Tabs.TabPane>
         <Tabs.TabPane tab="Validation" key="3" disabled={disabledTabs["3"]}>
-          <Validation selectedNodes={selectedNodes} onStart={() => handleTabStart(3)} />
+          <Validation selectedNodes={selectedNodes} />
         </Tabs.TabPane>
       </Tabs>
     </Zti>
