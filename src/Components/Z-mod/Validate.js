@@ -617,7 +617,7 @@ const Validation = ({ nodes }) => {
       dataIndex: "validate",
       key: "validate",
       align: "center",
-      render: (_, record, node) => (
+      render: (_, record) => (
         <Popover
           content={
             <Form
@@ -625,43 +625,26 @@ const Validation = ({ nodes }) => {
               onFinish={() => handleBmcFormSubmit(record.ip, bmcDetails)}
               style={{ width: "200px", height: "222px" }}
             >
-              <Form.Item
-                label="BMC IP"
-                name="bmcIp"
-                style={{ marginBottom: "1px" }}
-              >
+              {/* BMC Form Fields */}
+              <Form.Item label="BMC IP" name="bmcIp">
                 <Input
                   placeholder="Enter BMC IP"
                   value={bmcDetails.ip}
-                  onChange={(e) =>
-                    setBmcDetails({ ...bmcDetails, ip: e.target.value })
-                  }
+                  onChange={(e) => setBmcDetails({ ...bmcDetails, ip: e.target.value })}
                 />
               </Form.Item>
-              <Form.Item
-                label="Username"
-                name="username"
-                style={{ marginBottom: "1px" }}
-              >
+              <Form.Item label="Username" name="username">
                 <Input
                   placeholder="Enter Username"
                   value={bmcDetails.username}
-                  onChange={(e) =>
-                    setBmcDetails({ ...bmcDetails, username: e.target.value })
-                  }
+                  onChange={(e) => setBmcDetails({ ...bmcDetails, username: e.target.value })}
                 />
               </Form.Item>
-              <Form.Item
-                label="Password"
-                name="password"
-                style={{ marginBottom: "1px" }}
-              >
+              <Form.Item label="Password" name="password">
                 <Input.Password
                   placeholder="Enter Password"
                   value={bmcDetails.password}
-                  onChange={(e) =>
-                    setBmcDetails({ ...bmcDetails, password: e.target.value })
-                  }
+                  onChange={(e) => setBmcDetails({ ...bmcDetails, password: e.target.value })}
                 />
               </Form.Item>
               <Form.Item>
@@ -686,8 +669,8 @@ const Validation = ({ nodes }) => {
           <Button
             type="primary"
             style={{ width: "80px" }}
-            disabled={validatingNode !== null && validatingNode.ip !== node.ip}
-            onClick={() => validateNode(node)}
+            disabled={validatingNode !== null && validatingNode.ip !== record.ip}
+            onClick={() => validateNode(record)}
           >
             Start
           </Button>
@@ -695,40 +678,44 @@ const Validation = ({ nodes }) => {
       ),
     },
     {
-        title: "Result",
-        dataIndex: "result",
-        key: "result",
-        align: "center",
-        render: (_, node) => {
-          const result = validationResults[node.ip];
-      
-          if (!result) return "Not Validated"; // Display Pending for nodes with no result
-      
-          return result.status === "Passed" ? (
-            <button
-              style={{
-                backgroundColor: "#28a745",
-                padding: "5px 10px",
-                color: "#fff",
-                cursor: "pointer",
-                margin: "5px",
-              }}
-              onClick={() => handleInfoButtonClick(node.ip)}
-            >
-              Info
-            </button>
-          ) : (
-            "Failed" // Or another fallback for failed status
+      title: "Result",
+      dataIndex: "result",
+      key: "result",
+      align: "center",
+      render: (_, node) => {
+        const result = validationResults[node.ip];
+  
+        if (!result) {
+          return "Not Validated";
+        } else if (result.status === "Passed") {
+          return (
+            <>
+              <button
+                style={{
+                  backgroundColor: "#28a745",
+                  padding: "5px 10px",
+                  color: "#fff",
+                  cursor: "pointer",
+                  margin: "5px",
+                }}
+                onClick={() => handleInfoButtonClick(node.ip)}
+              >
+                Info
+              </button>
+            </>
           );
-        },
+        } else {
+          return "Failed"; // Optionally handle failed results
+        }
       },
+    },
     {
       title: "Deploy",
       dataIndex: "deploy",
       key: "deploy",
       align: "center",
     },
-  ];
+  ];  
   return (
     <div style={{ padding: "24px" }}>
       <Breadcrumb style={{ marginBottom: "16px" }}>
