@@ -1,5 +1,5 @@
  docker-compose down
  docker rmi $(docker images -aq)
- docker volume remove zt_mysql-data 
- docker volume remove zt_shared-data 
+ docker volume remove zti_05_mysql-data 
+ docker volume remove zti_05_shared-data 
 
