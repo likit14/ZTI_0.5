@@ -65,7 +65,7 @@ const Signup = () => {
         }
 
         try {
-            const response = await axios.post('http://localhost:5000/register', { companyName, email, password });
+            const response = await axios.post('http://192.168.249.101:5000/register', { companyName, email, password });
             setRegistrationSuccess(true);
             setRegisteredUser(companyName);
             setUserId(response.data.userId);

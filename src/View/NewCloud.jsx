@@ -39,7 +39,7 @@ const App = () => {
           <Discovery onNodeSelect={handleNodeSelection} onStart={() => handleTabStart(2)} />
         </Tabs.TabPane>
         <Tabs.TabPane tab="Validation" key="3" disabled={disabledTabs["3"]}>
-          <Validation selectedNodes={selectedNodes} />
+          <Validation nodes={selectedNodes} />
         </Tabs.TabPane>
       </Tabs>
     </Zti>
@@ -47,3 +47,4 @@ const App = () => {
 };
 
 export default App;
+
