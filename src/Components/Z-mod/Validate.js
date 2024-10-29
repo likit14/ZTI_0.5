@@ -630,21 +630,27 @@ const Validation = ({ nodes }) => {
                 <Input
                   placeholder="Enter BMC IP"
                   value={bmcDetails.ip}
-                  onChange={(e) => setBmcDetails({ ...bmcDetails, ip: e.target.value })}
+                  onChange={(e) =>
+                    setBmcDetails({ ...bmcDetails, ip: e.target.value })
+                  }
                 />
               </Form.Item>
               <Form.Item label="Username" name="username">
                 <Input
                   placeholder="Enter Username"
                   value={bmcDetails.username}
-                  onChange={(e) => setBmcDetails({ ...bmcDetails, username: e.target.value })}
+                  onChange={(e) =>
+                    setBmcDetails({ ...bmcDetails, username: e.target.value })
+                  }
                 />
               </Form.Item>
               <Form.Item label="Password" name="password">
                 <Input.Password
                   placeholder="Enter Password"
                   value={bmcDetails.password}
-                  onChange={(e) => setBmcDetails({ ...bmcDetails, password: e.target.value })}
+                  onChange={(e) =>
+                    setBmcDetails({ ...bmcDetails, password: e.target.value })
+                  }
                 />
               </Form.Item>
               <Form.Item>
@@ -669,7 +675,9 @@ const Validation = ({ nodes }) => {
           <Button
             type="primary"
             style={{ width: "80px" }}
-            disabled={validatingNode !== null && validatingNode.ip !== record.ip}
+            disabled={
+              validatingNode !== null && validatingNode.ip !== record.ip
+            }
             onClick={() => validateNode(record)}
           >
             Start
@@ -684,28 +692,47 @@ const Validation = ({ nodes }) => {
       align: "center",
       render: (_, node) => {
         const result = validationResults[node.ip];
-  
+
         if (!result) {
           return "Not Validated";
         } else if (result.status === "Passed") {
           return (
             <>
-              <button
-                style={{
-                  backgroundColor: "#28a745",
-                  padding: "5px 10px",
-                  color: "#fff",
-                  cursor: "pointer",
-                  margin: "5px",
-                }}
+              <Button
+                style={{ width: "80px" }}
+                // style={{
+                //   backgroundColor: "#28a745",
+                //   padding: "5px 11px",
+                //   color: "#fff",
+                //   cursor: "pointer",
+                //   margin: "5px",
+                //   width: "80px"
+                // }}
                 onClick={() => handleInfoButtonClick(node.ip)}
               >
                 Info
-              </button>
+              </Button>
             </>
           );
         } else {
-          return "Failed"; // Optionally handle failed results
+            return (
+                <>
+                  <Button
+                    style={{ width: "80px", backgroundColor: "red" }}
+                    // style={{
+                    //   backgroundColor: "red",
+                    //   padding: "5px 11px",
+                    //   color: "#fff",
+                    //   cursor: "pointer",
+                    //   margin: "5px",
+                    //   width: "80px"
+                    // }}
+                    onClick={() => handleInfoButtonClick(node.ip)}
+                  >
+                    Info
+                  </Button>
+                </>
+              );
         }
       },
     },
@@ -714,8 +741,35 @@ const Validation = ({ nodes }) => {
       dataIndex: "deploy",
       key: "deploy",
       align: "center",
+      render: (_, node) => {
+        const result = validationResults[node.ip];
+
+        if (!result) {
+          return null; // Or you can return a message like "Not Validated"
+        } else if (result.status === "Passed") {
+          return (
+            <Button
+            style={{ width: "80px" }}
+
+            //   style={{
+                // backgroundColor: "#007bff",
+                // padding: "5px 11px",
+                // color: "#fff",
+                // cursor: "pointer",
+                // margin: "5px",
+                // width: "80px",
+            //   }}
+              onClick={() => handleDeployClick(node.ip)}
+            >
+              Deploy
+            </Button>
+          );
+        } else {
+          return null; // Optionally handle failed results
+        }
+      },
     },
-  ];  
+  ];
   return (
     <div style={{ padding: "24px" }}>
       <Breadcrumb style={{ marginBottom: "16px" }}>
