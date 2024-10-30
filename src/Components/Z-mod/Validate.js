@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Divider, Table, Breadcrumb, Button, Popover, Input, Form } from "antd";
+import { Divider, Table, Breadcrumb, Button, Popover, Input, Form, Modal, Space } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import axios from "axios";
 import withReactContent from "sweetalert2-react-content";
@@ -28,6 +28,7 @@ const Validation = ({ nodes }) => {
   const itemsPerPage = 4;
   const navigate = useNavigate();
   const location = useLocation();
+  const [open, setOpen] = useState(false);
   const [interfaces, setInterfaces] = useState([]);
   const result = validationResults[nodes.ip]; // Get results based on the IP
 
@@ -37,6 +38,16 @@ const Validation = ({ nodes }) => {
     setBmcDetails({ ...bmcDetails, ip: nodes.ip });
     setBmcFormVisible(true);
   };
+
+  const showModal = () => {
+    setOpen(true);
+  };
+
+  const handleOk = () => {
+    setOpen(false);
+  };
+
+
 
   const handleBmcFormSubmit = async (ip, bmcDetails) => {
     setBmcFormVisible(false);
@@ -137,6 +148,7 @@ const Validation = ({ nodes }) => {
     }
   };
   const handleDeployButtonClick = async () => {
+    setOpen(false);
     try {
       // First API: Initiate Live OS boot
       await axios
@@ -146,7 +158,7 @@ const Validation = ({ nodes }) => {
 
       // Second API: Submit BMC details (reusing the same details)
       const response = await axios.post(
-        "http://localhost:8/set_pxe_boot",
+        "http://192.168.249.101:8000/s_pxe_boot",
         bmcDetails
       );
       console.log("BMC Details submitted:", bmcDetails);
@@ -312,73 +324,63 @@ const Validation = ({ nodes }) => {
       title: "Management Network",
       width: "60%",
       html: `
-            <div style="display: flex; justify-content: space-between; font-size: 1.2rem; padding: 10px; margin-top: 20px;">
-         <div style="display: flex; flex-direction: column; align-items: center;">
-    <div style="display: flex; align-items: center;">
-        <span style="margin-left: 50px; font-weight: bold;">IP/CIDR</span>
+<div style="display: flex; justify-content: space-between; font-size: 1.2rem; padding: 10px; margin-top: 20px;">
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <div style="display: flex; align-items: center;">
+            <span style="margin-left: 50px; font-weight: bold;">Field 1</span>
+        </div>
+        <div style="display: flex; align-items: center; margin-top: 10px;">
+            <input type="text" placeholder="Enter Value" 
+                style="padding: 8px; border-radius: 5px; 
+                       border: 1px solid #ccc; width: 120px;">
+        </div>
+        <div style="display: flex; align-items: center; margin-top: 10px;">
+            <span style="margin-right: 5px; color: red;">*</span>           
+            <span style="margin-right: 10px; font-weight: bold;">Field 2</span>
+            <input type="text" placeholder="Enter Value" 
+                style="padding: 8px; border-radius: 5px; 
+                       border: 1px solid #ccc; width: 120px;">
+        </div>
+        <div style="display: flex; align-items: center; margin-top: 10px;">
+            <span style="margin-right: 5px; color: red;">*</span>           
+            <span style="margin-right: 5px; font-weight: bold;">Field 3</span>
+            <input type="text" placeholder="Enter Value" 
+                style="padding: 8px; border-radius: 5px; 
+                       border: 1px solid #ccc; width: 120px;">
+        </div>
+        <div style="margin-top: 10px;"></div>
     </div>
-    <div style="display: flex; align-items: center; margin-top: 10px;">
-        <span style="margin-right: 5px; color: red;">*</span>           
-        <span style="margin-right: 10px; font-weight: bold;">OOB&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-        <input type="text" placeholder="Enter IP/CIDR" 
-            style="padding: 8px; border-radius: 5px; 
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <span style="font-weight: bold;">Field 4</span>
+        <input type="text" placeholder="Enter Value" 
+            style="margin-top: 10px; padding: 8px; border-radius: 5px; 
                    border: 1px solid #ccc; width: 120px;">
     </div>
-    <div style="display: flex; align-items: center; margin-top: 10px;">
-        <span style="margin-right: 5px; color: red;">*</span>           
-        <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">Mgmt IP</span>
-        <input type="text" placeholder="Enter Mgmt IP" 
-            style="padding: 8px; border-radius: 5px; 
-                   border: 1px solid #ccc; width: 120px;">
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <span style="font-weight: bold;">Field 5</span>
+        <input type="checkbox" style="margin-top: 19px; width: 16px; height: 16px;">
     </div>
-            <div style="display: flex; align-items: center; margin-top: 10px; margin-left: -150px;">
-                <span style="margin-right: 5px; color: red;">*</span>           
-                <span style="margin-right: 5px; font-weight: bold;">VLAN&nbsp;&nbsp;</span>
-            </div>
-                    <div style="display: flex; align-items: center; margin-top: 10px; margin-left: 40px;">
-<span style="margin-right: 5px; color: red;">*</span>           
-<span style="margin-right: 5px; font-weight: bold; margin-left: 0;">Provider NGW</span>
-<input type="text" placeholder="Enter Gateway" 
-       style="padding: 8px; border-radius: 5px; 
-              border: 1px solid #ccc; width: 120px;">
-</div>
-
-    <div style="margin-top: 10px;"></div>
-</div>
-<div style="display: flex; flex-direction: column; align-items: center;">
-    <span style="font-weight: bold;">VLAN ID</span>
-    <input type="text" placeholder="Enter VLAN ID" 
-        style="margin-top: 10px; padding: 8px; border-radius: 5px; 
-               border: 1px solid #ccc; width: 120px;">
-</div>
-<div style="display: flex; flex-direction: column; align-items: center;">
-    <span style="font-weight: bold;">BOND</span>
-    <input type="checkbox" style="margin-top: 19px; width: 16px; height: 16px;">
-</div>
-<div style="display: flex; flex-direction: column; align-items: center;">
-    <span style="font-weight: bold;">INTERFACE</span>
-    <div style="margin-top: 10px; ">
-            <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
-                <option value="" disabled selected>Select</option>
-                ${interfaces
-          .map((iface) => `<option value="${iface}">${iface}</option>`)
-          .join("")}
-            </select>
-    </div>
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <span style="font-weight: bold;">Field 6</span>
         <div style="margin-top: 10px;">
-            <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
+            <select style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
                 <option value="" disabled selected>Select</option>
-                ${interfaces
-          .map((iface) => `<option value="${iface}">${iface}</option>`)
-          .join("")}
+                <option value="Option 1">Option 1</option>
+                <option value="Option 2">Option 2</option>
             </select>
         </div>
-    <div style="margin-top: 10px;">
-             <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
+        <div style="margin-top: 10px;">
+            <select style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
                 <option value="" disabled selected>Select</option>
-                ${interfaces
-          .map((iface) => `<option value="${iface}">${iface}</option>`)
-          .join("")}
+                <option value="Option 1">Option 1</option>
+                <option value="Option 2">Option 2</option>
+            </select>
+        </div>
+        <div style="margin-top: 10px;">
+            <select style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
+                <option value="" disabled selected>Select</option>
+                <option value="Option 1">Option 1</option>
+                <option value="Option 2">Option 2</option>
             </select>
     </div>
          </div>
@@ -467,8 +469,8 @@ const Validation = ({ nodes }) => {
               DNS_SERVERS: dns,
               INTERFACE_01: selectedInterface1,
               INTERFACE_02: selectedInterface2,
-              DOCKER_TOKEN:"dckr_pat_D_pxIidbzQAoVJ5sfE65S-O-J9c",
-              GITHUB_TOKEN:"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"
+              DOCKER_TOKEN: "dckr_pat_D_pxIidbzQAoVJ5sfE65S-O-J9c",
+              GITHUB_TOKEN: "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"
             };
             // Convert JSON object to string
             const jsonString = JSON.stringify(formData, null, 2); // Pretty-print JSON
@@ -569,8 +571,7 @@ const Validation = ({ nodes }) => {
               onFinish={() => handleBmcFormSubmit(record.ip, bmcDetails)}
               style={{ width: "200px", height: "222px" }}
             >
-              {/* BMC Form Fields */}
-              <Form.Item label="BMC IP" name="bmcIp">
+              <Form.Item label="BMC IP" name="bmcIp" style={{ marginBottom: "1px" }}>
                 <Input
                   placeholder="Enter BMC IP"
                   value={bmcDetails.ip}
@@ -579,7 +580,7 @@ const Validation = ({ nodes }) => {
                   }
                 />
               </Form.Item>
-              <Form.Item label="Username" name="username">
+              <Form.Item label="Username" name="username" style={{ marginBottom: "1px" }}>
                 <Input
                   placeholder="Enter Username"
                   value={bmcDetails.username}
@@ -588,7 +589,7 @@ const Validation = ({ nodes }) => {
                   }
                 />
               </Form.Item>
-              <Form.Item label="Password" name="password">
+              <Form.Item label="Password" name="password" style={{ marginBottom: "1px" }}>
                 <Input.Password
                   placeholder="Enter Password"
                   value={bmcDetails.password}
@@ -597,7 +598,7 @@ const Validation = ({ nodes }) => {
                   }
                 />
               </Form.Item>
-              <Form.Item>
+              <Form.Item style={{ marginTop: "4px", marginLeft: "6px" }}>
                 <Button type="primary" htmlType="submit">
                   Submit
                 </Button>
@@ -687,31 +688,49 @@ const Validation = ({ nodes }) => {
         const result = validationResults[node.ip];
 
         if (!result) {
-          return null; // Or you can return a message like "Not Validated"
+          return null;
         } else if (result.status === "Passed") {
           return (
             <Button
               type="primary"
-              style={{ width: "80px", backgroundColor: "#007bff", }}
-
-              //   style={{
-              // backgroundColor: "#007bff",
-              // padding: "5px 11px",
-              // color: "#fff",
-              // cursor: "pointer",
-              // margin: "5px",
-              // width: "80px",
-              //   }}
-              onClick={() => handleDeployClick(node.ip)}
+              style={{ width: "80px", backgroundColor: "#007bff" }}
+              onClick={() => {
+                Modal.confirm({
+                  title: 'Confirm',
+                  // icon: null,
+                  content: (
+                    <>
+                      <p>Are you certain you wish to proceed with the deployment?</p>
+                      <p>Important Considerations:</p>
+                      <ul>
+                        <li>A new operating system will be initialized.</li>
+                        <li>All disks will be completely erased, leading to permanent data loss.</li>
+                      </ul>
+                      <p>We strongly recommend backing up all critical information prior to continuing.</p>
+                    </>
+                  ),
+                  onOk: () => handleDeployButtonClick(node.ip),
+                  okText: 'BOOT',
+                  cancelText: 'Cancel',
+                  style: { top: '30vh' },
+                  footer: () => (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Button onClick={() => handleDeployButtonClick(node.ip)}>BOOT</Button>
+                      <Button onClick={() => Modal.destroyAll()} style={{ marginLeft: '10px' }}>Cancel</Button>
+                    </div>
+                  ),
+                });
+              }}
             >
               Deploy
             </Button>
           );
         } else {
-          return null; // Optionally handle failed results
+          return null;
         }
       },
-    },
+    }
+
   ];
   return (
     <div style={{ padding: "24px" }}>
