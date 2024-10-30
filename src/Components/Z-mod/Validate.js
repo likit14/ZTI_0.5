@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Divider, Table, Breadcrumb, Button, Popover, Input, Form, Modal, Space } from "antd";
+import { Divider, Table, Breadcrumb, Button, Popover, Input, Form, Modal, Space, Progress } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import axios from "axios";
 import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
+import ProgressModal from './ProgressModal';
 import { useLocation, useNavigate } from "react-router-dom";
 import requirementData from "../../Comparison/min_requirements.json";
 
@@ -17,6 +18,7 @@ const Validation = ({ nodes }) => {
     password: "",
   });
   const MySwal = withReactContent(Swal);
+  const [progressVisible, setProgressVisible] = useState(false);
   const [validatingNode, setValidatingNode] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [validated, setValidated] = useState(false);
@@ -148,6 +150,7 @@ const Validation = ({ nodes }) => {
     }
   };
   const handleDeployButtonClick = async () => {
+    setProgressVisible(true);
     setOpen(false);
     try {
       // First API: Initiate Live OS boot
@@ -696,14 +699,14 @@ const Validation = ({ nodes }) => {
               style={{ width: "80px", backgroundColor: "#007bff" }}
               onClick={() => {
                 Modal.confirm({
-                  title: 'Confirm',
+                  title: 'Warning',
                   // icon: null,
                   content: (
                     <>
                       <p>Are you certain you wish to proceed with the deployment?</p>
                       <p>Important Considerations:</p>
                       <ul>
-                        <li>A new operating system will be initialized.</li>
+                        <li>PinakaOS will be initialized.</li>
                         <li>All disks will be completely erased, leading to permanent data loss.</li>
                       </ul>
                       <p>We strongly recommend backing up all critical information prior to continuing.</p>
@@ -715,7 +718,12 @@ const Validation = ({ nodes }) => {
                   style: { top: '30vh' },
                   footer: () => (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Button onClick={() => handleDeployButtonClick(node.ip)}>BOOT</Button>
+                      <Button onClick={() => {
+                        Modal.destroyAll(); // Close the confirmation modal first
+                        handleDeployButtonClick(node.ip); // Then call the deployment handler
+                      }}>
+                        BOOT
+                      </Button>
                       <Button onClick={() => Modal.destroyAll()} style={{ marginLeft: '10px' }}>Cancel</Button>
                     </div>
                   ),
@@ -748,6 +756,10 @@ const Validation = ({ nodes }) => {
         dataSource={nodes} // Use the combined data source
         rowKey="ip"
         pagination={{ pageSize: 4 }}
+      />
+      <ProgressModal
+        visible={progressVisible}
+        onClose={() => setProgressVisible(false)}
       />
     </div>
   );
