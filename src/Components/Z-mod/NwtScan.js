@@ -146,13 +146,15 @@ const DataTable = ({ onNodeSelect }) => {
                 <Breadcrumb.Item>Discovery</Breadcrumb.Item>
             </Breadcrumb>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0 }}>Discovery</h2>
-                <a
-                    style={{ marginRight: '83%', marginTop: '0.5%', color:'#1677ff' }}
-                    onClick={handleRefresh}
-                >
-                    <FontAwesomeIcon icon={faArrowsRotate} size="1x" />
-                </a>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <h2 style={{ margin: 0 }}>Discovery</h2>
+                    <FontAwesomeIcon
+                        icon={faArrowsRotate}
+                        size="1x"
+                        style={{ marginLeft: '8px', color: '#1677ff', cursor: 'pointer' }}
+                        onClick={handleRefresh}
+                    />
+                </div>
                 <Button
                     size="middle"
                     style={{ marginLeft: '-10%', width: '75px' }}
@@ -163,6 +165,7 @@ const DataTable = ({ onNodeSelect }) => {
                     Next
                 </Button>
             </div>
+
             <Divider />
             <Table
                 columns={columns}

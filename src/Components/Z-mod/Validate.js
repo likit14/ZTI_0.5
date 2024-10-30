@@ -92,9 +92,9 @@ const Validation = ({ nodes }) => {
 
       const overallStatus =
         comparisonResults.cpuCoresPassed &&
-        comparisonResults.memoryPassed &&
-        comparisonResults.diskPassed &&
-        comparisonResults.nicPassed
+          comparisonResults.memoryPassed &&
+          comparisonResults.diskPassed &&
+          comparisonResults.nicPassed
           ? "Passed"
           : "Failed";
 
@@ -196,59 +196,63 @@ const Validation = ({ nodes }) => {
     // Determine heading color based on status
     const headingColor =
       result.cpuCoresPassed &&
-      result.memoryPassed &&
-      result.diskPassed &&
-      result.nicPassed
+        result.memoryPassed &&
+        result.diskPassed &&
+        result.nicPassed
         ? "#28a745"
         : "#dc3545";
 
     // Create HTML message with Min Req Value and Result Value
     const msg = `
     <h1 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: ${headingColor};">
-        TEST RESULT: ${
-          result.cpuCoresPassed &&
-          result.memoryPassed &&
-          result.diskPassed &&
-          result.nicPassed
-            ? "PASSED"
-            : "FAILED"
-        }
+        TEST RESULT: ${result.cpuCoresPassed &&
+        result.memoryPassed &&
+        result.diskPassed &&
+        result.nicPassed
+        ? "PASSED"
+        : "FAILED"
+      }
     </h1>
     <div style="cursor: pointer; font-size: 1.1rem; color: #007bff; margin-bottom: 10px;" id="toggleReport">
         Detailed Report <span id="arrow" style="font-size: 1.1rem;">▼</span>
     </div>
-    <div id="reportWrapper" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
-        <table style="width:100%; border-collapse: collapse; margin-top: 10px; border-radius: 10px; overflow: hidden;">
-            <thead style="background-color: #f8f9fa;">
-                <tr>
-                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">PARAMETER</th>
-                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Min Req Value</th>
-                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Result Value</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">CPU Cores</td>
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${minCpuCores}</td>
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${validationCpuCores}</td>
-                </tr>
-                <tr style="background-color: #f8f9fa;">
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">RAM</td>
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${minMemory} GB</td>
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${validationMemory} GB</td>
-                </tr>
-                <tr>
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">Disk Count</td>
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${minDiskCount}</td>
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${validationDiskCount}</td>
-                </tr>
-                <tr style="background-color: #f8f9fa;">
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">NIC Count</td>
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${minNicTotalCount}</td>
-                    <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${validationNicTotalCount}</td>
-                </tr>
-            </tbody>
-        </table>
+   <div id="reportWrapper" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
+            <table style="width:100%; border-collapse: collapse; margin-top: 10px; border-radius: 10px; overflow: hidden;">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">PARAMETER</th>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Min Req Value</th>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Recommended</th>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Result Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">CPU Cores</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${minCpuCores}</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">8</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${validationCpuCores}</td>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">RAM</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${minMemory} GB</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">16 GB</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${validationMemory} GB</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">Disk Count</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${minDiskCount}</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">5</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${validationDiskCount}</td>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">NIC Count</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${minNicTotalCount}</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">3</td>
+                        <td style="border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 1rem;">${validationNicTotalCount}</td>
+                    </tr>
+                </tbody>
+            </table>
     </div>`;
 
     // Display the Swal modal
@@ -355,24 +359,24 @@ const Validation = ({ nodes }) => {
             <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
                 <option value="" disabled selected>Select</option>
                 ${interfaces
-                  .map((iface) => `<option value="${iface}">${iface}</option>`)
-                  .join("")}
+          .map((iface) => `<option value="${iface}">${iface}</option>`)
+          .join("")}
             </select>
     </div>
         <div style="margin-top: 10px;">
             <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
                 <option value="" disabled selected>Select</option>
                 ${interfaces
-                  .map((iface) => `<option value="${iface}">${iface}</option>`)
-                  .join("")}
+          .map((iface) => `<option value="${iface}">${iface}</option>`)
+          .join("")}
             </select>
         </div>
     <div style="margin-top: 10px;">
              <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
                 <option value="" disabled selected>Select</option>
                 ${interfaces
-                  .map((iface) => `<option value="${iface}">${iface}</option>`)
-                  .join("")}
+          .map((iface) => `<option value="${iface}">${iface}</option>`)
+          .join("")}
             </select>
     </div>
          </div>
@@ -465,24 +469,24 @@ const Validation = ({ nodes }) => {
             <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
                 <option value="" disabled selected>Select</option>
                 ${interfaces
-                  .map((iface) => `<option value="${iface}">${iface}</option>`)
-                  .join("")}
+              .map((iface) => `<option value="${iface}">${iface}</option>`)
+              .join("")}
             </select>
                     </div>
                     <div style="margin-top: 10px;">
             <select id="interface-select-3" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
                 <option value="" disabled selected>Select</option>
                 ${interfaces
-                  .map((iface) => `<option value="${iface}">${iface}</option>`)
-                  .join("")}
+              .map((iface) => `<option value="${iface}">${iface}</option>`)
+              .join("")}
             </select>
                     </div>
                     <div style="margin-top: 10px;">
             <select id="interface-select-2" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
                 <option value="" disabled selected>Select</option>
                 ${interfaces
-                  .map((iface) => `<option value="${iface}">${iface}</option>`)
-                  .join("")}
+              .map((iface) => `<option value="${iface}">${iface}</option>`)
+              .join("")}
             </select>
                                         </div>
                                     </div>
@@ -675,9 +679,6 @@ const Validation = ({ nodes }) => {
           <Button
             type="primary"
             style={{ width: "80px" }}
-            disabled={
-              validatingNode !== null && validatingNode.ip !== record.ip
-            }
             onClick={() => validateNode(record)}
           >
             Start
@@ -699,9 +700,9 @@ const Validation = ({ nodes }) => {
           return (
             <>
               <Button
-                style={{ width: "80px" }}
+                type="primary"
+                style={{ width: "80px", backgroundColor: "#28a745" }}
                 // style={{
-                //   backgroundColor: "#28a745",
                 //   padding: "5px 11px",
                 //   color: "#fff",
                 //   cursor: "pointer",
@@ -715,24 +716,25 @@ const Validation = ({ nodes }) => {
             </>
           );
         } else {
-            return (
-                <>
-                  <Button
-                    style={{ width: "80px", backgroundColor: "red" }}
-                    // style={{
-                    //   backgroundColor: "red",
-                    //   padding: "5px 11px",
-                    //   color: "#fff",
-                    //   cursor: "pointer",
-                    //   margin: "5px",
-                    //   width: "80px"
-                    // }}
-                    onClick={() => handleInfoButtonClick(node.ip)}
-                  >
-                    Info
-                  </Button>
-                </>
-              );
+          return (
+            <>
+              <Button
+                type="primary"
+                style={{ width: "80px", backgroundColor: "red" }}
+                // style={{
+                //   backgroundColor: "red",
+                //   padding: "5px 11px",
+                //   color: "#fff",
+                //   cursor: "pointer",
+                //   margin: "5px",
+                //   width: "80px"
+                // }}
+                onClick={() => handleInfoButtonClick(node.ip)}
+              >
+                Info
+              </Button>
+            </>
+          );
         }
       },
     },
@@ -749,16 +751,17 @@ const Validation = ({ nodes }) => {
         } else if (result.status === "Passed") {
           return (
             <Button
-            style={{ width: "80px" }}
+              type="primary"
+              style={{ width: "80px", backgroundColor: "#007bff", }}
 
-            //   style={{
-                // backgroundColor: "#007bff",
-                // padding: "5px 11px",
-                // color: "#fff",
-                // cursor: "pointer",
-                // margin: "5px",
-                // width: "80px",
-            //   }}
+              //   style={{
+              // backgroundColor: "#007bff",
+              // padding: "5px 11px",
+              // color: "#fff",
+              // cursor: "pointer",
+              // margin: "5px",
+              // width: "80px",
+              //   }}
               onClick={() => handleDeployClick(node.ip)}
             >
               Deploy
@@ -777,6 +780,7 @@ const Validation = ({ nodes }) => {
           <HomeOutlined />
         </Breadcrumb.Item>
         <Breadcrumb.Item>Deployment</Breadcrumb.Item>
+        <Breadcrumb.Item>Discovery</Breadcrumb.Item>
         <Breadcrumb.Item>Validation</Breadcrumb.Item>
       </Breadcrumb>
       <Divider />
