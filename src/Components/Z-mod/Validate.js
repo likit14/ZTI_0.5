@@ -411,17 +411,6 @@ const Validation = ({ nodes }) => {
                             </div>
                             <div style="display: flex; align-items: center; margin-top: 10px;">
                                 <span style="margin-right: 5px; color: red;">*</span>           
-                                <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">Storage</span>
-                                <input type="text" id="storage-input" placeholder="Enter Storage" 
-                                    style="padding: 8px; border-radius: 5px; 
-                                           border: 1px solid #ccc; width: 120px;">
-                            </div>
-                              <div style="display: flex; align-items: center; margin-top: 10px; margin-left: -150px;">
-                               <span style="margin-right: 5px; color: red;">*</span>           
-                                 <span style="margin-right: 5px; font-weight: bold;">VLAN&nbsp;&nbsp;</span>
-                            </div>
-                            <div style="display: flex; align-items: center; margin-top: 10px;">
-                                <span style="margin-right: 5px; color: red;">*</span>           
                                 <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">DNS</span>
                                 <input type="text" id="dns" placeholder="Enter DNS" 
                                        style="padding: 8px; border-radius: 5px; 
@@ -434,49 +423,12 @@ const Validation = ({ nodes }) => {
                                        style="padding: 8px; border-radius: 5px; 
                                               border: 1px solid #ccc; width: 120px;">
                             </div>
-                            <div style="display: flex; align-items: center; margin-top: 10px; margin-left: 0px;">
-                                <span style="margin-right: 5px; color: red;">*</span>           
-                                <span style="margin-right: 5px; font-weight: bold;">VIP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                                <input type="text" id="vip-input" placeholder="Enter VIP" 
-                                    style="padding: 8px; border-radius: 5px; 
-                                           border: 1px solid #ccc; width: 120px;">
-                            </div>
-                            <div style="display: flex; align-items: center; margin-top: 10px; margin-left: -12px;">
-                                <span style="margin-right: 5px; color: red;">*</span>           
-                                <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">Services</span>
-                                <select id="services-select" style="padding: 8px; border-radius: 5px; 
-                                           border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 31.5px">
-                                    <option value="" disabled selected>Select</option>
-                                    <option value="docker">docker</option>
-                                    <option value="kubernetes">kubernetes</option>
-                                    <option value="other">..</option>
-                                </select>
-                            </div>
                             <div style="margin-top: 10px;"></div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="font-weight: bold;">VLAN ID</span>
-                            <input type="text" id="vlan-input" placeholder="Enter VLAN ID" 
-                                style="margin-top: 10px; padding: 8px; border-radius: 5px; 
-                                       border: 1px solid #ccc; width: 120px;">
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="font-weight: bold;">BOND</span>
-                            <input type="checkbox" id="bond1" style="margin-top: 19px; width: 16px; height: 16px;">
-                            <input type="checkbox" id="bond2" style="margin-top: 19px; width: 16px; height: 16px;">
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <span style="font-weight: bold;">INTERFACE</span>
                             <div style="margin-top: 10px;">
             <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
-                <option value="" disabled selected>Select</option>
-                ${interfaces
-              .map((iface) => `<option value="${iface}">${iface}</option>`)
-              .join("")}
-            </select>
-                    </div>
-                    <div style="margin-top: 10px;">
-            <select id="interface-select-3" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
                 <option value="" disabled selected>Select</option>
                 ${interfaces
               .map((iface) => `<option value="${iface}">${iface}</option>`)
@@ -490,7 +442,7 @@ const Validation = ({ nodes }) => {
               .map((iface) => `<option value="${iface}">${iface}</option>`)
               .join("")}
             </select>
-                                        </div>
+                    </div>
                                     </div>
                                 </div>
                 `,
@@ -500,37 +452,23 @@ const Validation = ({ nodes }) => {
           if (result.isConfirmed) {
             // Collect all form data
             const ibn = document.getElementById("ibn-input").value;
-            const storage = document.getElementById("storage-input").value;
-            const vip = document.getElementById("vip-input").value;
-            const service = document.getElementById("services-select").value;
-            const vlan = document.getElementById("vlan-input").value;
             const gateway = document.getElementById("gateway").value;
             const dns = document.getElementById("dns").value;
             const selectedInterface1 =
               document.getElementById("interface-select-1").value;
             const selectedInterface2 =
               document.getElementById("interface-select-2").value;
-            const selectedInterface3 =
-              document.getElementById("interface-select-3").value;
 
-            // Collect checkbox values
-            const bond1 = document.getElementById("bond1").checked;
-            const bond2 = document.getElementById("bond2").checked;
 
             // Create the form data object
             const formData = {
               IP_ADDRESS: ibn,
-              Storage: storage,
-              VIP: vip,
-              Service: service,
-              VLAN: vlan,
               GATEWAY: gateway,
               DNS_SERVERS: dns,
               INTERFACE_01: selectedInterface1,
               INTERFACE_02: selectedInterface2,
-              INTERFACE_03: selectedInterface3,
-              Bond1: bond1,
-              Bond2: bond2,
+              DOCKER_TOKEN:"dckr_pat_D_pxIidbzQAoVJ5sfE65S-O-J9c",
+              GITHUB_TOKEN:"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"
             };
             // Convert JSON object to string
             const jsonString = JSON.stringify(formData, null, 2); // Pretty-print JSON
