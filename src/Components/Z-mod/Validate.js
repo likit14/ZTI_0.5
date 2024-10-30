@@ -19,6 +19,7 @@ const Validation = ({ nodes }) => {
   const MySwal = withReactContent(Swal);
   const [validatingNode, setValidatingNode] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [validated, setValidated] = useState(false);
   const [bmcFormVisible, setBmcFormVisible] = useState(false);
   const [currentNode, setCurrentNode] = useState(null);
   const [scanResults, setScanResults] = useState([]);
@@ -65,6 +66,7 @@ const Validation = ({ nodes }) => {
       await new Promise((resolve) => setTimeout(resolve, 120000));
 
       await fetchValidationData();
+      setValidated(true); // Mark as validated
     } catch (error) {
       console.error("Error in form submission:", error);
     }
@@ -220,10 +222,10 @@ const Validation = ({ nodes }) => {
             <table style="width:100%; border-collapse: collapse; margin-top: 10px; border-radius: 10px; overflow: hidden;">
                 <thead style="background-color: #f8f9fa;">
                     <tr>
-                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">PARAMETER</th>
-                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Min Req Value</th>
-                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Recommended</th>
-                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Result Value</th>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">PARAM</th>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Min Req </th>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">REC</th>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Result </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -679,9 +681,9 @@ const Validation = ({ nodes }) => {
           <Button
             type="primary"
             style={{ width: "80px" }}
-            onClick={() => validateNode(record)}
+            onClick={() => validated ? fetchValidationData() : validateNode(record)}
           >
-            Start
+            {validated ? 'Revalidate' : 'Start'}
           </Button>
         </Popover>
       ),
