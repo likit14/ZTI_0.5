@@ -21,6 +21,7 @@ const Validation = ({ nodes }) => {
   const [progressVisible, setProgressVisible] = useState(false);
   const [validatingNode, setValidatingNode] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedIp, setSelectedIp] = useState(null);
   const [validated, setValidated] = useState(false);
   const [bmcFormVisible, setBmcFormVisible] = useState(false);
   const [currentNode, setCurrentNode] = useState(null);
@@ -149,6 +150,13 @@ const Validation = ({ nodes }) => {
       setFormSubmitted(true);
     }
   };
+  const handleNextClick = () => {
+    if (selectedIp) {
+      handleDeployClick(selectedIp);
+      setProgressVisible(false); // Close the progress modal
+    }
+  };
+
   const handleDeployButtonClick = async () => {
     setProgressVisible(true);
     setOpen(false);
@@ -324,221 +332,145 @@ const Validation = ({ nodes }) => {
 
   const handleDeployClick = (ip) => {
     Swal.fire({
-      title: "Management Network",
+      title: "Deployment",
       width: "60%",
       html: `
-<div style="display: flex; justify-content: space-between; font-size: 1.2rem; padding: 10px; margin-top: 20px;">
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <div style="display: flex; align-items: center;">
-            <span style="margin-left: 50px; font-weight: bold;">Field 1</span>
-        </div>
-        <div style="display: flex; align-items: center; margin-top: 10px;">
-            <input type="text" placeholder="Enter Value" 
-                style="padding: 8px; border-radius: 5px; 
-                       border: 1px solid #ccc; width: 120px;">
-        </div>
-        <div style="display: flex; align-items: center; margin-top: 10px;">
-            <span style="margin-right: 5px; color: red;">*</span>           
-            <span style="margin-right: 10px; font-weight: bold;">Field 2</span>
-            <input type="text" placeholder="Enter Value" 
-                style="padding: 8px; border-radius: 5px; 
-                       border: 1px solid #ccc; width: 120px;">
-        </div>
-        <div style="display: flex; align-items: center; margin-top: 10px;">
-            <span style="margin-right: 5px; color: red;">*</span>           
-            <span style="margin-right: 5px; font-weight: bold;">Field 3</span>
-            <input type="text" placeholder="Enter Value" 
-                style="padding: 8px; border-radius: 5px; 
-                       border: 1px solid #ccc; width: 120px;">
-        </div>
-        <div style="margin-top: 10px;"></div>
-    </div>
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <span style="font-weight: bold;">Field 4</span>
-        <input type="text" placeholder="Enter Value" 
-            style="margin-top: 10px; padding: 8px; border-radius: 5px; 
-                   border: 1px solid #ccc; width: 120px;">
-    </div>
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <span style="font-weight: bold;">Field 5</span>
-        <input type="checkbox" style="margin-top: 19px; width: 16px; height: 16px;">
-    </div>
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <span style="font-weight: bold;">Field 6</span>
-        <div style="margin-top: 10px;">
-            <select style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
-                <option value="" disabled selected>Select</option>
-                <option value="Option 1">Option 1</option>
-                <option value="Option 2">Option 2</option>
-            </select>
-        </div>
-        <div style="margin-top: 10px;">
-            <select style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
-                <option value="" disabled selected>Select</option>
-                <option value="Option 1">Option 1</option>
-                <option value="Option 2">Option 2</option>
-            </select>
-        </div>
-        <div style="margin-top: 10px;">
-            <select style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
-                <option value="" disabled selected>Select</option>
-                <option value="Option 1">Option 1</option>
-                <option value="Option 2">Option 2</option>
-            </select>
-    </div>
-         </div>
+        <div style="display: flex; justify-content: space-between; font-size: 1.2rem; padding: 10px; margin-top: 20px;">
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="display: flex; align-items: center;">
+              <span style="margin-left: 50px; font-weight: bold;">IP/CIDR</span>
             </div>
-        `,
-      confirmButtonText: "BOOT",
+            <div style="display: flex; align-items: center; margin-top: 10px;">
+              <span style="margin-right: 5px; color: red;">*</span>           
+              <span style="margin-right: 10px; font-weight: bold;">IBN &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+              <input type="text" id="ibn-input" placeholder="Enter IP/CIDR" 
+                  style="padding: 8px; border-radius: 5px; 
+                         border: 1px solid #ccc; width: 120px;">
+            </div>
+            <div style="display: flex; align-items: center; margin-top: 10px;">
+              <span style="margin-right: 5px; color: red;">*</span>           
+              <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">DNS</span>
+              <input type="text" id="dns" placeholder="Enter DNS" 
+                     style="padding: 8px; border-radius: 5px; 
+                            border: 1px solid #ccc; width: 120px;">
+            </div>
+            <div style="display: flex; align-items: center; margin-top: 10px; margin-left: 40px;">
+              <span style="margin-right: 5px; color: red;">*</span>           
+              <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">Provider NGW</span>
+              <input type="text" id="gateway" placeholder="Enter Gateway" 
+                     style="padding: 8px; border-radius: 5px; 
+                            border: 1px solid #ccc; width: 120px;">
+            </div>
+            <div style="margin-top: 10px;"></div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <span style="font-weight: bold;">INTERFACE</span>
+            <div style="margin-top: 10px;">
+              <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
+                <option value="" disabled selected>Select</option>
+                ${interfaces
+          .map((iface) => `<option value="${iface}">${iface}</option>`)
+          .join("")}
+              </select>
+            </div>
+            <div style="margin-top: 10px;">
+              <select id="interface-select-2" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
+                <option value="" disabled selected>Select</option>
+                ${interfaces
+          .map((iface) => `<option value="${iface}">${iface}</option>`)
+          .join("")}
+              </select>
+            </div>
+          </div>
+        </div>
+      `,
+      confirmButtonText: "DEPLOY",
       confirmButtonColor: "#28a745",
-      preConfirm: () => {
-        // Trigger the handleDeployClick function when "Deploy" is clicked
-        handleDeployButtonClick();
-      },
     }).then((result) => {
       if (result.isConfirmed) {
-        // Trigger the next popup after clicking "BOOT"
-        Swal.fire({
-          title: "Deployment",
-          width: "60%",
-          html: `
-                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; padding: 10px; margin-top: 20px;">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <div style="display: flex; align-items: center;">
-                                <span style="margin-left: 50px; font-weight: bold;">IP/CIDR</span>
-                            </div>
-                            <div style="display: flex; align-items: center; margin-top: 10px;">
-                                <span style="margin-right: 5px; color: red;">*</span>           
-                                <span style="margin-right: 10px; font-weight: bold;">IBN &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                                <input type="text" id="ibn-input" placeholder="Enter IP/CIDR" 
-                                    style="padding: 8px; border-radius: 5px; 
-                                           border: 1px solid #ccc; width: 120px;">
-                            </div>
-                            <div style="display: flex; align-items: center; margin-top: 10px;">
-                                <span style="margin-right: 5px; color: red;">*</span>           
-                                <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">DNS</span>
-                                <input type="text" id="dns" placeholder="Enter DNS" 
-                                       style="padding: 8px; border-radius: 5px; 
-                                              border: 1px solid #ccc; width: 120px;">
-                            </div>
-                            <div style="display: flex; align-items: center; margin-top: 10px; margin-left: 40px;">
-                                <span style="margin-right: 5px; color: red;">*</span>           
-                                <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">Provider NGW</span>
-                                <input type="text" id="gateway" placeholder="Enter Gateway" 
-                                       style="padding: 8px; border-radius: 5px; 
-                                              border: 1px solid #ccc; width: 120px;">
-                            </div>
-                            <div style="margin-top: 10px;"></div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <span style="font-weight: bold;">INTERFACE</span>
-                            <div style="margin-top: 10px;">
-            <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
-                <option value="" disabled selected>Select</option>
-                ${interfaces
-              .map((iface) => `<option value="${iface}">${iface}</option>`)
-              .join("")}
-            </select>
-                    </div>
-                    <div style="margin-top: 10px;">
-            <select id="interface-select-2" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
-                <option value="" disabled selected>Select</option>
-                ${interfaces
-              .map((iface) => `<option value="${iface}">${iface}</option>`)
-              .join("")}
-            </select>
-                    </div>
-                                    </div>
-                                </div>
-                `,
-          confirmButtonText: "DEPLOY",
-          confirmButtonColor: "#28a745",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Collect all form data
-            const ibn = document.getElementById("ibn-input").value;
-            const gateway = document.getElementById("gateway").value;
-            const dns = document.getElementById("dns").value;
-            const selectedInterface1 =
-              document.getElementById("interface-select-1").value;
-            const selectedInterface2 =
-              document.getElementById("interface-select-2").value;
+        // Collect all form data
+        const ibn = document.getElementById("ibn-input").value;
+        const gateway = document.getElementById("gateway").value;
+        const dns = document.getElementById("dns").value;
+        const selectedInterface1 =
+          document.getElementById("interface-select-1").value;
+        const selectedInterface2 =
+          document.getElementById("interface-select-2").value;
 
 
-            // Create the form data object
-            const formData = {
-              IP_ADDRESS: ibn,
-              GATEWAY: gateway,
-              DNS_SERVERS: dns,
-              INTERFACE_01: selectedInterface1,
-              INTERFACE_02: selectedInterface2,
-              DOCKER_TOKEN: "dckr_pat_D_pxIidbzQAoVJ5sfE65S-O-J9c",
-              GITHUB_TOKEN: "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"
-            };
-            // Convert JSON object to string
-            const jsonString = JSON.stringify(formData, null, 2); // Pretty-print JSON
+        // Create the form data object
+        const formData = {
+          IP_ADDRESS: ibn,
+          GATEWAY: gateway,
+          DNS_SERVERS: dns,
+          INTERFACE_01: selectedInterface1,
+          INTERFACE_02: selectedInterface2,
+          DOCKER_TOKEN: "dckr_pat_D_pxIidbzQAoVJ5sfE65S-O-J9c",
+          GITHUB_TOKEN: "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"
+        };
+        // Convert JSON object to string
+        const jsonString = JSON.stringify(formData, null, 2); // Pretty-print JSON
 
-            // Create a Blob from the JSON string
-            const blob = new Blob([jsonString], { type: "application/json" });
-            const fileName = "config.json"; // Change the file name to .json
+        // Create a Blob from the JSON string
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const fileName = "config.json"; // Change the file name to .json
 
-            // Create a FormData object to send to the backend
-            const formDataToSend = new FormData();
-            formDataToSend.append("file", blob, fileName);
-            formDataToSend.append("ibn", ibn); // Append ibn directly to FormData
+        // Create a FormData object to send to the backend
+        const formDataToSend = new FormData();
+        formDataToSend.append("file", blob, fileName);
+        formDataToSend.append("ibn", ibn); // Append ibn directly to FormData
 
-            // Send the FormData object to the backend (no need for headers with FormData)
-            fetch("http://192.168.249.101:9909/upload", {
-              method: "POST",
-              body: formDataToSend, // This contains the file and any additional data
-            })
-              .then((response) => {
-                if (!response.ok) {
-                  throw new Error("Network response was not ok");
-                }
-                return response.json();
-              })
-              .then((data) => {
-                console.log("Success:", data);
-                // Handle success on the backend
-                Swal.fire({
-                  icon: "success",
-                  title: "Deployment Initialized",
-                  text: "Your deployment request has been submitted successfully.",
-                });
-              })
-              .catch((error) => {
-                console.error("Error:", error);
-                Swal.fire({
-                  icon: "error",
-                  title: "Deployment Failed",
-                  text: "There was an error submitting your request.",
-                });
-              });
+        // Send the FormData object to the backend (no need for headers with FormData)
+        fetch("http://192.168.249.101:9909/upload", {
+          method: "POST",
+          body: formDataToSend, // This contains the file and any additional data
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            console.log("Success:", data);
+            // Handle success on the backend
+            Swal.fire({
+              icon: "success",
+              title: "Deployment Initialized",
+              text: "Your deployment request has been submitted successfully.",
+            });
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Deployment Failed",
+              text: "There was an error submitting your request.",
+            });
+          });
 
-            // Additional fetch request for deployment
-            fetch("http://192.168.249.101:8080/deploy", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                host: ibn, // Use the input value here
-                username: "pinaka",
-                password: "pinaka",
-                // scriptPath: '/home/pinaka/script.sh'
-              }),
-            })
-              .then((response) => response.json())
-              .then((data) => {
-                console.log(data);
-              })
-              .catch((error) => {
-                console.error("Error:", error);
-              });
-          }
-        });
+        // Additional fetch request for deployment
+        fetch("http://192.168.249.101:8080/deploy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            host: ibn, // Use the input value here
+            username: "pinaka",
+            password: "pinaka",
+            // scriptPath: '/home/pinaka/script.sh'
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
       }
     });
   };
+
 
   const paginatedNodes = nodes.slice(
     (currentPage - 1) * itemsPerPage,
@@ -760,6 +692,7 @@ const Validation = ({ nodes }) => {
       <ProgressModal
         visible={progressVisible}
         onClose={() => setProgressVisible(false)}
+        onNext={() => handleDeployClick}
       />
     </div>
   );
