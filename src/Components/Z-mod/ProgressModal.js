@@ -28,7 +28,7 @@ const ProgressModal = ({ visible, onClose }) => {
   }, [visible, onClose]);
 
   return (
-    <Modal title="Installation in Progress" visible={visible} footer={null}>
+    <Modal title="Installation in Progress" visible={visible} footer={null} closable={false}>
       <p>Please wait while the  PinakaOS is being intialized...</p>
       <Progress percent={progress} />
     </Modal>

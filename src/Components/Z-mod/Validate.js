@@ -161,7 +161,7 @@ const Validation = ({ nodes }) => {
 
       // Second API: Submit BMC details (reusing the same details)
       const response = await axios.post(
-        "http://192.168.249.101:8000/s_pxe_boot",
+        "http://192.168.249.101:8000/set_pxe_boot",
         bmcDetails
       );
       console.log("BMC Details submitted:", bmcDetails);
@@ -237,7 +237,7 @@ const Validation = ({ nodes }) => {
             <table style="width:100%; border-collapse: collapse; margin-top: 10px; border-radius: 10px; overflow: hidden;">
                 <thead style="background-color: #f8f9fa;">
                     <tr>
-                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">PARAM</th>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">PARAMETER</th>
                         <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Min Req </th>
                         <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">REC</th>
                         <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Result </th>
@@ -715,7 +715,7 @@ const Validation = ({ nodes }) => {
                   onOk: () => handleDeployButtonClick(node.ip),
                   okText: 'BOOT',
                   cancelText: 'Cancel',
-                  style: { top: '30vh' },
+                  style: { top: '20vh' },
                   footer: () => (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Button onClick={() => {
