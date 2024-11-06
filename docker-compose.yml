@@ -50,6 +50,15 @@ services:
       - shared-data:/home/d
     network_mode: host
 
+  monitor-service:
+    build:
+      context: ./backend/python/monitor
+    depends_on:
+      - mysql-db
+    network_mode: host
+    volumes:
+      - /var/log:/var/log 
+
   deploy-service: 
     build:
       context: ./backend/python/ssh

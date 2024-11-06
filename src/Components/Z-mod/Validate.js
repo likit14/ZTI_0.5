@@ -12,7 +12,8 @@ const Validation = ({ nodes }) => {
   const [validationResults, setValidationResults] = useState({});
   //   const combinedDataSource = [...nodes];
   const [popoverVisible, setPopoverVisible] = useState({});
-  const [bmcDetails, setBmcDetails] = useState({
+  const [isModalVisible, setIsModalVisible] = useState(false);
+	const [bmcDetails, setBmcDetails] = useState({
     ip: "",
     username: "",
     password: "",
@@ -50,7 +51,11 @@ const Validation = ({ nodes }) => {
     setOpen(false);
   };
 
-
+  const handleNextStep = () => {
+    // Handle the "Next" button click (you can proceed to the next step here)
+    console.log('Proceed to the next step');
+    setIsModalVisible(false);  // Optionally hide the modal after clicking "Next"
+  };
 
   const handleBmcFormSubmit = async (ip, bmcDetails) => {
     setBmcFormVisible(false);
@@ -331,6 +336,7 @@ const Validation = ({ nodes }) => {
   };
 
   const handleDeployClick = (ip) => {
+    setIsModalVisible(true)
     Swal.fire({
       title: "Deployment",
       width: "60%",
@@ -692,7 +698,7 @@ const Validation = ({ nodes }) => {
       <ProgressModal
         visible={progressVisible}
         onClose={() => setProgressVisible(false)}
-        onNext={() => handleDeployClick}
+       onNext={handleNextStep} 
       />
     </div>
   );
