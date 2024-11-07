@@ -21,7 +21,7 @@ const ProgressModal = ({ visible, onClose, onNext }) => {
       }, 10800);
 
       // Establish SSE connection
-      const eventSource = new EventSource('http://192.168.249.101:5055/events');
+      const eventSource = new EventSource('http://192.168.249.100:5055/events');
       
       eventSource.onmessage = (event) => {
         if (event.data === 'Successfully booted Pinaka OS') {

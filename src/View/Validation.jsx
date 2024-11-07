@@ -35,7 +35,7 @@ const Validation = () => {
 
     const fetchScanResults = async () => {
         try {
-            const response = await axios.get('http://192.168.249.101:8000/scan');
+            const response = await axios.get('http://192.168.249.100:8000/scan');
             setScanResults(response.data);
         } catch (error) {
             console.error('Error fetching scan results:', error);
@@ -85,12 +85,12 @@ const Validation = () => {
             },
         });
         try {
-            axios.post("http://192.168.249.101:9909/api/boot", { osType: "live" })
+            axios.post("http://192.168.249.100:9909/api/boot", { osType: "live" })
                 .then(response => console.log("Live OS boot initiated"))
                 .catch(error => console.error("Error in booting Live OS:", error));
 
             // Submit BMC details to the server
-            const response = await axios.post('http://192.168.249.101:8000/set_pxe_boot', bmcDetails);
+            const response = await axios.post('http://192.168.249.100:8000/set_pxe_boot', bmcDetails);
             console.log('BMC Details submitted:', bmcDetails);
             console.log('Server response:', response.data); 
 
@@ -173,12 +173,12 @@ const Validation = () => {
     const handleDeployButtonClick = async () => {
         try {
             // First API: Initiate Live OS boot
-            await axios.post("http://192.168.249.101:9909/api/boot", { osType: "normal" })
+            await axios.post("http://192.168.249.100:9909/api/boot", { osType: "normal" })
                 .then(response => console.log("Normal OS boot initiated"))
                 .catch(error => console.error("Error in booting Live OS:", error));
 
             // Second API: Submit BMC details (reusing the same details)
-            const response = await axios.post('http://192.168.249.101:8/se_pxe_boot', bmcDetails);
+            const response = await axios.post('http://192.168.249.100:8/se_pxe_boot', bmcDetails);
             console.log('BMC Details submitted:', bmcDetails);
             console.log('Server response:', response.data);
 
@@ -542,7 +542,7 @@ const Validation = () => {
                         formDataToSend.append('ibn', ibn); // Append ibn directly to FormData
 
                         // Send the FormData object to the backend (no need for headers with FormData)
-                        fetch('http://192.168.249.101:9909/upload', {
+                        fetch('http://192.168.249.100:9909/upload', {
                             method: 'POST',
                             body: formDataToSend, // This contains the file and any additional data
                         })
@@ -571,7 +571,7 @@ const Validation = () => {
                             });
 
                         // Additional fetch request for deployment
-                        fetch('http://192.168.249.101:8080/deploy', {
+                        fetch('http://192.168.249.100:8080/deploy', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({

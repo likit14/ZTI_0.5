@@ -32,7 +32,7 @@ const Login = (props) => {
     const { id, companyName, password } = formData;
   
     try {
-      const response = await axios.post('http://192.168.249.101:5000/api/login', { id, companyName, password });
+      const response = await axios.post('http://192.168.249.100:5000/api/login', { id, companyName, password });
       if (response.data.success) {
         const loginDetails = {
           loginStatus: true,

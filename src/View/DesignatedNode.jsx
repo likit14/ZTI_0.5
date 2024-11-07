@@ -73,7 +73,7 @@ const DesignatedNode = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://192.168.249.101:8000/set_pxe_boot", {
+      const response = await fetch("http://192.168.249.100:8000/set_pxe_boot", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

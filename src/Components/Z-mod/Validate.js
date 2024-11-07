@@ -12,8 +12,9 @@ const Validation = ({ nodes }) => {
   const [validationResults, setValidationResults] = useState({});
   //   const combinedDataSource = [...nodes];
   const [popoverVisible, setPopoverVisible] = useState({});
+  const [isRevalidate, setIsRevalidate] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-	const [bmcDetails, setBmcDetails] = useState({
+  const [bmcDetails, setBmcDetails] = useState({
     ip: "",
     username: "",
     password: "",
@@ -40,7 +41,13 @@ const Validation = ({ nodes }) => {
     setValidatingNode(nodes);
     setCurrentNode(nodes);
     setBmcDetails({ ...bmcDetails, ip: nodes.ip });
-    setBmcFormVisible(true);
+    if (isRevalidate) {
+      setIsRevalidate(false);
+      setBmcFormVisible(true);
+    } else {
+      setBmcFormVisible(false);
+      setIsRevalidate(true);
+    }
   };
 
   const showModal = () => {
@@ -59,7 +66,7 @@ const Validation = ({ nodes }) => {
 
   const handleBmcFormSubmit = async (ip, bmcDetails) => {
     setBmcFormVisible(false);
-
+    setPopoverVisible((prev) => ({ ...prev, [ip]: false }));
     MySwal.fire({
       title: "Validation in Progress",
       html: "Please wait while we process your request...",
@@ -71,12 +78,12 @@ const Validation = ({ nodes }) => {
 
     try {
       axios
-        .post("http://192.168.249.101:9909/api/boot", { osType: "live" })
+        .post("http://192.168.249.100:9909/api/boot", { osType: "live" })
         .then((response) => console.log("Live OS boot initiated"))
         .catch((error) => console.error("Error in booting Live OS:", error));
 
       const response = await axios.post(
-        "http://192.168.249.101:8000/set_pxe_boot",
+        "http://192.168.249.100:8000/set_pxe_boot",
         bmcDetails
       );
       console.log("BMC Details submitted:", bmcDetails);
@@ -168,13 +175,13 @@ const Validation = ({ nodes }) => {
     try {
       // First API: Initiate Live OS boot
       await axios
-        .post("http://192.168.249.101:9909/api/boot", { osType: "normal" })
+        .post("http://192.168.249.100:9909/api/boot", { osType: "normal" })
         .then((response) => console.log("Normal OS boot initiated"))
         .catch((error) => console.error("Error in booting Live OS:", error));
 
       // Second API: Submit BMC details (reusing the same details)
       const response = await axios.post(
-        "http://192.168.249.101:8000/set_pxe_boot",
+        "http://192.168.249.100:8000/set_pxe_boot",
         bmcDetails
       );
       console.log("BMC Details submitted:", bmcDetails);
@@ -427,7 +434,7 @@ const Validation = ({ nodes }) => {
         formDataToSend.append("ibn", ibn); // Append ibn directly to FormData
 
         // Send the FormData object to the backend (no need for headers with FormData)
-        fetch("http://192.168.249.101:9909/upload", {
+        fetch("http://192.168.249.100:9909/upload", {
           method: "POST",
           body: formDataToSend, // This contains the file and any additional data
         })
@@ -456,7 +463,7 @@ const Validation = ({ nodes }) => {
           });
 
         // Additional fetch request for deployment
-        fetch("http://192.168.249.101:8080/deploy", {
+        fetch("http://192.168.249.100:8080/deploy", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -561,7 +568,16 @@ const Validation = ({ nodes }) => {
           <Button
             type="primary"
             style={{ width: "80px" }}
-            onClick={() => validated ? fetchValidationData() : validateNode(record)}
+            onClick={() => {
+              if (validated) {
+                // If validated, show the BMC form again for revalidation
+                setIsRevalidate(true);  // Set revalidation state
+                validateNode(record);  // Trigger the function to show BMC form
+              } else {
+                // If not validated yet, start the initial validation
+                validateNode(record);  // Trigger initial validation process
+              }
+            }}
           >
             {validated ? 'Revalidate' : 'Start'}
           </Button>
@@ -698,7 +714,7 @@ const Validation = ({ nodes }) => {
       <ProgressModal
         visible={progressVisible}
         onClose={() => setProgressVisible(false)}
-       onNext={handleNextStep} 
+        onNext={handleNextStep}
       />
     </div>
   );
