@@ -8,7 +8,11 @@ WORKDIR /app
 COPY requirements.txt /app/
 
 # Install system dependencies (e.g., for tail, which needs `grep`)
-RUN apt-get update && apt-get install -y grep && apt-get clean
+RUN apt-get update && apt-get install -y \
+    sudo \
+    grep \
+    systemd \
+    && apt-get clean
 
 # Install Python dependencies from requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt

@@ -18,8 +18,9 @@ logger = logging.getLogger(__name__)
 logger.info("Starting Flask app...")
 
 def tail_log():
-    logger.info("Starting to tail /var/log/syslog")
-    process = Popen('stdbuf -oL tail -f /var/log/syslog', stdout=PIPE, stderr=PIPE, shell=True)
+    # Change log file to /var/log/dnsmasq.log
+    logger.info("Starting to tail /var/log/dnsmasq.log")
+    process = Popen('stdbuf -oL tail -f /var/log/dnsmasq.log', stdout=PIPE, stderr=PIPE, shell=True)
     
     while True:
         line = process.stdout.readline().decode('utf-8')
@@ -47,4 +48,3 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5055, debug=True)
-

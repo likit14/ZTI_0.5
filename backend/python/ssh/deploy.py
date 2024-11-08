@@ -34,7 +34,7 @@ def deploy():
         logger.info(f"Successfully connected to {host}")
 
         # Execute the command to run the Python script from the URL
-        command = 'sudo apt install curl -y && python3 <(curl -s https://raw.githubusercontent.com/gopipanda/Pinakastra/main/All-in-one.py)'
+        command = 'sudo apt install curl -y && python3 <(curl -H "Authorization: token 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" -L https://raw.githubusercontent.com/gopipanda/Pinakastra/main/All-in-one.py)'
         logger.info(f"Executing command: {command}")
         stdin, stdout, stderr = ssh.exec_command(command)
 

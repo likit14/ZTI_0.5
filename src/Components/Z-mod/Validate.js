@@ -58,11 +58,11 @@ const Validation = ({ nodes }) => {
     setOpen(false);
   };
 
-  const handleNextStep = () => {
-    // Handle the "Next" button click (you can proceed to the next step here)
-    console.log('Proceed to the next step');
-    setIsModalVisible(false);  // Optionally hide the modal after clicking "Next"
-  };
+  // const handleNextStep = () => {
+  //   // Handle the "Next" button click (you can proceed to the next step here)
+  //   console.log('Proceed to the next step');
+  //   setIsModalVisible(false);  // Optionally hide the modal after clicking "Next"
+  // };
 
   const handleBmcFormSubmit = async (ip, bmcDetails) => {
     setBmcFormVisible(false);
@@ -164,7 +164,7 @@ const Validation = ({ nodes }) => {
   };
   const handleNextClick = () => {
     if (selectedIp) {
-      handleDeployClick(selectedIp);
+      onDeployTriggered(selectedIp);
       setProgressVisible(false); // Close the progress modal
     }
   };
@@ -342,7 +342,7 @@ const Validation = ({ nodes }) => {
     };
   };
 
-  const handleDeployClick = (ip) => {
+  const onDeployTriggered = () => {
     setIsModalVisible(true)
     Swal.fire({
       title: "Deployment",
@@ -714,7 +714,7 @@ const Validation = ({ nodes }) => {
       <ProgressModal
         visible={progressVisible}
         onClose={() => setProgressVisible(false)}
-        onNext={handleNextStep}
+        onNext={onDeployTriggered}
       />
     </div>
   );
