@@ -10,7 +10,6 @@ import Dashboard from "../View/Dashboard";
 import AddNodes from "../View/AddNodes";
 import RemoveNodes from "../View/RemoveNodes";
 import AiWorkbench from "../View/AiWorkbench";
-import Daas from "../View/DaaS";
 import Noc from "../View/Noc";
 import Lifecyclemgmt from "../View/Lifecyclemgmt";
 import Migration from "../View/Migration";
@@ -18,6 +17,9 @@ import Compliance from "../View/Compliance";
 import Setting from "../View/Setting";
 import Administration from "../View/Administration";
 import Validation from "../View/Validation";
+import Vdi from "../View/Vdi";
+import Hpc from "../View/Hpc";
+import Marketplace from "../View/Marketplace";
 
 export const router = createBrowserRouter([
   {
@@ -58,12 +60,20 @@ export const router = createBrowserRouter([
         element: <Siem />,
       },
       {
-        path: "/daas",
-        element: <Daas />,
+        path: "/vdi",
+        element: <Vdi />,
+      },
+      {
+        path: "/hpc",
+        element: <Hpc />,
       },
       {
         path: "/noc",
         element: <Noc />,
+      },
+      {
+        path: "/marketplace",
+        element: <Marketplace />,
       },
       {
         path: "/lifecyclemgmt",

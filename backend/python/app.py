@@ -49,28 +49,36 @@ def scan_network(network):
 
     return active_nodes
 
-@app.route('/scan', methods=['GET', 'POST'])
+@app.route('/scan', methods=['GET'])
 def scan_network_api():
     logging.info("Received scan request")
-    if request.method == 'POST':
-        data = request.get_json()
-        local_ip = data.get('local_ip')
 
-        if not local_ip:
-            logging.error("Local IP address is required in the request body.")
-            return jsonify({"error": "Local IP address is required in the request body."}), 400
+    # Check if a subnet is provided in the query parameters
+    subnet = request.args.get('subnet')
+    
+    if subnet:
+        try:
+            # Validate and parse the subnet
+            network = ipaddress.IPv4Network(subnet, strict=False)
+            logging.info(f"Scanning provided subnet: {network}")
+        except ValueError:
+            logging.error("Invalid subnet format provided.")
+            return jsonify({"error": "Invalid subnet format."}), 400
     else:
+        # Use the local network IP if no subnet is provided
         local_ip = get_local_network_ip()
         if not local_ip:
             logging.error("Failed to retrieve local network IP address.")
             return jsonify({"error": "Failed to retrieve local network IP address."}), 500
+        network = get_network_range(local_ip)
+        logging.info(f"Scanning local network: {network}")
 
-    network = get_network_range(local_ip)
-    logging.info(f"Scanning network: {network}")
+    # Perform the network scan
     active_nodes = scan_network(network)
     logging.info(f"Active nodes found: {active_nodes}")
 
     return jsonify(active_nodes)
+
 
 @app.route('/set_pxe_boot', methods=['POST'])
 def set_pxe_boot():

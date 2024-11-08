@@ -120,22 +120,31 @@ const AppLayout = ({ children }) => {
       key: "4",
       icon: <FileDoneOutlined />,
       label: (
-        <Link to="/aiworkbench" style={{ textDecoration: "none" }}>
-          HPC/AI Workbench
+        <Link to="/hpc" style={{ textDecoration: "none" }}>
+          HPC
         </Link>
       ),
     },
     {
       key: "5",
-      icon: <DatabaseOutlined />,
+      icon: <FileDoneOutlined />,
       label: (
-        <Link to="/daas" style={{ textDecoration: "none" }}>
-          DaaS/VDI
+        <Link to="/aiworkbench" style={{ textDecoration: "none" }}>
+          AI Workbench
         </Link>
       ),
     },
     {
-      key: "9",
+      key: "6",
+      icon: <DatabaseOutlined />,
+      label: (
+        <Link to="/vdi" style={{ textDecoration: "none" }}>
+          VDI
+        </Link>
+      ),
+    },
+    {
+      key: "7",
       icon: <FileSearchOutlined />,
       label: (
         <Link to="/siem" style={{ textDecoration: "none" }}>
@@ -144,7 +153,7 @@ const AppLayout = ({ children }) => {
       ),
     },
     {
-      key: "10",
+      key: "8",
       icon: <WifiOutlined />,
       label: (
         <Link to="/noc" style={{ textDecoration: "none" }}>
@@ -153,7 +162,7 @@ const AppLayout = ({ children }) => {
       ),
     },
     {
-      key: "11",
+      key: "9",
       icon: <SyncOutlined />,
       label: (
         <Link to="/lifecyclemgmt" style={{ textDecoration: "none" }}>
@@ -162,7 +171,7 @@ const AppLayout = ({ children }) => {
       ),
     },
     {
-      key: "12",
+      key: "10",
       icon: <TruckOutlined />,
       label: (
         <Link to="/migration" style={{ textDecoration: "none" }}>
@@ -171,7 +180,7 @@ const AppLayout = ({ children }) => {
       ),
     },
     {
-      key: "13",
+      key: "11",
       icon: <CheckCircleOutlined />,
       label: (
         <Link to="/compliance" style={{ textDecoration: "none" }}>
@@ -180,7 +189,16 @@ const AppLayout = ({ children }) => {
       ),
     },
     {
-      key: "14",
+      key: "12",
+      icon: <CheckCircleOutlined />,
+      label: (
+        <Link to="/marketplace" style={{ textDecoration: "none" }}>
+          Marketplace
+        </Link>
+      ),
+    },
+    {
+      key: "13",
       icon: <SettingOutlined />,
       label: (
         <Link to="/setting" style={{ textDecoration: "none" }}>
@@ -189,7 +207,7 @@ const AppLayout = ({ children }) => {
       ),
     },
     {
-      key: "15",
+      key: "14",
       icon: <ProfileOutlined />,
       label: (
         <Link to="/administration" style={{ textDecoration: "none" }}>

@@ -343,7 +343,6 @@ const Validation = ({ nodes }) => {
   };
 
   const onDeployTriggered = () => {
-    setIsModalVisible(true)
     Swal.fire({
       title: "Deployment",
       width: "60%",

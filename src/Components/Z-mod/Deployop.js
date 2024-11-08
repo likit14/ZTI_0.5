@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { HomeOutlined } from '@ant-design/icons';
 import { Breadcrumb, Button } from 'antd';
 import '../../Styles/DeploymentOptions.css';
@@ -6,18 +6,12 @@ import '../../Styles/DeploymentOptions.css';
 const DeploymentOptions = ({ onStart }) => {  // Accepting onStart prop
   const [selectedOption, setSelectedOption] = useState(null);
 
- 
-
   const handleOptionClick = (option) => {
     setSelectedOption(option === selectedOption ? null : option);
-  };
 
-  const handleNextClick = () => {
-    if (selectedOption === "Standalone Cloud Setup") {
-      onStart();  // Call the function passed from App.js
-    } else if (selectedOption === "Distributed Cloud Setup") {
-      // You can handle redirection or error here
-      console.log("Error or redirect logic here");
+    // Trigger onStart immediately if "Standalone Cloud Setup" is selected
+    if (option === "Standalone Cloud Setup") {
+      onStart();
     }
   };
 
@@ -39,7 +33,7 @@ const DeploymentOptions = ({ onStart }) => {  // Accepting onStart prop
               <div className="option-text" style={{ fontSize: '1em', color: '#333', lineHeight: '1.6' }}>
                 <strong>All-in-One Setup:</strong> A streamlined, self-contained cloud environment where all OpenStack services are deployed on a single server, perfect for development and testing.
               </div>
-              <Button className="custom-button" type="primary" onClick={handleNextClick}>Start</Button>
+              <Button className="custom-button" type="primary">Start</Button>
             </div>
           </div>
         </div>

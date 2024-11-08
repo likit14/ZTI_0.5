@@ -4,7 +4,7 @@ import { theme, Layout, Result } from 'antd';
 
 const { Content } = Layout;
 
-const Daas = () => {
+const Vdi = () => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -31,4 +31,4 @@ const Daas = () => {
   );
 };
 
-export default Daas;
+export default Vdi;
