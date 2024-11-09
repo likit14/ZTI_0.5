@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Progress, Button } from 'antd';
 import Swal from 'sweetalert2';
 
@@ -6,7 +6,9 @@ const ProgressModal = ({ visible, onNext }) => {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(visible);
-  const [eventSource, setEventSource] = useState(null);
+  const [logs, setLogs] = useState([]); // To store real-time logs
+  const [isLogsExpanded, setIsLogsExpanded] = useState(false); // To control log panel expansion
+  const logContainerRef = useRef(null); // Ref to the logs container
 
   useEffect(() => {
     if (visible) {
@@ -14,6 +16,7 @@ const ProgressModal = ({ visible, onNext }) => {
       setIsModalVisible(true);
       setProgress(0);
       setIsComplete(false);
+      setLogs([]); // Clear logs when modal opens
 
       // Start the progress bar
       const interval = setInterval(() => {
@@ -48,6 +51,9 @@ const ProgressModal = ({ visible, onNext }) => {
 
           // Close the EventSource connection once success message is received
           newEventSource.close();
+        } else {
+          // Add new log message to logs array
+          setLogs((prevLogs) => [...prevLogs, event.data]);
         }
       };
 
@@ -58,9 +64,6 @@ const ProgressModal = ({ visible, onNext }) => {
       };
 
       // Store the EventSource so we can close it later
-      setEventSource(newEventSource);
-
-      // Cleanup on component unmount
       return () => {
         clearInterval(interval);
         newEventSource.close();  // Make sure to close the EventSource on unmount
@@ -68,23 +71,101 @@ const ProgressModal = ({ visible, onNext }) => {
     }
   }, [visible, onNext]);  // Re-run whenever 'visible' or 'onNext' changes
 
+  // Scroll to the bottom of the log container whenever logs change
+  useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [logs]); // Trigger on every logs update
+
+  // Toggle the logs panel expansion
+  const toggleLogs = () => {
+    setIsLogsExpanded(!isLogsExpanded);
+  };
+
   return (
-    <Modal
-      title="Installation in Progress"
-      visible={isModalVisible}
-      footer={null}
-      closable={false}
-    >
-      <p>Please wait while the PinakaOS is being initialized...</p>
-      <Progress percent={progress} />
-      {isComplete && (
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <Button type="primary" onClick={onNext}>
-            Next
-          </Button>
-        </div>
-      )}
-    </Modal>
+    <>
+      {/* Add styles here */}
+      <style>
+        {`
+          @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+
+          .log-item {
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+          }
+        `}
+      </style>
+
+      <Modal
+        title="Installation in Progress"
+        visible={isModalVisible}
+        footer={null}
+        closable={false}
+      >
+        <p>Please wait while the PinakaOS is being initialized...</p>
+        <Progress percent={progress} />
+
+        {/* View Logs Button */}
+        <button
+          onClick={toggleLogs}
+          style={{
+            display: 'block',
+            margin: '10px auto',
+            background: 'none',
+            marginLeft: '120px',
+            border: 'none',
+            color: '#1890ff',
+            cursor: 'pointer',
+            textDecoration: 'none'
+          }}
+        >
+          View Logs
+        </button>
+
+        {/* Logs Panel */}
+        {isLogsExpanded && (
+          <div
+            ref={logContainerRef}
+            style={{
+              backgroundColor: '#212529',  // Black background
+              color: 'white',              // White text
+              padding: '10px',             // Padding for a cleaner look
+              height: '150px',             // Fixed height for the log box
+              width: '100%',               // Full width of the parent container
+              borderRadius: '5px',         // Rounded corners for a cleaner look
+              overflowY: 'auto',           // Enable vertical scrolling when content exceeds height
+              overflowX: 'hidden',         // Prevent horizontal scrolling
+              scrollBehavior: 'smooth'     // Smooth scroll transition when new logs come in
+            }}
+          >
+            {/* Display logs dynamically */}
+            {logs.length === 0 ? (
+              <p style={{ color: 'gray' }}>No logs available.</p>
+            ) : (
+              <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                {logs.map((log, index) => (
+                  <li key={index} className="log-item" style={{ marginBottom: 8 }}>
+                    <span style={{ color: '#6c757d' }}>→</span> {log}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {isComplete && (
+          <div style={{ marginTop: 16, textAlign: 'center' }}>
+            <Button type="primary" onClick={onNext}>
+              Next
+            </Button>
+          </div>
+        )}
+      </Modal>
+    </>
   );
 };
 
