@@ -116,7 +116,7 @@ const ProgressModal = ({ visible, onNext }) => {
             display: 'block',
             margin: '10px auto',
             background: 'none',
-            marginLeft: '120px',
+            marginLeft: '170px',
             border: 'none',
             color: '#1890ff',
             cursor: 'pointer',
@@ -137,7 +137,7 @@ const ProgressModal = ({ visible, onNext }) => {
               height: '150px',             // Fixed height for the log box
               width: '100%',               // Full width of the parent container
               borderRadius: '5px',         // Rounded corners for a cleaner look
-              overflowY: 'auto',           // Enable vertical scrolling when content exceeds height
+              overflowY: 'hidden',           // Enable vertical scrolling when content exceeds height
               overflowX: 'hidden',         // Prevent horizontal scrolling
               scrollBehavior: 'smooth'     // Smooth scroll transition when new logs come in
             }}
