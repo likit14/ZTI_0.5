@@ -236,7 +236,7 @@ const AppLayout = ({ children }) => {
             src={collapsed ? img2 : img1}
             alt="Logo"
             style={{
-              width: collapsed ? "40px" : "80%",
+              width: collapsed ? "40px" : "90%",
               maxWidth: "200px",
               borderRadius: "8px",
               transition: "all 0.3s ease-in-out",

@@ -46,7 +46,7 @@ const DataTable = ({ onNodeSelect }) => {
         return;
       }
 
-      const response = await axios.get("http://localhost:8000/scan", {
+      const response = await axios.get("http://192.168.249.100:8000/scan", {
         params: { subnet },
       });
 
