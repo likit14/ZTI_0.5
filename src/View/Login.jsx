@@ -66,7 +66,7 @@ const Login = (props) => {
                   <div className={styles.formGroup}>
                     <label>User ID:</label>
                     <Input
-                      prefix={<UserOutlined />}
+                      prefix={<UserOutlined style={{ marginRight: 8 }}/>}
                       type="text"
                       name="id"
                       value={formData.id}
@@ -78,7 +78,7 @@ const Login = (props) => {
                   <div className={styles.formGroup}>
                     <label>Company Name:</label>
                     <Input
-                      prefix={<HomeOutlined />}
+                      prefix={<HomeOutlined style={{ marginRight: 8 }} />}
                       type="text"
                       name="companyName"
                       value={formData.companyName}
@@ -90,7 +90,7 @@ const Login = (props) => {
                   <div className={styles.formGroup}>
                     <label>Password:</label>
                     <Input.Password
-                      prefix={<LockOutlined />}
+                      prefix={<LockOutlined style={{ marginRight: 8 }}/>}
                       name="password"
                       value={formData.password}
                       onChange={handleChange}

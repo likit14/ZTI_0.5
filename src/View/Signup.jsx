@@ -115,7 +115,7 @@ const Signup = () => {
                                     <div className="form-group">
                                         <label>Company Name:</label>
                                         <Input
-                                            prefix={<HomeOutlined />}
+                                            prefix={<HomeOutlined style={{ marginRight: 8 }} />}
                                             type="text"
                                             name="companyName"
                                             value={formData.companyName}
@@ -127,7 +127,7 @@ const Signup = () => {
                                     <div className="form-group">
                                         <label>Email:</label>
                                         <Input
-                                            prefix={<MailOutlined />}
+                                            prefix={<MailOutlined style={{ marginRight: 8 }}/>}
                                             type="email"
                                             name="email"
                                             value={formData.email}
@@ -139,7 +139,7 @@ const Signup = () => {
                                     <div className="form-group">
                                         <label>Password:</label>
                                         <Input
-                                            prefix={<LockOutlined />}
+                                            prefix={<LockOutlined style={{ marginRight: 8 }} />}
                                             type="password"
                                             name="password"
                                             value={formData.password}
@@ -151,7 +151,7 @@ const Signup = () => {
                                     <div className="form-group">
                                         <label>Confirm Password:</label>
                                         <Input
-                                            prefix={<LockOutlined />}
+                                            prefix={<LockOutlined  style={{ marginRight: 8 }}/>}
                                             type="password"
                                             name="confirmPassword"
                                             value={formData.confirmPassword}
