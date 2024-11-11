@@ -347,57 +347,69 @@ const Validation = ({ nodes }) => {
       title: "Deployment",
       width: "60%",
       html: `
-        <div style="display: flex; justify-content: space-between; font-size: 1.2rem; padding: 10px; margin-top: 20px;">
-          <div style="display: flex; flex-direction: column; align-items: center;">
-            <div style="display: flex; align-items: center;">
-              <span style="margin-left: 50px; font-weight: bold;">IP/CIDR</span>
-            </div>
-            <div style="display: flex; align-items: center; margin-top: 10px;">
-              <span style="margin-right: 5px; color: red;">*</span>           
-              <span style="margin-right: 10px; font-weight: bold;">IBN &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <div style="display: flex; justify-content: space-between; font-size: 1rem; padding: 20px; margin-top: 20px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+          
+          <!-- Left Column: Input Fields -->
+          <div style="display: flex; flex-direction: column; align-items: flex-start; width: 48%;">
+            <div style="margin-bottom: 15px; width: 100%;">
+              <label style="font-weight: bold; margin-bottom: 5px;">IP/CIDR</label>
               <input type="text" id="ibn-input" placeholder="Enter IP/CIDR" 
-                  style="padding: 8px; border-radius: 5px; 
-                         border: 1px solid #ccc; width: 120px;">
+                     style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; max-width: 180px; font-size: 0.9rem;">
             </div>
-            <div style="display: flex; align-items: center; margin-top: 10px;">
-              <span style="margin-right: 5px; color: red;">*</span>           
-              <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">DNS</span>
+    
+            <div style="margin-bottom: 15px; width: 100%;">
+              <label style="font-weight: bold; margin-bottom: 5px;">IBN</label>
+              <span style="color: red; font-size: 1.1rem; margin-right: 5px;">*</span>
+              <input type="text" id="ibn-input" placeholder="Enter IBN" 
+                     style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; max-width: 180px; font-size: 0.9rem;">
+            </div>
+    
+            <div style="margin-bottom: 15px; width: 100%;">
+              <label style="font-weight: bold; margin-bottom: 5px;">DNS</label>
+              <span style="color: red; font-size: 1.1rem; margin-right: 5px;">*</span>
               <input type="text" id="dns" placeholder="Enter DNS" 
-                     style="padding: 8px; border-radius: 5px; 
-                            border: 1px solid #ccc; width: 120px;">
+                     style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; max-width: 180px; font-size: 0.9rem;">
             </div>
-            <div style="display: flex; align-items: center; margin-top: 10px; margin-left: 40px;">
-              <span style="margin-right: 5px; color: red;">*</span>           
-              <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">Provider NGW</span>
+    
+            <div style="margin-bottom: 15px; width: 100%;">
+              <label style="font-weight: bold; margin-bottom: 5px;">Provider NGW</label>
+              <span style="color: red; font-size: 1.1rem; margin-right: 5px;">*</span>
               <input type="text" id="gateway" placeholder="Enter Gateway" 
-                     style="padding: 8px; border-radius: 5px; 
-                            border: 1px solid #ccc; width: 120px;">
+                     style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; max-width: 180px; font-size: 0.9rem;">
             </div>
-            <div style="margin-top: 10px;"></div>
           </div>
-          <div style="display: flex; flex-direction: column; align-items: center;">
-            <span style="font-weight: bold;">INTERFACE</span>
-            <div style="margin-top: 10px;">
-              <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
+    
+          <!-- Right Column: Interface Selects -->
+          <div style="display: flex; flex-direction: column; align-items: center; width: 48%;">
+            <div style="margin-bottom: 15px; width: 100%;">
+              <label style="font-weight: bold; margin-bottom: 5px;">INTERFACE</label>
+              <select id="interface-select-1" 
+                      style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; max-width: 180px; font-size: 0.9rem; height: 36px;">
                 <option value="" disabled selected>Select</option>
-                ${interfaces
-          .map((iface) => `<option value="${iface}">${iface}</option>`)
-          .join("")}
+                ${interfaces.map((iface) => `<option value="${iface}">${iface}</option>`).join('')}
               </select>
             </div>
-            <div style="margin-top: 10px;">
-              <select id="interface-select-2" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
+    
+            <div style="margin-bottom: 15px; width: 100%;">
+              <select id="interface-select-2" 
+                      style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; max-width: 180px; font-size: 0.9rem; height: 36px;">
                 <option value="" disabled selected>Select</option>
-                ${interfaces
-          .map((iface) => `<option value="${iface}">${iface}</option>`)
-          .join("")}
+                ${interfaces.map((iface) => `<option value="${iface}">${iface}</option>`).join('')}
               </select>
             </div>
           </div>
         </div>
       `,
       confirmButtonText: "DEPLOY",
-      confirmButtonColor: "#28a745",
+      confirmButtonColor: "#28a745", // Green color for confirm button
+      showCancelButton: true, // Add a cancel button if needed
+      cancelButtonText: "Cancel",
+      cancelButtonColor: "#d33", // Red color for cancel button
+      padding: '20px',
+      backdrop: true,
+      customClass: {
+        popup: 'swal-popup', // Optionally, you can define a custom class for further customization
+      }
     }).then((result) => {
       if (result.isConfirmed) {
         // Collect all form data

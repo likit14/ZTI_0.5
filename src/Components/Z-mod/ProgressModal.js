@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Modal, Progress, Button } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Progress, Button, Alert } from 'antd';
 import Swal from 'sweetalert2';
+import Marquee from 'react-fast-marquee';  // Import Marquee
 
 const ProgressModal = ({ visible, onNext }) => {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(visible);
   const [logs, setLogs] = useState([]); // To store real-time logs
-  const [isLogsExpanded, setIsLogsExpanded] = useState(false); // To control log panel expansion
-  const logContainerRef = useRef(null); // Ref to the logs container
+  const [isLogsExpanded, setIsLogsExpanded] = useState(false); // Define the missing state
+
+  const [showMarquee, setShowMarquee] = useState(false);  // State to control marquee visibility
 
   useEffect(() => {
     if (visible) {
@@ -17,6 +19,12 @@ const ProgressModal = ({ visible, onNext }) => {
       setProgress(0);
       setIsComplete(false);
       setLogs([]); // Clear logs when modal opens
+
+      // Show marquee for 5 minutes after the modal is visible
+      setShowMarquee(true);
+      const marqueeTimeout = setTimeout(() => {
+        setShowMarquee(false);
+      }, 300000);  // 5 minutes timeout
 
       // Start the progress bar
       const interval = setInterval(() => {
@@ -66,6 +74,7 @@ const ProgressModal = ({ visible, onNext }) => {
       // Store the EventSource so we can close it later
       return () => {
         clearInterval(interval);
+        clearTimeout(marqueeTimeout);  // Clear the timeout when component unmounts
         newEventSource.close();  // Make sure to close the EventSource on unmount
       };
     }
@@ -73,8 +82,9 @@ const ProgressModal = ({ visible, onNext }) => {
 
   // Scroll to the bottom of the log container whenever logs change
   useEffect(() => {
-    if (logContainerRef.current) {
-      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    const logContainer = document.getElementById('logContainer');
+    if (logContainer) {
+      logContainer.scrollTop = logContainer.scrollHeight;
     }
   }, [logs]); // Trigger on every logs update
 
@@ -85,20 +95,31 @@ const ProgressModal = ({ visible, onNext }) => {
 
   return (
     <>
-      {/* Add styles here */}
-      <style>
-        {`
-          @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
+      {/* Conditionally render the marquee message at the top */}
+      {progress < 100 && showMarquee && (
+        <Alert
+          banner
+          type="warning" // This will make the alert yellow
+          message={
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Marquee pauseOnHover gradient={false}>
+              Please refrain from closing this tab or navigating away from the page during this process.
+              </Marquee>
+            </div>
           }
-
-          .log-item {
-            opacity: 0;
-            animation: fadeIn 0.5s forwards;
-          }
-        `}
-      </style>
+          style={{
+            position: 'fixed',
+            top: 20,  
+            left: '50%',
+            transform: 'translateX(-50%)',  
+            zIndex: 999, 
+            width: '55%', 
+            maxWidth: '600px', 
+            borderRadius: '10px',  
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',  
+          }}
+        />
+      )}
 
       <Modal
         title="Installation in Progress"
@@ -107,6 +128,8 @@ const ProgressModal = ({ visible, onNext }) => {
         closable={false}
       >
         <p>Please wait while the PinakaOS is being initialized...</p>
+
+        {/* Progress bar */}
         <Progress percent={progress} />
 
         {/* View Logs Button */}
@@ -129,17 +152,17 @@ const ProgressModal = ({ visible, onNext }) => {
         {/* Logs Panel */}
         {isLogsExpanded && (
           <div
-            ref={logContainerRef}
+            id="logContainer"
             style={{
-              backgroundColor: '#212529',  // Black background
-              color: 'white',              // White text
-              padding: '10px',             // Padding for a cleaner look
-              height: '150px',             // Fixed height for the log box
-              width: '100%',               // Full width of the parent container
-              borderRadius: '5px',         // Rounded corners for a cleaner look
-              overflowY: 'hidden',           // Enable vertical scrolling when content exceeds height
-              overflowX: 'hidden',         // Prevent horizontal scrolling
-              scrollBehavior: 'smooth'     // Smooth scroll transition when new logs come in
+              backgroundColor: '#212529',  
+              color: 'white',              
+              padding: '10px',             
+              height: '150px',             
+              width: '100%',               
+              borderRadius: '5px',         
+              overflowY: 'hidden',        
+              overflowX: 'hidden',         
+              scrollBehavior: 'smooth'    
             }}
           >
             {/* Display logs dynamically */}

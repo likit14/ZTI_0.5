@@ -7,6 +7,7 @@ import {
   Breadcrumb,
   Input,
   Space,
+  Alert,
 } from "antd";
 import { HomeOutlined, SearchOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -38,11 +39,31 @@ const DataTable = ({ onNodeSelect }) => {
     // onNext();
   };
 
+  const handleDefaultSubnetScan = async () => {
+    setIsScanning(true); // Start loading
+    try {
+      // Fetch the local subnet from the backend
+      const response = await axios.get("http://192.168.249.100:8000/scan");
+
+      if (response.data && Array.isArray(response.data)) {
+        setSubnet("");  // Clear any manually entered subnet
+        setNodes(response.data); // Directly update nodes with the fetched data
+      } else {
+        messageApi.error("No active nodes found in the local network.");
+      }
+    } catch (error) {
+      console.error("Error getting local subnet:", error);
+      messageApi.error("Failed to detect the local network. Please enter a subnet manually.");
+    } finally {
+      setIsScanning(false); // End loading
+    }
+  };
+
   const scanNetwork = async (subnet = "") => {
-    setIsScanning(true);
+    setIsScanning(true); // Start loading
     try {
       if (!subnet) {
-        messageApi.warning("Please enter a subnet to scan.", 15);
+        setWarningMessage("Please enter a subnet to scan.");
         return;
       }
 
@@ -50,34 +71,37 @@ const DataTable = ({ onNodeSelect }) => {
         params: { subnet },
       });
 
-      const activeNodes = response.data;
-      setNodes(activeNodes);
-
-      if (activeNodes.length === 0) {
-        messageApi.info("No active nodes found in the specified network.");
+      if (response.data && Array.isArray(response.data)) {
+        setNodes(response.data); // Update nodes with the active nodes found in the scan
+        if (response.data.length === 0) {
+          messageApi.info("No active nodes found in the specified network.");
+        }
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        messageApi.error(
-          "Invalid subnet format. Please enter a valid CIDR subnet."
-        );
+        messageApi.error("Invalid subnet format. Please enter a valid CIDR subnet.");
       } else {
-        console.error("Error scanning network:", error);
-        messageApi.error(
-          "An unexpected error occurred while scanning the network."
-        );
+        messageApi.error("An unexpected error occurred while scanning the network.");
       }
     } finally {
-      setIsScanning(false);
+      setIsScanning(false); // End loading
     }
   };
 
   const handleSubnetChange = (e) => {
-    setSubnet(e.target.value);
+    const value = e.target.value;
+    setSubnet(value);
+
+    if (value) {
+      setWarningMessage(null);
+    } else {
+      setWarningMessage("Please enter a subnet to scan.");
+    }
   };
 
   const handleSubnetScan = () => {
     scanNetwork(subnet); // Scan using the entered subnet
+    setWarningMessage(null); // Clear the warning message when a scan starts
   };
 
   const handleRefresh = () => {
@@ -207,20 +231,39 @@ const DataTable = ({ onNodeSelect }) => {
         <div style={{ display: "flex", alignItems: "center" }}>
           <h2 style={{ margin: 0 }}>Discovery</h2>
         </div>
+        <div>
+          {warningMessage && (
+            <Alert
+              message={warningMessage}
+              type="warning"
+              icon={<SearchOutlined />}
+              style={{
+                marginLeft: "40px",
+                flex: 1,
+                marginBottom: "5px",
+                maxWidth: "300px",
+                wordBreak: "break-word",
+              }}
+            />
+          )}
+        </div>
         <div style={{ display: "flex", alignItems: "center" }}>
           <Input
             placeholder="Enter subnet (e.g., 192.168.1.0/24)"
             value={subnet}
             onChange={handleSubnetChange}
-            style={{ marginRight: "8px" }}
+            style={{
+              marginRight: "8px",  // Reduced margin to move closer to buttons
+              marginBottom: "3px"
+            }}
             autoFocus
           />
           <Button
             type="primary"
             style={{
-              width: "100px",
-              marginRight: "350px",
+              marginRight: "8px",
               marginBottom: "9px",
+              width: "100px",
             }}
             onClick={handleSubnetScan}
             disabled={!subnet}
@@ -228,8 +271,23 @@ const DataTable = ({ onNodeSelect }) => {
             Scan Subnet
           </Button>
           <Button
+            type="default"
+            style={{
+              width: "120px",
+              marginRight: "100px",
+              marginBottom: "9px",
+            }}
+            onClick={handleDefaultSubnetScan}
+          >
+            Default Subnet
+          </Button>
+          <Button
             size="middle"
-            style={{ marginLeft: "-10%", width: "75px" }}
+            style={{
+              marginLeft: "8px",
+              width: "75px",
+              marginBottom: "9px"
+            }}
             type="primary"
             onClick={handleNextClick}
             disabled={selectedNodes.length === 0}
@@ -238,7 +296,6 @@ const DataTable = ({ onNodeSelect }) => {
           </Button>
         </div>
       </div>
-
       <Divider />
       <Table
         columns={columns}
@@ -265,4 +322,5 @@ const DataTable = ({ onNodeSelect }) => {
 export const Discovery = ({ onNodeSelect }) => {
   return <DataTable onNodeSelect={onNodeSelect} />;
 };
+
 export default Discovery;
