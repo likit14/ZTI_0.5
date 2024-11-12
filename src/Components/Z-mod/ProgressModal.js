@@ -103,20 +103,20 @@ const ProgressModal = ({ visible, onNext }) => {
           message={
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Marquee pauseOnHover gradient={false}>
-              Please refrain from closing this tab or navigating away from the page during this process.
+                Please refrain from closing this tab or navigating away from the page during this process.
               </Marquee>
             </div>
           }
           style={{
             position: 'fixed',
-            top: 20,  
+            top: 20,
             left: '50%',
-            transform: 'translateX(-50%)',  
-            zIndex: 999, 
-            width: '55%', 
-            maxWidth: '600px', 
-            borderRadius: '10px',  
-            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',  
+            transform: 'translateX(-50%)',
+            zIndex: 999,
+            width: '55%',
+            maxWidth: '600px',
+            borderRadius: '10px',
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
           }}
         />
       )}
@@ -154,15 +154,15 @@ const ProgressModal = ({ visible, onNext }) => {
           <div
             id="logContainer"
             style={{
-              backgroundColor: '#212529',  
-              color: 'white',              
-              padding: '10px',             
-              height: '150px',             
-              width: '100%',               
-              borderRadius: '5px',         
-              overflowY: 'hidden',        
-              overflowX: 'hidden',         
-              scrollBehavior: 'smooth'    
+              backgroundColor: '#212529',
+              color: 'white',
+              padding: '10px',
+              height: '150px',
+              width: '100%',
+              borderRadius: '5px',
+              overflowY: 'hidden',
+              overflowX: 'hidden',
+              scrollBehavior: 'smooth'
             }}
           >
             {/* Display logs dynamically */}
@@ -180,13 +180,23 @@ const ProgressModal = ({ visible, onNext }) => {
           </div>
         )}
 
-        {isComplete && (
-          <div style={{ marginTop: 16, textAlign: 'center' }}>
-            <Button type="primary" onClick={onNext}>
-              Next
-            </Button>
-          </div>
-        )}
+        {/* Always show Next button, but disable until progress is 100% */}
+        <div style={{ marginTop: 16, textAlign: 'center' }}>
+          {/* <Button 
+            type="primary" 
+            onClick={onNext}
+            disabled={progress < 100}  // Disable until progress is complete
+          >
+            Next
+          </Button> */}
+          <Button
+            type="primary"
+            onClick={onNext}
+            disabled={progress === 100}  // Disable the button only when progress is 100%
+          >
+            Next
+          </Button>
+        </div>
       </Modal>
     </>
   );
