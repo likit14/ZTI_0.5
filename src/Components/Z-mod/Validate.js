@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Divider, Table, Breadcrumb, Button, Popover, Input, Form, Modal, Space, Progress } from "antd";
+import { Divider, Table, Breadcrumb, Button, Popover, Input, Form, Modal, Space, Progress, Select, Spin, notification } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import axios from "axios";
 import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
+import { Row, Col } from 'antd';
 import ProgressModal from './ProgressModal';
 import { useLocation, useNavigate } from "react-router-dom";
 import requirementData from "../../Comparison/min_requirements.json";
@@ -13,6 +14,7 @@ const Validation = ({ nodes }) => {
   //   const combinedDataSource = [...nodes];
   const [popoverVisible, setPopoverVisible] = useState({});
   const [isRevalidate, setIsRevalidate] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [bmcDetails, setBmcDetails] = useState({
     ip: "",
@@ -36,6 +38,7 @@ const Validation = ({ nodes }) => {
   const [open, setOpen] = useState(false);
   const [interfaces, setInterfaces] = useState([]);
   const result = validationResults[nodes.ip]; // Get results based on the IP
+  const [form] = Form.useForm();
 
   const validateNode = (nodes) => {
     setValidatingNode(nodes);
@@ -49,7 +52,9 @@ const Validation = ({ nodes }) => {
       setIsRevalidate(true);
     }
   };
-
+  const showDeployModal = () => {
+    setOpen(true);
+  };
   const showModal = () => {
     setOpen(true);
   };
@@ -57,6 +62,17 @@ const Validation = ({ nodes }) => {
   const handleOk = () => {
     setOpen(false);
   };
+
+  const showLoading = () => {
+    setOpen(true);
+    setLoading(true);
+    // Reset the form when the modal is opened
+    form.resetFields();
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000); // Simulate loading time (2 seconds)
+  };
+
 
   // const handleNextStep = () => {
   //   // Handle the "Next" button click (you can proceed to the next step here)
@@ -342,145 +358,96 @@ const Validation = ({ nodes }) => {
     };
   };
 
-  const onDeployTriggered = () => {
-    Swal.fire({
-      title: "Deployment",
-      width: "60%",
-      html: `
-        <div style="display: flex; justify-content: space-between; font-size: 1.2rem; padding: 10px; margin-top: 20px;">
-          <div style="display: flex; flex-direction: column; align-items: center;">
-            <div style="display: flex; align-items: center;">
-              <span style="margin-left: 50px; font-weight: bold;">IP/CIDR</span>
-            </div>
-            <div style="display: flex; align-items: center; margin-top: 10px;">
-              <span style="margin-right: 5px; color: red;">*</span>           
-              <span style="margin-right: 10px; font-weight: bold;">IBN &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-              <input type="text" id="ibn-input" placeholder="Enter IP/CIDR" 
-                  style="padding: 8px; border-radius: 5px; 
-                         border: 1px solid #ccc; width: 120px;">
-            </div>
-            <div style="display: flex; align-items: center; margin-top: 10px;">
-              <span style="margin-right: 5px; color: red;">*</span>           
-              <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">DNS</span>
-              <input type="text" id="dns" placeholder="Enter DNS" 
-                     style="padding: 8px; border-radius: 5px; 
-                            border: 1px solid #ccc; width: 120px;">
-            </div>
-            <div style="display: flex; align-items: center; margin-top: 10px; margin-left: 40px;">
-              <span style="margin-right: 5px; color: red;">*</span>           
-              <span style="margin-right: 5px; font-weight: bold; margin-left: 0;">Provider NGW</span>
-              <input type="text" id="gateway" placeholder="Enter Gateway" 
-                     style="padding: 8px; border-radius: 5px; 
-                            border: 1px solid #ccc; width: 120px;">
-            </div>
-            <div style="margin-top: 10px;"></div>
-          </div>
-          <div style="display: flex; flex-direction: column; align-items: center;">
-            <span style="font-weight: bold;">INTERFACE</span>
-            <div style="margin-top: 10px;">
-              <select id="interface-select-1" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
-                <option value="" disabled selected>Select</option>
-                ${interfaces
-          .map((iface) => `<option value="${iface}">${iface}</option>`)
-          .join("")}
-              </select>
-            </div>
-            <div style="margin-top: 10px;">
-              <select id="interface-select-2" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 0.8rem; height: 32px">
-                <option value="" disabled selected>Select</option>
-                ${interfaces
-          .map((iface) => `<option value="${iface}">${iface}</option>`)
-          .join("")}
-              </select>
-            </div>
-          </div>
-        </div>
-      `,
-      confirmButtonText: "DEPLOY",
-      confirmButtonColor: "#28a745",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Collect all form data
-        const ibn = document.getElementById("ibn-input").value;
-        const gateway = document.getElementById("gateway").value;
-        const dns = document.getElementById("dns").value;
-        const selectedInterface1 =
-          document.getElementById("interface-select-1").value;
-        const selectedInterface2 =
-          document.getElementById("interface-select-2").value;
+  const onDeployTriggered = (values) => {
+    setLoading(true);
+    console.log('Form values:', values); // Logs the form data
 
+    // Collect the form data from the form values
+    const { ibn, gateway, dns, interface1, interface2 } = values;
 
-        // Create the form data object
-        const formData = {
-          IP_ADDRESS: ibn,
-          GATEWAY: gateway,
-          DNS_SERVERS: dns,
-          INTERFACE_01: selectedInterface1,
-          INTERFACE_02: selectedInterface2,
-          DOCKER_TOKEN: "dckr_pat_D_pxIidbzQAoVJ5sfE65S-O-J9c",
-          GITHUB_TOKEN: "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"
-        };
-        // Convert JSON object to string
-        const jsonString = JSON.stringify(formData, null, 2); // Pretty-print JSON
+    // Create the form data object to send to the backend
+    const formData = {
+      IP_ADDRESS: ibn,
+      GATEWAY: gateway,
+      DNS_SERVERS: dns,
+      INTERFACE_01: interface1,
+      INTERFACE_02: interface2,
+      DOCKER_TOKEN: "dckr_pat_D_pxIidbzQAoVJ5sfE65S-O-J9c",
+      GITHUB_TOKEN: "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"
+    };
 
-        // Create a Blob from the JSON string
-        const blob = new Blob([jsonString], { type: "application/json" });
-        const fileName = "config.json"; // Change the file name to .json
+    // Convert the formData object to a JSON string for the file
+    const jsonString = JSON.stringify(formData, null, 2);
 
-        // Create a FormData object to send to the backend
-        const formDataToSend = new FormData();
-        formDataToSend.append("file", blob, fileName);
-        formDataToSend.append("ibn", ibn); // Append ibn directly to FormData
+    // Create a Blob from the JSON string (this is how we'll send it as a file)
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const fileName = "config.json"; // File name for the blob
 
-        // Send the FormData object to the backend (no need for headers with FormData)
-        fetch("http://192.168.249.100:9909/upload", {
-          method: "POST",
-          body: formDataToSend, // This contains the file and any additional data
-        })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error("Network response was not ok");
-            }
-            return response.json();
-          })
-          .then((data) => {
-            console.log("Success:", data);
-            // Handle success on the backend
-            Swal.fire({
-              icon: "success",
-              title: "Deployment Initialized",
-              text: "Your deployment request has been submitted successfully.",
-            });
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            Swal.fire({
-              icon: "error",
-              title: "Deployment Failed",
-              text: "There was an error submitting your request.",
-            });
-          });
+    // Create a FormData object to append the file and send to the backend
+    const formDataToSend = new FormData();
+    formDataToSend.append("file", blob, fileName);  // Append the JSON file
+    formDataToSend.append("ibn", ibn); // Append other data to FormData
 
-        // Additional fetch request for deployment
-        fetch("http://192.168.249.100:8080/deploy", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            host: ibn, // Use the input value here
-            username: "pinaka",
-            password: "pinaka",
-            // scriptPath: '/home/pinaka/script.sh'
-          }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log(data);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-      }
-    });
+    // Send the FormData object (file and other form data) to the backend
+    fetch("http://192.168.249.100:9909/upload", {
+      method: "POST",
+      body: formDataToSend, // Send FormData as the request body
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Success:", data);
+        // Handle success on the backend (e.g., show success message)
+        Swal.fire({
+          icon: "success",
+          title: "Deployment Initialized",
+          text: "Your deployment request has been submitted successfully.",
+        });
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Deployment Failed",
+          text: "There was an error submitting your request.",
+        });
+      });
+
+    // Additional fetch request for deployment
+    fetch("http://192.168.249.100:8080/deploy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        host: ibn, // Use the IP from the form
+        username: "pinaka", // Assuming static credentials
+        password: "pinaka",
+        // Add other necessary data for deployment
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Deployment response:", data);
+        // Handle successful deployment response here (e.g., show success notification)
+        notification.success({
+          message: 'Deployment Successful',
+          description: 'The deployment has been triggered successfully.',
+        });
+      })
+      .catch((error) => {
+        console.error("Deployment Error:", error);
+        notification.error({
+          message: 'Deployment Failed',
+          description: 'There was an error triggering the deployment.',
+        });
+      })
+      .finally(() => {
+        setLoading(false); // Ensure that loading state is turned off
+        setOpen(false); // Close the modal after the process
+      });
   };
 
 
@@ -636,9 +603,9 @@ const Validation = ({ nodes }) => {
       },
     },
     {
-      title: "Deploy",
-      dataIndex: "deploy",
-      key: "deploy",
+      title: "OS Deploy",
+      dataIndex: "os",
+      key: "os",
       align: "center",
       render: (_, node) => {
         const result = validationResults[node.ip];
@@ -683,15 +650,132 @@ const Validation = ({ nodes }) => {
                 });
               }}
             >
-              Deploy
+              BOOT
             </Button>
           );
         } else {
           return null;
         }
       },
-    }
+    },
+    {
+      title: 'Deploy',
+      dataIndex: 'deploy',
+      key: 'deploy',
+      align: 'center',
+      render: (_, node) => {
+        const result = validationResults[node.ip];
+        if (!result) return null; // If no validation result, return nothing
+        if (result.status === 'Passed') {
+          return (
+            <>
+              <Button type="primary" style={{ width: '80px' }} onClick={showDeployModal}>
+                Deploy
+              </Button>
 
+              <Modal
+                title="Deployment Form"
+                visible={open}
+                onCancel={() => setOpen(false)}
+                footer={null}
+                width={600}
+                destroyOnClose={true}
+              >
+                <Form
+                  form={form}
+                  layout="vertical"
+                  onFinish={onDeployTriggered}
+                  initialValues={{}} // Optional initial values
+                >
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item
+                        name="ibn"
+                        label="IP/CIDR"
+                        rules={[{ required: true, message: 'Please enter IP/CIDR' }]}
+                      >
+                        <Input placeholder="Enter IP/CIDR" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item
+                        name="interface1"
+                        label="Interface 1"
+                        rules={[{ required: true, message: 'Please select Interface 1' }]}
+                      >
+                        <Select placeholder="Select Interface 1">
+                          {interfaces.map((iface) => (
+                            <Select.Option key={iface} value={iface}>
+                              {iface}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item
+                        name="dns"
+                        label="DNS"
+                        rules={[{ required: true, message: 'Please enter DNS' }]}
+                      >
+                        <Input placeholder="Enter DNS" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item
+                        name="interface2"
+                        label="Interface 2"
+                        rules={[{ required: true, message: 'Please select Interface 2' }]}
+                      >
+                        <Select placeholder="Select Interface 2">
+                          {interfaces.map((iface) => (
+                            <Select.Option key={iface} value={iface}>
+                              {iface}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item
+                        name="gateway"
+                        label="Provider NGW"
+                        rules={[{ required: true, message: 'Please enter Gateway' }]}
+                      >
+                        <Input placeholder="Enter Gateway" />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  {/* Align the button to the right */}
+                  <Form.Item>
+                    <div style={{ textAlign: 'right' }}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={loading}
+                        style={{ width: '80px' }}  // Set width to 80px
+                      >
+                        Deploy
+                      </Button>
+                    </div>
+                  </Form.Item>
+                </Form>
+              </Modal>
+
+            </>
+          );
+        } else {
+          return null; // If validation fails, return nothing
+        }
+      },
+    },
   ];
   return (
     <div style={{ padding: "24px" }}>

@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Progress, Button, Alert } from 'antd';
 import Swal from 'sweetalert2';
-import Marquee from 'react-fast-marquee';  // Import Marquee
+import Marquee from 'react-fast-marquee';  
 
 const ProgressModal = ({ visible, onNext }) => {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(visible);
-  const [logs, setLogs] = useState([]); // To store real-time logs
-  const [isLogsExpanded, setIsLogsExpanded] = useState(false); // Define the missing state
+  const [logs, setLogs] = useState([]); 
+  const [isLogsExpanded, setIsLogsExpanded] = useState(false); 
 
-  const [showMarquee, setShowMarquee] = useState(false);  // State to control marquee visibility
+  const [showMarquee, setShowMarquee] = useState(false); 
 
   useEffect(() => {
     if (visible) {
-      // Reset everything when the modal is visible
       setIsModalVisible(true);
       setProgress(0);
       setIsComplete(false);
@@ -126,6 +125,7 @@ const ProgressModal = ({ visible, onNext }) => {
         visible={isModalVisible}
         footer={null}
         closable={false}
+        onCancel={() => setIsModalVisible(false)}
       >
         <p>Please wait while the PinakaOS is being initialized...</p>
 
@@ -189,13 +189,6 @@ const ProgressModal = ({ visible, onNext }) => {
           >
             Next
           </Button> */}
-          <Button
-            type="primary"
-            onClick={onNext}
-            disabled={progress === 100}  // Disable the button only when progress is 100%
-          >
-            Next
-          </Button>
         </div>
       </Modal>
     </>
