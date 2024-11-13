@@ -112,14 +112,14 @@ const Validation = ({ nodes }) => {
       await new Promise((resolve) => setTimeout(resolve, 120000));
 
       await fetchValidationData();
-      setValidated(true); // Mark as validated
+      setValidated(true); 
     } catch (error) {
       console.error("Error in form submission:", error);
 
       Swal.fire({
         icon: 'error',
         title: 'Validation Failed',
-        text: 'An error occurred during the request. Please try again later.',
+        text: 'An error occurred during the request. Please check your BMC Credentials or try again later.',
         confirmButtonText: 'OK'
       });
     }
