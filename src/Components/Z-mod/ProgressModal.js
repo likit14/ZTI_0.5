@@ -23,7 +23,7 @@ const ProgressModal = ({ visible, onNext }) => {
       setShowMarquee(true);
       const marqueeTimeout = setTimeout(() => {
         setShowMarquee(false);
-      }, 300000);  // 5 minutes timeout
+      }, 30000);  // 5 minutes timeout
 
       // Start the progress bar
       const interval = setInterval(() => {

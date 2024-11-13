@@ -6,6 +6,7 @@ import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
 import { Row, Col } from 'antd';
 import ProgressModal from './ProgressModal';
+import DeploymentProgressBar from './DeploymentProgressBar'
 import { useLocation, useNavigate } from "react-router-dom";
 import requirementData from "../../Comparison/min_requirements.json";
 
@@ -15,6 +16,8 @@ const Validation = ({ nodes }) => {
   const [popoverVisible, setPopoverVisible] = useState({});
   const [isRevalidate, setIsRevalidate] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [bmcDetails, setBmcDetails] = useState({
     ip: "",
@@ -40,6 +43,9 @@ const Validation = ({ nodes }) => {
   const result = validationResults[nodes.ip]; // Get results based on the IP
   const [form] = Form.useForm();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [isProgressModalVisible, setProgressModalVisible] = useState(false);
+  const [filesProcessed, setFilesProcessed] = useState([]);
 
   const validateNode = (nodes) => {
     setValidatingNode(nodes);
@@ -61,6 +67,49 @@ const Validation = ({ nodes }) => {
     setPopoverVisible({});
   };
 
+  const handleDeploySubmit = (values) => {
+    setLoading(true); // Set form loading state
+    setIsDeploying(true); // Start deployment process
+
+    // Simulate deployment progress
+    setTimeout(() => {
+      setIsDeploying(false); // End deployment
+      setLoading(false); // End form loading
+      onDeployTriggered(values); // Trigger deploy logic
+    }, 3000); // Simulate a 5-second delay for deployment (replace with actual logic)
+  };
+
+  const handleDeployComplete = () => {
+    console.log('Deployment Completed!');
+    // Optionally, close the modal or reset form
+    setOpen(false);
+  };
+  useEffect(() => {
+    const progressInterval = setInterval(() => {
+      // Poll the server for current progress
+      fetch('http://192.168.249.100:5055/get-progress')
+        .then(response => response.json())
+        .then(data => {
+          // Update the progress and files processed
+          setProgress(data.progress);
+          setFilesProcessed(data.present_files);
+
+          // Stop polling when progress reaches 100%
+          if (data.progress >= 100) {
+            clearInterval(progressInterval);
+            setLoading(false);  // Stop loading spinner
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching progress:', error);
+          clearInterval(progressInterval);
+        });
+    }, 2000); // Poll every 2 seconds
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(progressInterval);
+  }, []); // Empty dependency array to run only once when component mounts
+  
   const handleOk = async () => {
     try {
       setOpen(false);            // Close the main modal
@@ -154,16 +203,9 @@ const Validation = ({ nodes }) => {
       await new Promise((resolve) => setTimeout(resolve, 120000));
 
       await fetchValidationData();
-      setValidated(true);
+      setValidated(true); // Mark as validated
     } catch (error) {
       console.error("Error in form submission:", error);
-
-      Swal.fire({
-        icon: 'error',
-        title: 'Validation Failed',
-        text: 'An error occurred during the request. Please check your BMC Credentials or try again later.',
-        confirmButtonText: 'OK'
-      });
     }
   };
   const fetchValidationData = async () => {
@@ -177,6 +219,7 @@ const Validation = ({ nodes }) => {
 
       setValidationData(data);
 
+      // Extract interfaces from the fetched data
       const fetchedInterfaces = data.interfaces
         ? data.interfaces.split(",")
         : [];
@@ -413,7 +456,10 @@ const Validation = ({ nodes }) => {
 
   const onDeployTriggered = (values) => {
     setLoading(true);
-    console.log('Form values:', values); // Logs the form data
+    setVisible(false);
+    setProgressModalVisible(true);
+    startDeployment();
+    console.log('Form values:', values);
 
     // Collect the form data from the form values
     const { ibn, gateway, dns, interface1, interface2 } = values;
@@ -501,6 +547,25 @@ const Validation = ({ nodes }) => {
         setLoading(false); // Ensure that loading state is turned off
         setOpen(false); // Close the modal after the process
       });
+  };
+
+  const startDeployment = () => {
+    setLoading(true);
+
+    const progressInterval = setInterval(() => {
+      fetch('http://192.168.249.100:5055/get-progress')
+        .then(response => response.json())
+        .then(data => {
+          setProgress(data.progress); // Update progress bar
+          setFilesProcessed(data.present_files); // Update processed files
+
+          // Stop polling once the progress reaches 100%
+          if (data.progress >= 100) {
+            clearInterval(progressInterval);
+            setLoading(false); // Stop the loading spinner
+          }
+        });
+    }, 2000); // Check every 2 seconds
   };
 
 
@@ -852,7 +917,6 @@ const Validation = ({ nodes }) => {
                       </Form.Item>
                     </Col>
                   </Row>
-
                   {/* Align the button to the right */}
                   <Form.Item>
                     <div style={{ textAlign: 'right' }}>
@@ -868,7 +932,19 @@ const Validation = ({ nodes }) => {
                   </Form.Item>
                 </Form>
               </Modal>
-
+              <Modal
+                visible={isProgressModalVisible}
+                footer={null}
+                onCancel={() => setProgressModalVisible(false)}
+                title="Deployment Progress"
+              >
+                {/* Use the DeploymentProgressBar component */}
+                <DeploymentProgressBar
+                  progress={progress} // Pass the current progress
+                  filesProcessed={filesProcessed} // Pass the processed files
+                  loading={loading} // Pass the loading state
+                />
+              </Modal>
             </>
           );
         } else {
