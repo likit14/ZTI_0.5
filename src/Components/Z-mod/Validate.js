@@ -111,6 +111,13 @@ const Validation = ({ nodes }) => {
       setValidated(true); // Mark as validated
     } catch (error) {
       console.error("Error in form submission:", error);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Failed',
+        text: 'An error occurred during the request. Please try again later.',
+        confirmButtonText: 'OK'
+      });
     }
   };
   const fetchValidationData = async () => {
