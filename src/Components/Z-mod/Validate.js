@@ -39,6 +39,7 @@ const Validation = ({ nodes }) => {
   const [interfaces, setInterfaces] = useState([]);
   const result = validationResults[nodes.ip]; // Get results based on the IP
   const [form] = Form.useForm();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const validateNode = (nodes) => {
     setValidatingNode(nodes);
@@ -57,10 +58,13 @@ const Validation = ({ nodes }) => {
   };
   const showModal = () => {
     setOpen(true);
+    setIsModalOpen(true);
+    setPopoverVisible({});
   };
 
   const handleOk = () => {
     setOpen(false);
+    setIsModalOpen(false);
   };
 
   const showLoading = () => {
@@ -216,6 +220,7 @@ const Validation = ({ nodes }) => {
   const handleCancel = () => {
     setBmcFormVisible(false);
     setValidatingNode(null);
+    setIsModalOpen(false);
   };
   const handleInfoButtonClick = () => {
     // Check if the validation results exist for the current node
@@ -485,76 +490,105 @@ const Validation = ({ nodes }) => {
       key: "validate",
       align: "center",
       render: (_, record) => (
-        <Popover
-          content={
-            <Form
-              layout="vertical"
-              onFinish={() => handleBmcFormSubmit(record.ip, bmcDetails)}
-              style={{ width: "200px", height: "222px" }}
-            >
-              <Form.Item label="BMC IP" name="bmcIp" style={{ marginBottom: "1px" }}>
-                <Input
-                  placeholder="Enter BMC IP"
-                  value={bmcDetails.ip}
-                  onChange={(e) =>
-                    setBmcDetails({ ...bmcDetails, ip: e.target.value })
-                  }
-                />
-              </Form.Item>
-              <Form.Item label="Username" name="username" style={{ marginBottom: "1px" }}>
-                <Input
-                  placeholder="Enter Username"
-                  value={bmcDetails.username}
-                  onChange={(e) =>
-                    setBmcDetails({ ...bmcDetails, username: e.target.value })
-                  }
-                />
-              </Form.Item>
-              <Form.Item label="Password" name="password" style={{ marginBottom: "1px" }}>
-                <Input.Password
-                  placeholder="Enter Password"
-                  value={bmcDetails.password}
-                  onChange={(e) =>
-                    setBmcDetails({ ...bmcDetails, password: e.target.value })
-                  }
-                />
-              </Form.Item>
-              <Form.Item style={{ marginTop: "4px", marginLeft: "6px" }}>
-                <Button type="primary" htmlType="submit">
-                  Submit
-                </Button>
-              </Form.Item>
-            </Form>
-          }
-          title="Enter BMC Credentials"
-          trigger="click"
-          visible={popoverVisible[record.ip]}
-          onVisibleChange={(visible) => {
-            if (visible) {
-              showPopover(record.ip);
-            } else {
-              hidePopover(record.ip);
+        <>
+          <Popover
+            content={
+              <Form
+                layout="vertical"
+                onFinish={() => handleBmcFormSubmit(record.ip, bmcDetails)}
+                style={{ width: '200px', height: 'auto' }} // Adjust height to auto for dynamic content
+              >
+                <Form.Item label="BMC IP" name="bmcIp" style={{ marginBottom: '1px' }}>
+                  <Input
+                    placeholder="Enter BMC IP"
+                    value={bmcDetails.ip}
+                    onChange={(e) =>
+                      setBmcDetails({ ...bmcDetails, ip: e.target.value })
+                    }
+                  />
+                </Form.Item>
+
+                <Form.Item label="Username" name="username" style={{ marginBottom: '1px' }}>
+                  <Input
+                    placeholder="Enter Username"
+                    value={bmcDetails.username}
+                    onChange={(e) =>
+                      setBmcDetails({ ...bmcDetails, username: e.target.value })
+                    }
+                  />
+                </Form.Item>
+
+                <Form.Item label="Password" name="password" style={{ marginBottom: '1px' }}>
+                  <Input.Password
+                    placeholder="Enter Password"
+                    value={bmcDetails.password}
+                    onChange={(e) =>
+                      setBmcDetails({ ...bmcDetails, password: e.target.value })
+                    }
+                  />
+                </Form.Item>
+
+                <Form.Item style={{ marginBottom: '4px' }}>
+                  <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
+                    Submit
+                  </Button>
+                </Form.Item>
+
+                {/* Adjusted gap and centered the link */}
+                <div style={{ textAlign: 'center', marginTop: '4px' }}> {/* Reduced marginTop */}
+                  <span
+                    style={{ color: '#1890ff', cursor: 'pointer' }}
+                    onClick={showModal}
+                  >
+                    Don't have BMC?
+                  </span>
+                </div>
+              </Form>
             }
-          }}
-          placement="right"
-        >
-          <Button
-            type="primary"
-            style={{ width: "80px" }}
-            onClick={() => {
-              if (validated) {
-                // If validated, show the BMC form again for revalidation
-                setIsRevalidate(true);  // Set revalidation state
-                validateNode(record);  // Trigger the function to show BMC form
+            title="Enter BMC Credentials"
+            trigger="click"
+            visible={popoverVisible[record.ip]}
+            onVisibleChange={(visible) => {
+              if (visible) {
+                showPopover(record.ip);
               } else {
-                // If not validated yet, start the initial validation
-                validateNode(record);  // Trigger initial validation process
+                hidePopover(record.ip);
               }
             }}
+            placement="right"
           >
-            {validated ? 'Revalidate' : 'Start'}
-          </Button>
-        </Popover>
+            <Button
+              type="primary"
+              style={{ width: "80px" }}
+              onClick={() => {
+                if (validated) {
+                  // If validated, show the BMC form again for revalidation
+                  setIsRevalidate(true);  // Set revalidation state
+                  validateNode(record);  // Trigger the function to show BMC form
+                } else {
+                  // If not validated yet, start the initial validation
+                  validateNode(record);  // Trigger initial validation process
+                }
+              }}
+            >
+              {validated ? 'Revalidate' : 'Start'}
+            </Button>
+          </Popover>
+          <Modal
+            title="Information"
+            open={isModalOpen}  // Controls visibility based on state
+            onOk={handleOk}   // Close the modal when "OK" is clicked
+            onCancel={handleCancel}
+            footer={[
+              <Button key="ok" type="primary" onClick={handleOk} style={{ width: '80px' }}>
+                OK
+              </Button>
+            ]}
+          >
+            <p>If you don't have a BMC, you can follow the instructions to set one up.</p>
+            <p>For assistance, please visit the documentation or contact support.</p>
+          </Modal>
+        </>
       ),
     },
     {
