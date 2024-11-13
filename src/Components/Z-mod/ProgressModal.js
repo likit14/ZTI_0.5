@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Progress, Button, Alert } from 'antd';
 import Swal from 'sweetalert2';
-import Marquee from 'react-fast-marquee';  
+import Marquee from 'react-fast-marquee';
 
 const ProgressModal = ({ visible, onNext }) => {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(visible);
-  const [logs, setLogs] = useState([]); 
-  const [isLogsExpanded, setIsLogsExpanded] = useState(false); 
+  const [logs, setLogs] = useState([]);
+  const [isLogsExpanded, setIsLogsExpanded] = useState(false);
 
-  const [showMarquee, setShowMarquee] = useState(false); 
+  const [showMarquee, setShowMarquee] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -124,8 +124,9 @@ const ProgressModal = ({ visible, onNext }) => {
         title="Installation in Progress"
         visible={isModalVisible}
         footer={null}
-        closable={false}
-        onCancel={() => setIsModalVisible(false)}
+        closable={false}  // Disable the close button
+        maskClosable={false}  // Prevent closing when clicking outside the modal
+        onCancel={() => setIsModalVisible(false)}  // Optionally, you can still have this for programmatic control
       >
         <p>Please wait while the PinakaOS is being initialized...</p>
 
@@ -167,7 +168,7 @@ const ProgressModal = ({ visible, onNext }) => {
           >
             {/* Display logs dynamically */}
             {logs.length === 0 ? (
-              <p style={{ color: 'gray' }}>No logs available.</p>
+              <p style={{ color: 'gray' }}>Wait for logs to be generated...</p>
             ) : (
               <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
                 {logs.map((log, index) => (

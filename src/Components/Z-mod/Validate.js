@@ -57,14 +57,55 @@ const Validation = ({ nodes }) => {
     setOpen(true);
   };
   const showModal = () => {
-    setOpen(true);
     setIsModalOpen(true);
     setPopoverVisible({});
   };
 
-  const handleOk = () => {
-    setOpen(false);
-    setIsModalOpen(false);
+  const handleOk = async () => {
+    try {
+      setOpen(false);            // Close the main modal
+      setIsModalOpen(false);     // Close the current modal
+      setPopoverVisible((prev) => ({ ...prev })); // Ensure it's updated as needed, or remove this if not necessary
+
+      // Show the validation in progress message
+      MySwal.fire({
+        title: "Validation in Progress",
+        html: "Please wait while we process your request...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      // Wait for a fixed period (120000 ms = 2 minutes)
+      await new Promise((resolve) => setTimeout(resolve, 120000));
+
+      // Fetch validation data and set validated to true
+      await fetchValidationData();
+      setValidated(true);
+
+      // Optional: Close the Swal loading dialog after completion
+      Swal.close();
+      Swal.fire({
+        title: "Success",
+        text: "Validation completed successfully!",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#28a745",
+      });
+
+      setBmcFormVisible(false);
+      setFormSubmitted(true);
+
+    } catch (error) {
+      console.error("Error setting PXE boot:", error);
+      // Show error message
+      Swal.fire({
+        title: "Failed",
+        text: "Failed to set PXE boot or fetch validation data. Please try again.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#dc3545",
+      });
+    }
   };
 
   const showLoading = () => {
@@ -83,6 +124,7 @@ const Validation = ({ nodes }) => {
   //   console.log('Proceed to the next step');
   //   setIsModalVisible(false);  // Optionally hide the modal after clicking "Next"
   // };
+
 
   const handleBmcFormSubmit = async (ip, bmcDetails) => {
     setBmcFormVisible(false);
@@ -112,7 +154,7 @@ const Validation = ({ nodes }) => {
       await new Promise((resolve) => setTimeout(resolve, 120000));
 
       await fetchValidationData();
-      setValidated(true); 
+      setValidated(true);
     } catch (error) {
       console.error("Error in form submission:", error);
 
@@ -135,7 +177,6 @@ const Validation = ({ nodes }) => {
 
       setValidationData(data);
 
-      // Extract interfaces from the fetched data
       const fetchedInterfaces = data.interfaces
         ? data.interfaces.split(",")
         : [];
@@ -561,32 +602,50 @@ const Validation = ({ nodes }) => {
               type="primary"
               style={{ width: "80px" }}
               onClick={() => {
-                if (validated) {
-                  // If validated, show the BMC form again for revalidation
-                  setIsRevalidate(true);  // Set revalidation state
-                  validateNode(record);  // Trigger the function to show BMC form
-                } else {
-                  // If not validated yet, start the initial validation
-                  validateNode(record);  // Trigger initial validation process
-                }
+                // Perform the Axios request first
+                axios
+                  .post("http://192.168.249.100:9909/api/boot", { osType: "live" })
+                  .then((response) => {
+                    console.log("Live OS boot initiated");
+
+                    // After boot initiation, handle validation logic
+                    if (validated) {
+                      // If validated, show the BMC form again for revalidation
+                      setIsRevalidate(true);  // Set revalidation state
+                      validateNode(record);  // Trigger the function to show BMC form
+                    } else {
+                      // If not validated yet, start the initial validation
+                      validateNode(record);  // Trigger initial validation process
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("Error initiating Live OS boot:", error);
+                  });
               }}
             >
               {validated ? 'Revalidate' : 'Start'}
             </Button>
           </Popover>
           <Modal
-            title="Information"
+            title="Dont have BMC?"
             open={isModalOpen}  // Controls visibility based on state
             onOk={handleOk}   // Close the modal when "OK" is clicked
             onCancel={handleCancel}
             footer={[
               <Button key="ok" type="primary" onClick={handleOk} style={{ width: '80px' }}>
-                OK
+                NEXT
               </Button>
             ]}
           >
-            <p>If you don't have a BMC, you can follow the instructions to set one up.</p>
-            <p>For assistance, please visit the documentation or contact support.</p>
+            <p>If your system doesn't have a BMC, you can follow the steps below to manually turn on PXE boot:</p>
+            <ul>
+              <li>Restart the system and enter the BIOS setup.</li>
+              <li>Navigate to the Boot Menu or Boot Options section.</li>
+              <li>Enable PXE Boot (sometimes listed as "Network Boot" or "Boot from LAN").</li>
+              <li>Save changes and exit the BIOS setup.</li>
+              <li>Ensure your system is connected to the network and can access PXE boot resources.</li>
+            </ul>
+            <p><strong>If all the above steps are done, click on the Next button.</strong></p>
           </Modal>
         </>
       ),
