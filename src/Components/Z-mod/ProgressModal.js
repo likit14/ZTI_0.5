@@ -140,15 +140,20 @@ const ProgressModal = ({ visible, onNext }) => {
             display: 'block',
             margin: '10px auto',
             background: 'none',
-            marginLeft: '170px',
             border: 'none',
             color: '#1890ff',
             cursor: 'pointer',
-            textDecoration: 'none'
+            textDecoration: 'none',
+            padding: '10px 20px', // Add padding for button height and width
+            textAlign: 'center', // Ensure the text is centered
+            fontSize: '16px', // Set a readable font size
+            borderRadius: '4px', // Add rounded corners
+            outline: 'none', // Remove outline to improve button aesthetics
           }}
         >
           View Logs
         </button>
+
 
         {/* Logs Panel */}
         {isLogsExpanded && (

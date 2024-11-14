@@ -389,7 +389,7 @@ const Validation = () => {
              </div>
                 </div>
             `,
-            confirmButtonText: "BOOT",
+            confirmButtonText: "Boot",
             confirmButtonColor: "#28a745",
             preConfirm: () => {
                 // Trigger the handleDeployClick function when "Deploy" is clicked

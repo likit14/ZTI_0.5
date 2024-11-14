@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Divider, Table, Breadcrumb, Button, Popover, Input, Form, Modal, Space, Progress, Select, Spin, notification } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -16,7 +16,9 @@ const Validation = ({ nodes }) => {
   const [popoverVisible, setPopoverVisible] = useState({});
   const [isRevalidate, setIsRevalidate] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isLogsExpanded, setIsLogsExpanded] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
+  const [logs, setLogs] = useState([]);
   const [progress, setProgress] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [bmcDetails, setBmcDetails] = useState({
@@ -33,8 +35,11 @@ const Validation = ({ nodes }) => {
   const [bmcFormVisible, setBmcFormVisible] = useState(false);
   const [currentNode, setCurrentNode] = useState(null);
   const [scanResults, setScanResults] = useState([]);
+  const [targetServerIp, setTargetServerIp] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [validationData, setValidationData] = useState(null);
+  const [isDeploymentStarted, setIsDeploymentStarted] = useState(false);
+
   const itemsPerPage = 4;
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,6 +51,7 @@ const Validation = ({ nodes }) => {
   const [visible, setVisible] = useState(true);
   const [isProgressModalVisible, setProgressModalVisible] = useState(false);
   const [filesProcessed, setFilesProcessed] = useState([]);
+  const logContainerRef = useRef(null); // Reference for the log container to manage scrolling
 
   const validateNode = (nodes) => {
     setValidatingNode(nodes);
@@ -59,6 +65,49 @@ const Validation = ({ nodes }) => {
       setIsRevalidate(true);
     }
   };
+
+  useEffect(() => {
+    if (!isDeploymentStarted || !targetServerIp) return; // Only proceed if deployment has started
+
+    const eventSource = new EventSource(`http://192.168.249.100:5055/tail-logs?targetserver_ip=${targetServerIp}`);
+
+    eventSource.onmessage = (event) => {
+      const newLog = event.data;
+
+      // Append the new log to the logs state
+      setLogs((prevLogs) => [...prevLogs, newLog]);
+
+      // Auto-scroll to the bottom of the log container
+      if (logContainerRef.current) {
+        logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+      }
+    };
+
+    eventSource.onerror = () => {
+      console.error("Error in SSE connection.");
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close(); // Clean up the SSE connection
+    };
+  }, [isDeploymentStarted, targetServerIp]);
+
+  const toggleLogss = () => {
+    setIsLogsExpanded((prev) => !prev); // Toggle logs panel visibility
+  };
+
+  // Add new log dynamically (example)
+  const addLog = (newLog) => {
+    setLogs((prevLogs) => [...prevLogs, newLog]); // Add new log to the existing logs array
+  };
+
+  // Auto-scroll to the latest log
+  useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [logs]); // This will run every time logs state is updated
   const showDeployModal = () => {
     setOpen(true);
   };
@@ -84,13 +133,18 @@ const Validation = ({ nodes }) => {
     // Optionally, close the modal or reset form
     setOpen(false);
   };
-  useEffect(() => {
+
+  const startPolling = (targetServerIp) => {
+
     const progressInterval = setInterval(() => {
-      // Poll the server for current progress
-      fetch('http://192.168.249.100:5055/get-progress')
-        .then(response => response.json())
+      fetch(`http://192.168.249.100:5055/get-progress?targetserver_ip=${targetServerIp}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
         .then(data => {
-          // Update the progress and files processed
           setProgress(data.progress);
           setFilesProcessed(data.present_files);
 
@@ -102,14 +156,18 @@ const Validation = ({ nodes }) => {
         })
         .catch((error) => {
           console.error('Error fetching progress:', error);
-          clearInterval(progressInterval);
+          clearInterval(progressInterval); // Stop polling on error
+          setLoading(false); // Optionally stop loading spinner on error
         });
     }, 2000); // Poll every 2 seconds
 
-    // Clean up the interval on component unmount
+    // Cleanup function to clear the interval when component unmounts
     return () => clearInterval(progressInterval);
-  }, []); // Empty dependency array to run only once when component mounts
-  
+  };
+
+
+  // [targetServerIp]); // Re-run the effect if the targetServerIp changes
+
   const handleOk = async () => {
     try {
       setOpen(false);            // Close the main modal
@@ -156,6 +214,10 @@ const Validation = ({ nodes }) => {
       });
     }
   };
+
+  // const toggleLogs = () => {
+  //   setIsLogsExpanded(!isLogsExpanded);
+  // };
 
   const showLoading = () => {
     setOpen(true);
@@ -454,15 +516,35 @@ const Validation = ({ nodes }) => {
     };
   };
 
+  useEffect(() => {
+    if (!targetServerIp) return; // Don't start polling if there's no IP
+
+    // Start polling when targetServerIp changes
+    const cleanUpPolling = startPolling(targetServerIp);
+
+    // Cleanup on component unmount or when IP changes
+    return () => {
+      cleanUpPolling(); // Clears the interval when component unmounts or IP changes
+    };
+  }, [targetServerIp]);
+
   const onDeployTriggered = (values) => {
     setLoading(true);
     setVisible(false);
+    setOpen(false);
     setProgressModalVisible(true);
-    startDeployment();
-    console.log('Form values:', values);
 
     // Collect the form data from the form values
     const { ibn, gateway, dns, interface1, interface2 } = values;
+    setTargetServerIp(ibn);
+
+    setIsDeploymentStarted(true);
+
+    // Call startPolling after ibn has been assigned
+    startDeployment();  // assuming startDeployment doesn't rely on ibn
+    startPolling(ibn);  // This should be after ibn is defined
+
+    console.log('Form values:', values);
 
     // Create the form data object to send to the backend
     const formData = {
@@ -474,6 +556,7 @@ const Validation = ({ nodes }) => {
       DOCKER_TOKEN: "dckr_pat_D_pxIidbzQAoVJ5sfE65S-O-J9c",
       GITHUB_TOKEN: "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"
     };
+
 
     // Convert the formData object to a JSON string for the file
     const jsonString = JSON.stringify(formData, null, 2);
@@ -488,6 +571,8 @@ const Validation = ({ nodes }) => {
     formDataToSend.append("ibn", ibn); // Append other data to FormData
 
     // Send the FormData object (file and other form data) to the backend
+
+    // Sending the form data via POST request
     fetch("http://192.168.249.100:9909/upload", {
       method: "POST",
       body: formDataToSend, // Send FormData as the request body
@@ -501,20 +586,20 @@ const Validation = ({ nodes }) => {
       .then((data) => {
         console.log("Success:", data);
         // Handle success on the backend (e.g., show success message)
-        Swal.fire({
-          icon: "success",
-          title: "Deployment Initialized",
-          text: "Your deployment request has been submitted successfully.",
+        notification.success({
+          message: "Deployment Initialized",
+          description: "Your deployment request has been submitted successfully.",
         });
       })
       .catch((error) => {
         console.error("Error:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Deployment Failed",
-          text: "There was an error submitting your request.",
+        notification.error({
+          message: "Deployment Failed",
+          description: "There was an error submitting your request.",
         });
+        setProgressModalVisible(false);
       });
+
 
     // Additional fetch request for deployment
     fetch("http://192.168.249.100:8080/deploy", {
@@ -529,19 +614,10 @@ const Validation = ({ nodes }) => {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("Deployment response:", data);
-        // Handle successful deployment response here (e.g., show success notification)
-        notification.success({
-          message: 'Deployment Successful',
-          description: 'The deployment has been triggered successfully.',
-        });
+        // Handle successful deployment response here
       })
       .catch((error) => {
-        console.error("Deployment Error:", error);
-        notification.error({
-          message: 'Deployment Failed',
-          description: 'There was an error triggering the deployment.',
-        });
+        // Handle deployment error here
       })
       .finally(() => {
         setLoading(false); // Ensure that loading state is turned off
@@ -551,21 +627,6 @@ const Validation = ({ nodes }) => {
 
   const startDeployment = () => {
     setLoading(true);
-
-    const progressInterval = setInterval(() => {
-      fetch('http://192.168.249.100:5055/get-progress')
-        .then(response => response.json())
-        .then(data => {
-          setProgress(data.progress); // Update progress bar
-          setFilesProcessed(data.present_files); // Update processed files
-
-          // Stop polling once the progress reaches 100%
-          if (data.progress >= 100) {
-            clearInterval(progressInterval);
-            setLoading(false); // Stop the loading spinner
-          }
-        });
-    }, 2000); // Check every 2 seconds
   };
 
 
@@ -581,8 +642,7 @@ const Validation = ({ nodes }) => {
   const hidePopover = (ip) => {
     setPopoverVisible((prev) => ({ ...prev, [ip]: false }));
   };
-  console.log("Validation Results:", validationResults); // Log to check the state
-  console.log("Validation Result:", result);
+
   const columns = [
     {
       title: "IP Address",
@@ -807,7 +867,7 @@ const Validation = ({ nodes }) => {
                         Modal.destroyAll(); // Close the confirmation modal first
                         handleDeployButtonClick(node.ip); // Then call the deployment handler
                       }}>
-                        BOOT
+                        Boot
                       </Button>
                       <Button onClick={() => Modal.destroyAll()} style={{ marginLeft: '10px' }}>Cancel</Button>
                     </div>
@@ -815,7 +875,7 @@ const Validation = ({ nodes }) => {
                 });
               }}
             >
-              BOOT
+              Boot
             </Button>
           );
         } else {
@@ -937,6 +997,7 @@ const Validation = ({ nodes }) => {
                 footer={null}
                 onCancel={() => setProgressModalVisible(false)}
                 title="Deployment Progress"
+                maskClosable={false}
               >
                 {/* Use the DeploymentProgressBar component */}
                 <DeploymentProgressBar
@@ -944,6 +1005,58 @@ const Validation = ({ nodes }) => {
                   filesProcessed={filesProcessed} // Pass the processed files
                   loading={loading} // Pass the loading state
                 />
+
+                <button
+                  onClick={toggleLogss}
+                  style={{
+                    display: 'block',
+                    margin: '10px auto',
+                    background: 'none',
+                    border: 'none',
+                    color: '#1890ff',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                    padding: '10px 20px', // Add padding for button height and width
+                    textAlign: 'center', // Ensure the text is centered
+                    fontSize: '16px', // Set a readable font size
+                    borderRadius: '4px', // Add rounded corners
+                    outline: 'none', // Remove outline to improve button aesthetics
+                  }}
+                >
+                  {isLogsExpanded ? 'Hide Logs' : 'View Logs'}
+                </button>
+
+                {/* Logs Panel */}
+                {isLogsExpanded && (
+                  <div
+                    id="logContainer"
+                    ref={logContainerRef} // Attach the reference for auto-scrolling
+                    style={{
+                      backgroundColor: '#212529',
+                      color: 'white',
+                      padding: '10px',
+                      height: '150px',
+                      width: '100%',
+                      borderRadius: '5px',
+                      overflowY: 'auto', // Allow vertical scrolling
+                      overflowX: 'hidden',
+                      scrollBehavior: 'smooth',
+                    }}
+                  >
+                    {/* Display logs dynamically */}
+                    {logs.length === 0 ? (
+                      <p style={{ color: 'gray' }}>Wait for logs to be generated...</p>
+                    ) : (
+                      <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                        {logs.map((log, index) => (
+                          <li key={index} className="log-item" style={{ marginBottom: 8 }}>
+                            <span style={{ color: '#6c757d' }}>→</span> {log}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </Modal>
             </>
           );
@@ -978,5 +1091,4 @@ const Validation = ({ nodes }) => {
     </div>
   );
 };
-
 export default Validation;
