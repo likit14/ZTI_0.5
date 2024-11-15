@@ -17,6 +17,7 @@ const Validation = ({ nodes }) => {
   const [isRevalidate, setIsRevalidate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLogsExpanded, setIsLogsExpanded] = useState(false);
+  const [openOSModal, setOpenOSModal] = useState(false);
   const progressRequestControllerRef = useRef(null);
   const [isDeploying, setIsDeploying] = useState(false);
   const [logs, setLogs] = useState([]);
@@ -96,6 +97,36 @@ const Validation = ({ nodes }) => {
     };
   }, [isDeploymentStarted, targetServerIp]);
 
+  // const interfaces = ['eno1', 'eno2', 'enp6s0'];
+
+  const handleSubmit = async (values) => {
+    setLoading(true);
+  
+    try {
+      // Sending form data to backend API
+      const response = await axios.post('http://192.168.249.100:9909/update-config', {
+        ip: values.ip,
+        subnet: values.subnet,
+        gateway: values.gateway,
+        interface: values.interface1,  // Assuming you're using the first interface
+      });
+  
+      // Handle the response from the server
+      if (response.data.message) {
+        console.log(response.data.message);
+        // Optionally close the modal after successful form submission
+        setOpenOSModal(false);
+        alert('Configuration updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating configuration:', error);
+      // Show a user-friendly error message
+      alert('There was an error updating the configuration. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const toggleLogss = () => {
     setIsLogsExpanded((prev) => !prev); // Toggle logs panel visibility
   };
@@ -114,6 +145,22 @@ const Validation = ({ nodes }) => {
   const showDeployModal = () => {
     setOpen(true);
   };
+
+  const showOSModal = () => {
+    setOpenOSModal(true); // Open the OS Boot Form modal
+  };
+
+  const closeOSModal = () => {
+    setOpenOSModal(false); // Close the modal
+    form.resetFields(); // Reset form fields
+  };
+
+  const handleConfirmation = () => {
+    Modal.destroyAll(); // Close the confirmation popup
+    showOSModal(); // Open the form modal
+  };
+
+
   const showModal = () => {
     setIsModalOpen(true);
     setPopoverVisible({});
@@ -959,155 +1006,112 @@ const Validation = ({ nodes }) => {
           return null;
         } else if (result.status === "Passed") {
           return (
-            <Button
-              type="primary"
-              style={{ width: "80px", backgroundColor: "#007bff" }}
-              onClick={() => {
-                Modal.confirm({
-                  title: 'Warning',
-                  // icon: null,
-                  content: (
-                    <>
-                      <p>Are you certain you wish to proceed with the deployment?</p>
-                      <p>Important Considerations:</p>
-                      <ul>
-                        <li>PinakaOS will be initialized.</li>
-                        <li>All disks will be completely erased, leading to permanent data loss.</li>
-                      </ul>
-                      <p>We strongly recommend backing up all critical information prior to continuing.</p>
-                    </>
-                  ),
-                  okText: 'BOOT',
-                  cancelText: 'Cancel',
-                  style: { top: '20vh' },
-                  onOk: () => {
-                    // Close the confirmation modal and open the form modal
-                    setOpenos(true);
-                  },
-                  onCancel: () => {
-                    Modal.destroyAll(); // Close the modal
-                  },
-                  footer: () => (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      {/* <Button onClick={() => {
-                        Modal.destroyAll(); // Close the confirmation modal first
-                        handleDeployButtonClick(node.ip); // Then call the deployment handler
-                      }}>
-                        Boot
-                      </Button> */}
+            <>
+              <Button
+                type="primary"
+                style={{ width: "80px", backgroundColor: "#007bff" }}
+                onClick={() => {
+                  Modal.confirm({
+                    title: "Warning",
+                    content: (
+                      <>
+                        <p>Are you certain you wish to proceed with the deployment?</p>
+                        <p>Important Considerations:</p>
+                        <ul>
+                          <li>PinakaOS will be initialized.</li>
+                          <li>All disks will be completely erased, leading to permanent data loss.</li>
+                        </ul>
+                        <p>We strongly recommend backing up all critical information prior to continuing.</p>
+                      </>
+                    ),
+                    okText: "Confirm",
+                    cancelText: "Cancel",
+                    style: { top: '20vh' },
+                    onOk: handleConfirmation, // On confirmation, open the form modal
+                    onCancel: () => Modal.destroyAll(), // Close the confirmation modal on cancel
+                  });
+                }}
+              >
+                Boot
+              </Button>
 
+              {/* OS Boot Form Modal */}
+              <Modal
+                title="OS Boot Form"
+                visible={openOSModal}
+                onCancel={() => setOpenOSModal(false)} // Close the modal
+                footer={null}
+                width={600}
+                destroyOnClose={true}
+              >
+                <Form
+                  form={form}
+                  layout="vertical"
+                  onFinish={handleSubmit}  // Handle form submission
+                >
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item
+                        name="ip"
+                        label="IP Address"
+                        rules={[{ required: true, message: 'Please enter IP address' }]}
+                      >
+                        <Input placeholder="Enter IP" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item
+                        name="subnet"
+                        label="Subnet Mask"
+                        rules={[{ required: true, message: 'Please enter subnet mask' }]}
+                      >
+                        <Input placeholder="Enter Subnet Mask" />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item
+                        name="interface1"
+                        label="Interface 1"
+                        rules={[{ required: true, message: 'Please select Interface 1' }]}
+                      >
+                        <Select placeholder="Select Interface 1">
+                          {interfaces.map((iface) => (
+                            <Select.Option key={iface} value={iface}>
+                              {iface}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item
+                        name="gateway"
+                        label="Gateway"
+                        rules={[{ required: true, message: 'Please enter Gateway' }]}
+                      >
+                        <Input placeholder="Enter Gateway" />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Form.Item>
+                    <div style={{ textAlign: 'right' }}>
                       <Button
-                        onClick={() => {
-                          setOpenos(true); // Open the modal
-                        }}
+                        type="primary"
+                        htmlType="submit"
+                        loading={loading}
+                        style={{ width: '80px' }} // Set width to 80px
                       >
-                        Boot
+                        Deploy
                       </Button>
-                      <Modal
-                        title="OS Boot Form"
-                        visible={openos}
-                        onCancel={() => setOpenos(false)} // Close the modal
-                        footer={null}
-                        width={600}
-                        destroyOnClose={true}
-                      >
-                        <Form
-                          form={form}
-                          layout="vertical"
-                          // onFinish={}
-                          initialValues={{}} // Optional initial values
-                        >
-                          <Row gutter={16}>
-                            <Col span={12}>
-                              <Form.Item
-                                name="ibn"
-                                label="IP/CIDR"
-                                rules={[{ required: true, message: 'Please enter IP/CIDR' }]}
-                              >
-                                <Input placeholder="Enter IP/CIDR" />
-                              </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                              <Form.Item
-                                name="interface1"
-                                label="Interface 1"
-                                rules={[{ required: true, message: 'Please select Interface 1' }]}
-                              >
-                                <Select placeholder="Select Interface 1">
-                                  {interfaces.map((iface) => (
-                                    <Select.Option key={iface} value={iface}>
-                                      {iface}
-                                    </Select.Option>
-                                  ))}
-                                </Select>
-                              </Form.Item>
-                            </Col>
-                          </Row>
-
-                          <Row gutter={16}>
-                            <Col span={12}>
-                              <Form.Item
-                                name="dns"
-                                label="DNS"
-                                rules={[{ required: true, message: 'Please enter DNS' }]}
-                              >
-                                <Input placeholder="Enter DNS" />
-                              </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                              <Form.Item
-                                name="interface2"
-                                label="Interface 2"
-                                rules={[{ required: true, message: 'Please select Interface 2' }]}
-                              >
-                                <Select placeholder="Select Interface 2">
-                                  {interfaces.map((iface) => (
-                                    <Select.Option key={iface} value={iface}>
-                                      {iface}
-                                    </Select.Option>
-                                  ))}
-                                </Select>
-                              </Form.Item>
-                            </Col>
-                          </Row>
-
-                          <Row gutter={16}>
-                            <Col span={12}>
-                              <Form.Item
-                                name="gateway"
-                                label="Provider NGW"
-                                rules={[{ required: true, message: 'Please enter Gateway' }]}
-                              >
-                                <Input placeholder="Enter Gateway" />
-                              </Form.Item>
-                            </Col>
-                          </Row>
-                          {/* Align the button to the right */}
-                          <Form.Item>
-                            <div style={{ textAlign: 'right' }}>
-                              <Button
-                                type="primary"
-                                htmlType="submit"
-                                loading={loading}
-                                style={{ width: '80px' }} // Set width to 80px
-                                onClick={() => {
-                                  Modal.destroyAll(); // Close the confirmation modal first
-                                  handleDeployButtonClick(node.ip); // Then call the deployment handler
-                                }}>
-                                Deploy
-                              </Button>
-                            </div>
-                          </Form.Item>
-                        </Form>
-                      </Modal>
-                      <Button onClick={() => Modal.destroyAll()} style={{ marginLeft: '10px' }}>Cancel</Button>
                     </div>
-                  ),
-                });
-              }}
-            >
-              Boot
-            </Button>
+                  </Form.Item>
+                </Form>
+              </Modal>
+            </>
           );
         } else {
           return null;
