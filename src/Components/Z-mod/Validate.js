@@ -17,6 +17,7 @@ const Validation = ({ nodes }) => {
   const [isRevalidate, setIsRevalidate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLogsExpanded, setIsLogsExpanded] = useState(false);
+  const progressRequestControllerRef = useRef(null);
   const [isDeploying, setIsDeploying] = useState(false);
   const [logs, setLogs] = useState([]);
   const [progress, setProgress] = useState(0);
@@ -36,6 +37,7 @@ const Validation = ({ nodes }) => {
   const [currentNode, setCurrentNode] = useState(null);
   const [scanResults, setScanResults] = useState([]);
   const [targetServerIp, setTargetServerIp] = useState(null);
+  const [canceltargetServerIp, setcancelTargetServerIp] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [validationData, setValidationData] = useState(null);
   const [isDeploymentStarted, setIsDeploymentStarted] = useState(false);
@@ -44,6 +46,7 @@ const Validation = ({ nodes }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [openos, setOpenos] = useState(false);
   const [interfaces, setInterfaces] = useState([]);
   const result = validationResults[nodes.ip]; // Get results based on the IP
   const [form] = Form.useForm();
@@ -127,6 +130,122 @@ const Validation = ({ nodes }) => {
       onDeployTriggered(values); // Trigger deploy logic
     }, 3000); // Simulate a 5-second delay for deployment (replace with actual logic)
   };
+
+
+  function fetchProgress(targetServerIP) {
+    // Cancel any ongoing request before making a new one
+    if (progressRequestControllerRef.current) {
+      progressRequestControllerRef.current.abort();
+    }
+
+    // Create a new AbortController for the new request
+    progressRequestControllerRef.current = new AbortController();
+    const { signal } = progressRequestControllerRef.current;
+
+    fetch(`http://192.168.249.100:5055/get-progress?targetserver_ip=${targetServerIP}`, { signal })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Request canceled or failed');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setProgress(data.progress);
+        setFilesProcessed(data.present_files);
+      })
+      .catch((error) => {
+        if (error.name === 'AbortError') {
+          console.log('Progress request canceled');
+        } else {
+          console.error('Error fetching progress:', error);
+        }
+      });
+  }
+
+  const startDeploymentWithIP = (ip) => {
+    if (!ip) {
+      console.error('IP is not defined or invalid');
+      return;
+    }
+    startDeployment(ip);
+  };
+
+  function startDeployment(ip) {
+    console.log('Sending request with targetServerIp:', ip);
+    setLoading(true);
+    fetch('http://192.168.249.100:5055/start-deployment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ targetserver_ip: ip }),
+    })
+      .then(response => {
+        // Check for a non-OK response (e.g., 400, 500)
+        if (!response.ok) {
+          return response.json().then(errorData => {
+            // Log error message from the server
+            console.error('Deployment Error:', errorData.error || 'Unknown error');
+            throw new Error(errorData.error || 'Failed to start deployment');
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Deployment Start Response:', data);
+        if (data.message) {
+          console.log(`Deployment for ${ip} started.`);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        console.log('Error starting deployment:', error.message); // Log the error
+      });
+  }
+
+
+
+  function cancelDeployment() {
+    fetch('http://192.168.249.100:5055/cancel-deployment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ targetserver_ip: targetServerIp }),  // Ensure 'targetServerIp' is correctly defined
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Network response was not ok. Status: ${response.status}`);
+        }
+        return response.text();  // Read as text first
+      })
+      .then(text => {
+        console.log('Raw response text:', text);  // Log the raw response body for debugging
+
+        try {
+          const data = JSON.parse(text);  // Parse JSON here
+          console.log(data);
+
+          if (data.message) {
+            console.log(`Deployment for ${targetServerIp} has been canceled.`);
+          } else {
+            console.log('Failed to cancel deployment: ' + (data.error || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Error parsing JSON:', error);
+          console.error('Error: Invalid response from server');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        console.error('Error canceling deployment: ' + error.message);  // Display the error message to the user
+      });
+  }
+
+  function closeProgressModal() {
+    cancelDeployment(); // Cancel the deployment
+    setProgressModalVisible(false);
+  }
 
   const handleDeployComplete = () => {
     console.log('Deployment Completed!');
@@ -539,9 +658,10 @@ const Validation = ({ nodes }) => {
     setTargetServerIp(ibn);
 
     setIsDeploymentStarted(true);
+    startDeploymentWithIP(ibn);
 
     // Call startPolling after ibn has been assigned
-    startDeployment();  // assuming startDeployment doesn't rely on ibn
+    // startDeployment();  // assuming startDeployment doesn't rely on ibn
     startPolling(ibn);  // This should be after ibn is defined
 
     console.log('Form values:', values);
@@ -625,9 +745,9 @@ const Validation = ({ nodes }) => {
       });
   };
 
-  const startDeployment = () => {
-    setLoading(true);
-  };
+  // const startDeployment = () => {
+  //   setLoading(true);
+  // };
 
 
   const paginatedNodes = nodes.slice(
@@ -857,18 +977,129 @@ const Validation = ({ nodes }) => {
                       <p>We strongly recommend backing up all critical information prior to continuing.</p>
                     </>
                   ),
-                  onOk: () => handleDeployButtonClick(node.ip),
                   okText: 'BOOT',
                   cancelText: 'Cancel',
                   style: { top: '20vh' },
+                  onOk: () => {
+                    // Close the confirmation modal and open the form modal
+                    setOpenos(true);
+                  },
+                  onCancel: () => {
+                    Modal.destroyAll(); // Close the modal
+                  },
                   footer: () => (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Button onClick={() => {
+                      {/* <Button onClick={() => {
                         Modal.destroyAll(); // Close the confirmation modal first
                         handleDeployButtonClick(node.ip); // Then call the deployment handler
                       }}>
                         Boot
+                      </Button> */}
+
+                      <Button
+                        onClick={() => {
+                          setOpenos(true); // Open the modal
+                        }}
+                      >
+                        Boot
                       </Button>
+                      <Modal
+                        title="OS Boot Form"
+                        visible={openos}
+                        onCancel={() => setOpenos(false)} // Close the modal
+                        footer={null}
+                        width={600}
+                        destroyOnClose={true}
+                      >
+                        <Form
+                          form={form}
+                          layout="vertical"
+                          // onFinish={}
+                          initialValues={{}} // Optional initial values
+                        >
+                          <Row gutter={16}>
+                            <Col span={12}>
+                              <Form.Item
+                                name="ibn"
+                                label="IP/CIDR"
+                                rules={[{ required: true, message: 'Please enter IP/CIDR' }]}
+                              >
+                                <Input placeholder="Enter IP/CIDR" />
+                              </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                              <Form.Item
+                                name="interface1"
+                                label="Interface 1"
+                                rules={[{ required: true, message: 'Please select Interface 1' }]}
+                              >
+                                <Select placeholder="Select Interface 1">
+                                  {interfaces.map((iface) => (
+                                    <Select.Option key={iface} value={iface}>
+                                      {iface}
+                                    </Select.Option>
+                                  ))}
+                                </Select>
+                              </Form.Item>
+                            </Col>
+                          </Row>
+
+                          <Row gutter={16}>
+                            <Col span={12}>
+                              <Form.Item
+                                name="dns"
+                                label="DNS"
+                                rules={[{ required: true, message: 'Please enter DNS' }]}
+                              >
+                                <Input placeholder="Enter DNS" />
+                              </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                              <Form.Item
+                                name="interface2"
+                                label="Interface 2"
+                                rules={[{ required: true, message: 'Please select Interface 2' }]}
+                              >
+                                <Select placeholder="Select Interface 2">
+                                  {interfaces.map((iface) => (
+                                    <Select.Option key={iface} value={iface}>
+                                      {iface}
+                                    </Select.Option>
+                                  ))}
+                                </Select>
+                              </Form.Item>
+                            </Col>
+                          </Row>
+
+                          <Row gutter={16}>
+                            <Col span={12}>
+                              <Form.Item
+                                name="gateway"
+                                label="Provider NGW"
+                                rules={[{ required: true, message: 'Please enter Gateway' }]}
+                              >
+                                <Input placeholder="Enter Gateway" />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                          {/* Align the button to the right */}
+                          <Form.Item>
+                            <div style={{ textAlign: 'right' }}>
+                              <Button
+                                type="primary"
+                                htmlType="submit"
+                                loading={loading}
+                                style={{ width: '80px' }} // Set width to 80px
+                                onClick={() => {
+                                  Modal.destroyAll(); // Close the confirmation modal first
+                                  handleDeployButtonClick(node.ip); // Then call the deployment handler
+                                }}>
+                                Deploy
+                              </Button>
+                            </div>
+                          </Form.Item>
+                        </Form>
+                      </Modal>
                       <Button onClick={() => Modal.destroyAll()} style={{ marginLeft: '10px' }}>Cancel</Button>
                     </div>
                   ),
@@ -995,7 +1226,7 @@ const Validation = ({ nodes }) => {
               <Modal
                 visible={isProgressModalVisible}
                 footer={null}
-                onCancel={() => setProgressModalVisible(false)}
+                onCancel={closeProgressModal}
                 title="Deployment Progress"
                 maskClosable={false}
               >

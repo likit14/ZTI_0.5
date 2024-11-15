@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 import logging
 import time
+import threading
 from subprocess import Popen, PIPE
 import sys
 import signal
@@ -13,7 +14,7 @@ app = Flask(__name__)
 
 # Enable CORS for all routes and all origins
 CORS(app)
-
+deployments = {}  # Dictionary to track deployment states
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -79,16 +80,72 @@ def tail_files_in_order(targetserver_ip):
 
 @app.route('/get-progress', methods=['GET'])
 def get_progress():
-    """Get the current deployment progress based on present files."""
-    targetserver_ip = request.args.get('targetserver_ip')  # Get IP from query parameters
+    targetserver_ip = request.args.get('targetserver_ip')
     if not targetserver_ip:
-        return jsonify({'error': 'IP is required'}), 400  # Return error if IP is not provided
+        return jsonify({'error': 'IP is required'}), 400
 
-    # Get the deployment progress for the provided IP
+    # Check if the deployment is canceled
+    if deployments.get(targetserver_ip) == "canceled":
+        return jsonify({'error': 'Deployment canceled'}), 400
+
     progress, present_files = get_deployment_progress(targetserver_ip)
-    
-    # Return the progress and present files in JSON response
     return jsonify({'progress': progress, 'present_files': present_files})
+
+@app.route('/start-deployment', methods=['POST'])
+def start_deployment():
+    try:
+        data = request.get_json()
+        targetserver_ip = data.get('targetserver_ip')
+
+        # Check if targetserver_ip is provided
+        if not targetserver_ip:
+            app.logger.error("Missing targetserver_ip in the request")
+            return jsonify({'error': 'IP is required'}), 400
+
+        # Check if the deployment is already in progress
+        if targetserver_ip in deployments and deployments[targetserver_ip] == 'in_progress':
+            app.logger.info(f"Deployment for {targetserver_ip} is already in progress.")
+            return jsonify({'error': 'Deployment already in progress'}), 400
+
+        # Mark the deployment as 'in_progress'
+        deployments[targetserver_ip] = 'in_progress'
+        app.logger.info(f"Starting deployment for {targetserver_ip}")
+
+        # Trigger the actual deployment process here (e.g., call 
+        # another function or trigger a background task)
+        # Example: start_deployment_task(targetserver_ip)
+
+        return jsonify({'message': f'Deployment for {targetserver_ip} started.'}), 200
+
+    except Exception as e:
+        app.logger.error(f"Error during deployment start: {e}")
+        return jsonify({'error': 'Failed to start deployment'}), 500
+
+
+@app.route('/cancel-deployment', methods=['POST'])
+def cancel_deployment():
+    try:
+        data = request.get_json()
+        targetserver_ip = data.get('targetserver_ip')
+
+        if not targetserver_ip:
+            return jsonify({'error': 'IP is required'}), 400
+
+        if targetserver_ip not in deployments:
+            return jsonify({'error': 'Deployment not found for this IP'}), 404
+        
+        # If deployment is in progress, mark as canceled
+        if deployments[targetserver_ip] == "in_progress":
+            deployments[targetserver_ip] = "canceled"
+            app.logger.info(f"Deployment for {targetserver_ip} has been canceled.")
+            return jsonify({'message': f'Deployment for {targetserver_ip} canceled.'}), 200
+        
+        # If the deployment is already canceled, return an error
+        return jsonify({'error': 'Deployment already canceled or not in progress'}), 400
+
+    except Exception as e:
+        app.logger.error(f"Error during deployment cancellation: {e}")
+        return jsonify({'error': 'Failed to cancel deployment'}), 500
 
 @app.route('/tail-logs')
 def tail_logs():
