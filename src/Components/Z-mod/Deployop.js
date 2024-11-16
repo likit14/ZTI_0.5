@@ -1,18 +1,62 @@
 import React, { useState } from 'react';
 import { HomeOutlined } from '@ant-design/icons';
-import { Breadcrumb, Button } from 'antd';
+import { Breadcrumb, Button, Modal, Input } from 'antd';
+import axios from 'axios';  // Import axios for making HTTP requests
 import '../../Styles/DeploymentOptions.css';
 
-const DeploymentOptions = ({ onStart }) => {  // Accepting onStart prop
+const DeploymentOptions = ({ onStart }) => {
   const [selectedOption, setSelectedOption] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [cloudName, setCloudName] = useState('');
 
   const handleOptionClick = (option) => {
     setSelectedOption(option === selectedOption ? null : option);
 
-    // Trigger onStart immediately if "Standalone Cloud Setup" is selected
+    // Show modal if "Standalone Cloud Setup" is selected
     if (option === "Standalone Cloud Setup") {
-      onStart();
+      setIsModalVisible(true);
     }
+  };
+
+  const updateMetadata = (name) => {
+    // Check if a meta tag for the cloud name exists
+    let cloudNameMeta = document.querySelector('meta[name="cloud-name"]');
+    
+    if (!cloudNameMeta) {
+      // Create the meta tag if it doesn't exist
+      cloudNameMeta = document.createElement('meta');
+      cloudNameMeta.name = 'cloud-name'; // Custom name for cloud
+      document.head.appendChild(cloudNameMeta);
+    }
+
+    cloudNameMeta.content = name; // Store the cloud name in the content
+  };
+
+  const handleModalOk = async () => {
+    try {
+      // Update metadata with the entered cloud name
+      updateMetadata(cloudName);
+
+      // Call the backend API to store the cloud name
+      await axios.post('http://localhost:5000/api/storedeploydetails', {
+        cloudName: cloudName
+      });
+
+      // Call the onStart function with the entered cloud name
+      onStart(cloudName);
+
+      // Close the modal
+      setIsModalVisible(false);
+      setCloudName(''); // Clear the input
+    } catch (error) {
+      console.error('Error storing cloud name:', error);
+      // Optionally, show an error message to the user
+    }
+  };
+
+  const handleModalCancel = () => {
+    setIsModalVisible(false); // Close the modal
+    setCloudName(''); // Clear the input
   };
 
   return (
@@ -52,6 +96,22 @@ const DeploymentOptions = ({ onStart }) => {  // Accepting onStart prop
           </div>
         </div>
       </div>
+
+      <Modal
+        title="Enter Your Cloud Name"
+        visible={isModalVisible}
+        onOk={handleModalOk}
+        onCancel={handleModalCancel}
+        okButtonProps={{ disabled: !cloudName, style: { width: '80px' } }} // Combine styles for okButtonProps
+        cancelButtonProps={{ style: { width: '80px', marginRight: '8px' } }} // Combine styles for cancelButtonProps
+        style={{ maxWidth: '400px' }} // Optional: limits the modal width
+      >
+        <Input
+          placeholder="Enter cloud name"
+          value={cloudName}
+          onChange={(e) => setCloudName(e.target.value)}
+        />
+      </Modal>
     </div>
   );
 };
