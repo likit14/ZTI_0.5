@@ -4,6 +4,7 @@ import { HomeOutlined } from "@ant-design/icons";
 import axios from "axios";
 import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
+import { CloudOutlined } from "@ant-design/icons";
 import { Row, Col } from 'antd';
 import ProgressModal from './ProgressModal';
 import DeploymentProgressBar from './DeploymentProgressBar'
@@ -84,8 +85,14 @@ const Validation = ({ nodes }) => {
     eventSource.onmessage = (event) => {
       const newLog = event.data;
 
-      // Append the new log to the logs state
-      setLogs((prevLogs) => [...prevLogs, newLog]);
+      // Check if the log indicates a new file is starting (or any condition for clearing)
+      if (newLog === "data: \n\n") {
+        // Clear logs when a new file is detected
+        setLogs([]);
+      } else {
+        // Append the new log to the logs state
+        setLogs((prevLogs) => [...prevLogs, newLog]);
+      }
 
       // Auto-scroll to the bottom of the log container
       if (logContainerRef.current) {
@@ -99,10 +106,10 @@ const Validation = ({ nodes }) => {
     };
 
     return () => {
-      eventSource.close(); // Clean up the SSE connection
+      eventSource.close(); // Clean up the SSE connection when component unmounts
     };
-  }, [isDeploymentStarted, targetServerIp]);
-
+  }, [isDeploymentStarted, targetServerIp]); // Dependency array ensures this runs only when deployment starts or targetServerIp changes
+  
   const validateDiskSelection = (_, value, disks) => {
     // Ensure value starts with '/dev/' (i.e., the format of the disk name)
     if (!value || !value.startsWith("/dev/")) {
@@ -1393,8 +1400,11 @@ const Validation = ({ nodes }) => {
   ];
   return (
     <div style={{ padding: "24px" }}>
-      <h5>• {cloudName} Cloud</h5>
-      <Breadcrumb style={{ marginBottom: "16px" }}>
+      <h5>
+        <CloudOutlined />
+        &nbsp; &nbsp;{cloudName} Cloud 
+      </h5>
+	  <Breadcrumb style={{ marginBottom: "16px" }}>
         <Breadcrumb.Item>
           <HomeOutlined />
         </Breadcrumb.Item>

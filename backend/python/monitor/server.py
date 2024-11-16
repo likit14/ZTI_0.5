@@ -22,22 +22,18 @@ logger = logging.getLogger(__name__)
 logger.info("Starting Flask app...")
 
 # Expected files for deployment progress
+# Define expected_files globally so that it's accessible to all functions
 expected_files = [
     'script1_done', 'script2_done', 'script3_done', 'script4_done',
     'script5_done', 'script6_done', 'script7_done', 'script8_done'
 ]
 
-def tail_file(file_path):
-    """Helper function to tail the content of a file."""
-    with open(file_path, 'r') as file:
-        logger.info(f"Tailing file: {file_path}")
-        while True:
-            line = file.readline()
-            if not line:
-                time.sleep(0.1)  # Wait for more content to appear
-                continue
-            logger.info(f"New log line: {line.strip()}")  # Log each new line
-            yield f"data: {line.strip()}\n\n"
+# Function to handle tailing in a separate thread
+def tail_logs_in_background(targetserver_ip):
+    """Run the tailing process in a background thread."""
+    thread = threading.Thread(target=tail_files_in_order, args=(targetserver_ip,))
+    thread.daemon = True  # Ensure thread dies when main program exits
+    thread.start()
 
 def get_deployment_progress(targetserver_ip):
     """Function to calculate the deployment progress based on the files present for a given IP."""
@@ -57,26 +53,53 @@ def get_deployment_progress(targetserver_ip):
     progress = (len(present_files) / len(expected_files)) * 100
     return progress, present_files
 
+def tail_file(file_path):
+    """Helper function to tail the content of a file."""
+    with open(file_path, 'r') as file:
+        logger.info(f"Tailing file: {file_path}")
+        while True:
+            line = file.readline()
+            if not line:
+                # If no new line, sleep briefly to avoid constant CPU usage
+                time.sleep(0.1)
+                continue
+            logger.info(f"New log line: {line.strip()}")
+            yield f"data: {line.strip()}\n\n"  # Yield new log line to the frontend
+
 def tail_files_in_order(targetserver_ip):
     """Tail files in the order specified in expected_files."""
     markers_directory = f'/home/pinaka/markers/{targetserver_ip}'
 
-    # Check for each file in the expected order and tail its contents
+    # Wait for each expected file in sequence
     for file in expected_files:
         file_path = os.path.join(markers_directory, file)
 
-        # If the file exists, start tailing it
-        if os.path.exists(file_path):
-            logger.info(f"Tailing file: {file_path}")
-            yield from tail_file(file_path)  # Stream the content of the file to frontend
-        else:
-            logger.info(f"File {file_path} not found, skipping...")
+        # Wait for the file to appear
+        while not os.path.exists(file_path):
+            logger.info(f"File {file_path} not found, waiting for it to appear...")
+            time.sleep(2)  # Poll every 2 seconds until the file appears
 
-    # Keep the connection alive by sending dummy data if no file content is present
+        logger.info(f"Found file {file_path}, now tailing...")
+
+        # Tail the current file and process it
+        yield from tail_file(file_path)  # Stream the content of the file to the frontend
+
+        # After tailing, proceed to the next file
+        logger.info(f"Finished tailing {file_path}. Moving to the next file...")
+
+    # After all files are processed, periodically check for new files
+    logger.info("All files processed. Waiting for new files to appear...")
+    
     while True:
-        time.sleep(5)  # Sleep to simulate waiting
-        yield "data: Waiting for new logs...\n\n"
+        logger.info("No more files to tail, waiting for new files...")
+        time.sleep(5)  # Wait before checking for new files
 
+        # Check if any new files appear in the directory
+        for file in expected_files:
+            file_path = os.path.join(markers_directory, file)
+            if os.path.exists(file_path):
+                logger.info(f"Found new file: {file_path}, now tailing...")
+                yield from tail_file(file_path)  # Stream the content of the file to the frontend
 
 @app.route('/get-progress', methods=['GET'])
 def get_progress():
@@ -147,6 +170,7 @@ def cancel_deployment():
         app.logger.error(f"Error during deployment cancellation: {e}")
         return jsonify({'error': 'Failed to cancel deployment'}), 500
 
+
 @app.route('/tail-logs')
 def tail_logs():
     """Stream log data for deployment progress."""
@@ -154,7 +178,8 @@ def tail_logs():
     if not targetserver_ip:
         return jsonify({'error': 'IP is required'}), 400  # Return error if IP is not provided
 
-    # Use Server-Sent Events (SSE) to stream the logs
+    # Start tailing logs in the background and return the SSE stream
+    tail_logs_in_background(targetserver_ip)
     return Response(tail_files_in_order(targetserver_ip), content_type='text/event-stream')
 
 # Route for streaming logs (SSE)

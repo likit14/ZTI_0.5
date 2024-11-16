@@ -11,6 +11,7 @@ import {
 } from "antd";
 import { HomeOutlined, SearchOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { CloudOutlined } from "@ant-design/icons";
 import { faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
 import Highlighter from "react-highlight-words";
 import axios from "axios";
@@ -220,7 +221,10 @@ const DataTable = ({ onNodeSelect }) => {
   return (
     <div style={{ padding: "24px" }}>
       {contextHolder}
-      <h5>• {cloudName} Cloud</h5>
+      <h5>
+        <CloudOutlined />
+        &nbsp; &nbsp;{cloudName} Cloud 
+      </h5>
       <Breadcrumb style={{ marginBottom: "16px" }}>
         <Breadcrumb.Item>
           <HomeOutlined />
