@@ -4,10 +4,11 @@ import Zti from '../Components/Z-mod/Zti';
 import DeploymentOptions from '../Components/Z-mod/Deployop';
 import Discovery from '../Components/Z-mod/NwtScan';
 import Validation from '../Components/Z-mod/Validate';
+import Report from '../Components/Z-mod/Report';
 
 const App = () => {
   const [activeTab, setActiveTab] = useState("1");
-  const [disabledTabs, setDisabledTabs] = useState({ "2": true, "3": true });
+  const [disabledTabs, setDisabledTabs] = useState({ "2": true, "3": true, "4" : false });
   const [selectedNodes, setSelectedNodes] = useState([]); // State for selected nodes
 
   const handleTabStart = (currentTab) => {
@@ -39,7 +40,10 @@ const App = () => {
           <Discovery onNodeSelect={handleNodeSelection} onStart={() => handleTabStart(2)} />
         </Tabs.TabPane>
         <Tabs.TabPane tab="Validation" key="3" disabled={disabledTabs["3"]}>
-          <Validation nodes={selectedNodes} />
+          <Validation nodes={selectedNodes} onStart={() => handleTabStart(3)}/>
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Report" key="4" disabled={disabledTabs["4"]}>
+          <Report nodes={selectedNodes} />
         </Tabs.TabPane>
       </Tabs>
     </Zti>

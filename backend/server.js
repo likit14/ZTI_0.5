@@ -55,8 +55,8 @@ db.query(createUserTable, (err, result) => {
 // Create single-node table if not exists
 const createSingleNodeTable = `
   CREATE TABLE IF NOT EXISTS single_node (
-    id CHAR(21) PRIMARY KEY, 
-    cloudName VARCHAR(255)
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+  cloudName VARCHAR(255)
   )
 `;
 
@@ -183,7 +183,7 @@ app.post('/api/storedeploydetails', async (req, res) => {
   }
 
   // Insert the cloud name into the `single_node` table
-  const sql = 'INSERT INTO single_node (cloudName) VALUES (?)';
+  const sql = ' INSERT INTO single_node (cloudName) VALUES (?)';
 
   try {
     await new Promise((resolve, reject) => {

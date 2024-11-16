@@ -10,7 +10,13 @@ import DeploymentProgressBar from './DeploymentProgressBar'
 import { useLocation, useNavigate } from "react-router-dom";
 import requirementData from "../../Comparison/min_requirements.json";
 
+const getCloudNameFromMetadata = () => {
+  let cloudNameMeta = document.querySelector('meta[name="cloud-name"]');
+  return cloudNameMeta ? cloudNameMeta.content : null; // Return the content of the meta tag
+};
+
 const Validation = ({ nodes }) => {
+  const cloudName = getCloudNameFromMetadata();
   const [validationResults, setValidationResults] = useState({});
   //   const combinedDataSource = [...nodes];
   const [popoverVisible, setPopoverVisible] = useState({});
@@ -1315,7 +1321,7 @@ const Validation = ({ nodes }) => {
                 visible={isProgressModalVisible}
                 footer={null}
                 onCancel={closeProgressModal}
-                title="Deployment Progress"
+                title={`Deployment Progress for  ${cloudName}`}
                 maskClosable={false}
               >
                 {/* Use the DeploymentProgressBar component */}
@@ -1387,6 +1393,7 @@ const Validation = ({ nodes }) => {
   ];
   return (
     <div style={{ padding: "24px" }}>
+      <h5>• {cloudName} Cloud</h5>
       <Breadcrumb style={{ marginBottom: "16px" }}>
         <Breadcrumb.Item>
           <HomeOutlined />

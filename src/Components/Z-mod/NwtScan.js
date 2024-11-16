@@ -16,7 +16,13 @@ import Highlighter from "react-highlight-words";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const getCloudNameFromMetadata = () => {
+  let cloudNameMeta = document.querySelector('meta[name="cloud-name"]');
+  return cloudNameMeta ? cloudNameMeta.content : null; // Return the content of the meta tag
+};
+
 const DataTable = ({ onNodeSelect }) => {
+  const cloudName = getCloudNameFromMetadata();
   const [isScanning, setIsScanning] = useState(false);
   const [selectedNodes, setSelectedNodes] = useState([]);
   const [nodes, setNodes] = useState([]);
@@ -214,6 +220,7 @@ const DataTable = ({ onNodeSelect }) => {
   return (
     <div style={{ padding: "24px" }}>
       {contextHolder}
+      <h5>• {cloudName} Cloud</h5>
       <Breadcrumb style={{ marginBottom: "16px" }}>
         <Breadcrumb.Item>
           <HomeOutlined />
