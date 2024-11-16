@@ -42,7 +42,7 @@ const Validation = ({ nodes }) => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [validationData, setValidationData] = useState(null);
   const [isDeploymentStarted, setIsDeploymentStarted] = useState(false);
-
+  const [disks, setDisks] = useState([]);
   const itemsPerPage = 4;
   const navigate = useNavigate();
   const location = useLocation();
@@ -97,11 +97,46 @@ const Validation = ({ nodes }) => {
     };
   }, [isDeploymentStarted, targetServerIp]);
 
-  // const interfaces = ['eno1', 'eno2', 'enp6s0'];
+  const validateDiskSelection = (_, value, disks) => {
+    // Ensure value starts with '/dev/' (i.e., the format of the disk name)
+    if (!value || !value.startsWith("/dev/")) {
+      return Promise.reject(new Error("Please select a valid disk"));
+    }
+
+    // Find the selected disk from the disks array by comparing the value with '/dev/diskName'
+    const selectedDisk = disks.find((disk) => `/dev/${disk.name}` === value);
+
+    if (!selectedDisk) {
+      return Promise.reject(new Error("Disk not found"));
+    }
+
+    // Extract the numeric part of the disk's capacity (ignoring units like 'G' or 'M')
+    const capacity = parseFloat(selectedDisk.capacity.replace(/[^\d.]/g, ""));
+
+    // Check if the capacity is in GB or another unit
+    const isGB = selectedDisk.capacity.includes("G");
+
+    // Convert MB to GB if the disk is in MB
+    const capacityInGB = isGB ? capacity : capacity / 1024;
+
+    // Validate if the capacity is at least 100 GB
+    if (capacityInGB < 100) {
+      return Promise.reject(
+        new Error("Selected disk must have a capacity of at least 100GB.")
+      );
+    }
+
+    // If everything is valid, resolve the promise
+    return Promise.resolve();
+  };
+
+
+
+
 
   const handleSubmit = async (values) => {
     setLoading(true);
-  
+
     try {
       // Sending form data to backend API
       const response = await axios.post('http://192.168.249.100:9909/update-config', {
@@ -109,8 +144,9 @@ const Validation = ({ nodes }) => {
         subnet: values.subnet,
         gateway: values.gateway,
         interface: values.interface1,  // Assuming you're using the first interface
+        disk: values.disk,             // Including the disk value
       });
-  
+
       // Handle the response from the server
       if (response.data.message) {
         console.log(response.data.message);
@@ -126,7 +162,8 @@ const Validation = ({ nodes }) => {
       setLoading(false);
     }
   };
-  
+
+
   const toggleLogss = () => {
     setIsLogsExpanded((prev) => !prev); // Toggle logs panel visibility
   };
@@ -156,8 +193,19 @@ const Validation = ({ nodes }) => {
   };
 
   const handleConfirmation = () => {
-    Modal.destroyAll(); // Close the confirmation popup
-    showOSModal(); // Open the form modal
+    Modal.destroyAll();
+    showOSModal();
+    axios
+      .post("http://192.168.249.100:9909/api/boot", { osType: "normal" })
+      .then((response) => {
+        console.log("Normal OS boot initiated");
+        // You can also handle success here (e.g., show a success message or update state)
+      })
+      .catch((error) => {
+        console.error("Error initiating OS boot:", error);
+        // Optionally handle errors (e.g., show an error message)
+      });
+
   };
 
 
@@ -452,6 +500,17 @@ const Validation = ({ nodes }) => {
         ? data.interfaces.split(",")
         : [];
       setInterfaces(fetchedInterfaces);
+
+      const fetchedDisks = data.disk_capacities
+        ? data.disk_capacities.map((disk) => {
+          const [name, capacity] = Object.entries(disk)[0];
+          // Remove the colon (:) from the disk name
+          const cleanedName = name.replace(/:$/, '');
+          return { name: cleanedName, capacity };
+        })
+        : [];
+      setDisks(fetchedDisks);
+
 
       // Compare specifications
       const comparisonResults = compareSpecs(data, requirementData);
@@ -1027,8 +1086,8 @@ const Validation = ({ nodes }) => {
                     okText: "Confirm",
                     cancelText: "Cancel",
                     style: { top: '20vh' },
-                    onOk: handleConfirmation, // On confirmation, open the form modal
-                    onCancel: () => Modal.destroyAll(), // Close the confirmation modal on cancel
+                    onOk: handleConfirmation,
+                    onCancel: () => Modal.destroyAll(),
                   });
                 }}
               >
@@ -1047,7 +1106,7 @@ const Validation = ({ nodes }) => {
                 <Form
                   form={form}
                   layout="vertical"
-                  onFinish={handleSubmit}  // Handle form submission
+                  onFinish={handleSubmit} // Handle form submission
                 >
                   <Row gutter={16}>
                     <Col span={12}>
@@ -1097,6 +1156,26 @@ const Validation = ({ nodes }) => {
                     </Col>
                   </Row>
 
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item
+                        name="disk"
+                        label="Disk"
+                        rules={[
+                          { required: true, message: "Please select a disk" },
+                          { validator: (rule, value) => validateDiskSelection(rule, value, disks) },
+                        ]}
+                      >
+                        <Select placeholder="Select Disk">
+                          {disks.map((disk) => (
+                            <Select.Option key={disk.name} value={`/dev/${disk.name}`}>
+                              {`/dev/${disk.name} {disk.capacity}`}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                  </Row>
                   <Form.Item>
                     <div style={{ textAlign: 'right' }}>
                       <Button
@@ -1104,13 +1183,18 @@ const Validation = ({ nodes }) => {
                         htmlType="submit"
                         loading={loading}
                         style={{ width: '80px' }} // Set width to 80px
+                        onClick={() => {
+                          Modal.destroyAll();
+                          handleDeployButtonClick(node.ip);
+                        }}
                       >
-                        Deploy
+                        Boot
                       </Button>
                     </div>
                   </Form.Item>
                 </Form>
               </Modal>
+
             </>
           );
         } else {
@@ -1321,7 +1405,7 @@ const Validation = ({ nodes }) => {
       <ProgressModal
         visible={progressVisible}
         onClose={() => setProgressVisible(false)}
-        onNext={onDeployTriggered}
+        // onNext={onDeployTriggered}
       />
     </div>
   );
