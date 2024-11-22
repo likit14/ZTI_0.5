@@ -52,7 +52,7 @@ const DataTable = ({ onNodeSelect }) => {
     setIsScanning(true); // Start loading
     try {
       // Fetch the active nodes from the backend
-      const response = await axios.get("http://localhost:8000/scan");
+      const response = await axios.get("http://192.168.249.100:8000/scan");
   
       if (response.data && Array.isArray(response.data)) {
         setSubnet("");
@@ -77,7 +77,7 @@ const DataTable = ({ onNodeSelect }) => {
         return;
       }
 
-      const response = await axios.get("http://localhost:8000/scan", {
+      const response = await axios.get("http://192.168.249.100:8000/scan", {
         params: { subnet },
       });
 
@@ -113,7 +113,7 @@ const DataTable = ({ onNodeSelect }) => {
     setIsProcessing(true); // Start processing
     try {
       // Call the backend to scan the subnet
-      const response = await fetch('http://localhost:9909/scan-subnet', {
+      const response = await fetch('http://192.168.249.100:9909/scan-subnet', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ const DataTable = ({ onNodeSelect }) => {
        console.log('Subnet found! Proceeding with configuration...');
         
         // Call the backend to update the configuration file
-        const configUpdateResponse = await fetch('http://localhost:9909/pxe-config', {
+        const configUpdateResponse = await fetch('http://192.168.249.100:9909/pxe-config', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
