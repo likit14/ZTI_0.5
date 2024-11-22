@@ -37,10 +37,6 @@ const DeploymentOptions = ({ onStart }) => {
       // Update metadata with the entered cloud name
       updateMetadata(cloudName);
 
-      // Call the backend API to store the cloud name
-      await axios.post('http://localhost:5000/api/storedeploydetails', {
-        cloudName: cloudName
-      });
 
       // Call the onStart function with the entered cloud name
       onStart(cloudName);

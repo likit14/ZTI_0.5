@@ -8,6 +8,7 @@ import {
   Input,
   Space,
   Alert,
+  Spin
 } from "antd";
 import { HomeOutlined, SearchOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -23,6 +24,7 @@ const getCloudNameFromMetadata = () => {
 };
 
 const DataTable = ({ onNodeSelect }) => {
+  const [isProcessing, setIsProcessing] = useState(false); // To track if the configuration is being updated
   const cloudName = getCloudNameFromMetadata();
   const [isScanning, setIsScanning] = useState(false);
   const [selectedNodes, setSelectedNodes] = useState([]);
@@ -49,22 +51,23 @@ const DataTable = ({ onNodeSelect }) => {
   const handleDefaultSubnetScan = async () => {
     setIsScanning(true); // Start loading
     try {
-      // Fetch the local subnet from the backend
-      const response = await axios.get("http://192.168.249.100:8000/scan");
-
+      // Fetch the active nodes from the backend
+      const response = await axios.get("http://localhost:8000/scan");
+  
       if (response.data && Array.isArray(response.data)) {
-        setSubnet("");  // Clear any manually entered subnet
+        setSubnet("");
         setNodes(response.data); // Directly update nodes with the fetched data
       } else {
         messageApi.error("No active nodes found in the local network.");
       }
     } catch (error) {
-      console.error("Error getting local subnet:", error);
-      messageApi.error("Failed to detect the local network. Please enter a subnet manually.");
+      console.error("Error getting active nodes:", error);
+      messageApi.error("Failed to detect the local network. Please try again.");
     } finally {
       setIsScanning(false); // End loading
     }
   };
+  
 
   const scanNetwork = async (subnet = "") => {
     setIsScanning(true); // Start loading
@@ -74,7 +77,7 @@ const DataTable = ({ onNodeSelect }) => {
         return;
       }
 
-      const response = await axios.get("http://192.168.249.100:8000/scan", {
+      const response = await axios.get("http://localhost:8000/scan", {
         params: { subnet },
       });
 
@@ -106,7 +109,47 @@ const DataTable = ({ onNodeSelect }) => {
     }
   };
 
-  const handleSubnetScan = () => {
+  const handleSubnetScan = async() => {
+    setIsProcessing(true); // Start processing
+    try {
+      // Call the backend to scan the subnet
+      const response = await fetch('http://localhost:9909/scan-subnet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ subnet }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+       console.log('Subnet found! Proceeding with configuration...');
+        
+        // Call the backend to update the configuration file
+        const configUpdateResponse = await fetch('http://localhost:9909/pxe-config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ subnet }),
+        });
+
+        const configData = await configUpdateResponse.json();
+
+        if (configData.success) {
+          messageApi.success('Subnet updated successfully!');
+        } else {
+          messageApi.error('Failed to update subnet.');
+        }
+      } else {
+        messageApi.error('Subnet not found!');
+      }
+    } catch (error) {
+      messageApi.error('Error while scanning subnet');
+    } finally {
+      setIsProcessing(false); // End processing
+    }
     scanNetwork(subnet); // Scan using the entered subnet
     setWarningMessage(null); // Clear the warning message when a scan starts
   };
@@ -279,7 +322,7 @@ const DataTable = ({ onNodeSelect }) => {
             onClick={handleSubnetScan}
             disabled={!subnet}
           >
-            Scan Subnet
+          Scan Subnet
           </Button>
           <Button
             type="default"

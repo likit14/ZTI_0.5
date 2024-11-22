@@ -10,6 +10,7 @@ import ProgressModal from './ProgressModal';
 import DeploymentProgressBar from './DeploymentProgressBar'
 import { useLocation, useNavigate } from "react-router-dom";
 import requirementData from "../../Comparison/min_requirements.json";
+import Report from './Report';
 
 const getCloudNameFromMetadata = () => {
   let cloudNameMeta = document.querySelector('meta[name="cloud-name"]');
@@ -23,6 +24,7 @@ const Validation = ({ nodes }) => {
   const [popoverVisible, setPopoverVisible] = useState({});
   const [isRevalidate, setIsRevalidate] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [notificationShown, setNotificationShown] = useState(false);
   const [isLogsExpanded, setIsLogsExpanded] = useState(false);
   const [openOSModal, setOpenOSModal] = useState(false);
   const progressRequestControllerRef = useRef(null);
@@ -49,6 +51,7 @@ const Validation = ({ nodes }) => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [validationData, setValidationData] = useState(null);
   const [isDeploymentStarted, setIsDeploymentStarted] = useState(false);
+  const [ibn, setIbn] = useState('');
   const [disks, setDisks] = useState([]);
   const itemsPerPage = 4;
   const navigate = useNavigate();
@@ -76,6 +79,24 @@ const Validation = ({ nodes }) => {
       setIsRevalidate(true);
     }
   };
+
+  const statusMessage =
+    progress === 100 ? "Successfully Deployed" : "Deployment in Progress";
+
+    useEffect(() => {
+      if (progress === 100 && !notificationShown) {
+        notification.success({
+          message: "Deployment Completed Successfully",
+          description: "Your deployment has been completed successfully.",
+          placement: "top", // Can be topLeft, topRight, bottomLeft, bottomRight
+        });
+  
+        
+  
+        // Mark the notification as shown
+        setNotificationShown(true);
+      }
+    }, [progress, notificationShown]);
 
   useEffect(() => {
     if (!isDeploymentStarted || !targetServerIp) return; // Only proceed if deployment has started
@@ -109,7 +130,7 @@ const Validation = ({ nodes }) => {
       eventSource.close(); // Clean up the SSE connection when component unmounts
     };
   }, [isDeploymentStarted, targetServerIp]); // Dependency array ensures this runs only when deployment starts or targetServerIp changes
-  
+
   const validateDiskSelection = (_, value, disks) => {
     // Ensure value starts with '/dev/' (i.e., the format of the disk name)
     if (!value || !value.startsWith("/dev/")) {
@@ -151,6 +172,45 @@ const Validation = ({ nodes }) => {
     setLoading(true);
 
     try {
+      const response = await fetch("http://192.168.249.100:9909/ssh-connect", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          osip: values.ip, // Pass the entered IP as `osip`
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log("Success:", result.message || "SSH successfully started!");
+
+        // Assuming the result message contains "SSH successful" or similar, we show SweetAlert
+        if (result.message === "SSH connection established successfully.") {
+          setTimeout(() => {
+            Swal.fire({
+              title: "Success!",
+              text: "SSH connection established successfully!",
+              icon: "success",
+              confirmButtonText: "OK",
+            }).then(() => {
+              // Trigger any necessary actions after the SweetAlert confirmation
+            });
+          }, 500);
+        }
+      } else {
+        console.error("Error:", result.message || "Failed to start SSH.");
+      }
+    } catch (error) {
+      console.error("Error starting SSH:", error);
+      console.error("An unexpected error occurred while starting SSH.");
+    } finally {
+      setLoading(false);
+    }
+
+    try {
       // Sending form data to backend API
       const response = await axios.post('http://192.168.249.100:9909/update-config', {
         ip: values.ip,
@@ -176,6 +236,12 @@ const Validation = ({ nodes }) => {
     }
   };
 
+  useEffect(() => {
+    const logContainer = document.getElementById("logContainer");
+    if (logContainer) {
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+  }, [logs]); // Trigger on every logs update
 
   const toggleLogss = () => {
     setIsLogsExpanded((prev) => !prev); // Toggle logs panel visibility
@@ -775,7 +841,7 @@ const Validation = ({ nodes }) => {
     // Collect the form data from the form values
     const { ibn, gateway, dns, interface1, interface2 } = values;
     setTargetServerIp(ibn);
-
+    setIbn(ibn);
     setIsDeploymentStarted(true);
     startDeploymentWithIP(ibn);
 
@@ -1336,6 +1402,7 @@ const Validation = ({ nodes }) => {
                   progress={progress} // Pass the current progress
                   filesProcessed={filesProcessed} // Pass the processed files
                   loading={loading} // Pass the loading state
+                  statusMessage={statusMessage}
                 />
 
                 <button
@@ -1358,21 +1425,19 @@ const Validation = ({ nodes }) => {
                   {isLogsExpanded ? 'Hide Logs' : 'View Logs'}
                 </button>
 
-                {/* Logs Panel */}
                 {isLogsExpanded && (
                   <div
                     id="logContainer"
-                    ref={logContainerRef} // Attach the reference for auto-scrolling
                     style={{
-                      backgroundColor: '#212529',
-                      color: 'white',
-                      padding: '10px',
-                      height: '150px',
-                      width: '100%',
-                      borderRadius: '5px',
-                      overflowY: 'auto', // Allow vertical scrolling
-                      overflowX: 'hidden',
-                      scrollBehavior: 'smooth',
+                      backgroundColor: "#212529",
+                      color: "white",
+                      padding: "10px",
+                      height: "150px",
+                      width: "100%",
+                      borderRadius: "5px",
+                      overflowY: "hidden",
+                      overflowX: "hidden",
+                      scrollBehavior: "smooth",
                     }}
                   >
                     {/* Display logs dynamically */}
@@ -1402,9 +1467,9 @@ const Validation = ({ nodes }) => {
     <div style={{ padding: "24px" }}>
       <h5>
         <CloudOutlined />
-        &nbsp; &nbsp;{cloudName} Cloud 
+        &nbsp; &nbsp;{cloudName} Cloud
       </h5>
-	  <Breadcrumb style={{ marginBottom: "16px" }}>
+      <Breadcrumb style={{ marginBottom: "16px" }}>
         <Breadcrumb.Item>
           <HomeOutlined />
         </Breadcrumb.Item>
@@ -1422,8 +1487,9 @@ const Validation = ({ nodes }) => {
       <ProgressModal
         visible={progressVisible}
         onClose={() => setProgressVisible(false)}
-        // onNext={onDeployTriggered}
+      // onNext={onDeployTriggered}
       />
+      {ibn && <Report ibn={ibn} />}
     </div>
   );
 };

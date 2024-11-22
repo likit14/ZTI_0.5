@@ -8,7 +8,7 @@ import Report from '../Components/Z-mod/Report';
 
 const App = () => {
   const [activeTab, setActiveTab] = useState("1");
-  const [disabledTabs, setDisabledTabs] = useState({ "2": true, "3": true, "4" : false });
+  const [disabledTabs, setDisabledTabs] = useState({ "2": true, "3": true, "4" : true });
   const [selectedNodes, setSelectedNodes] = useState([]); // State for selected nodes
 
   const handleTabStart = (currentTab) => {

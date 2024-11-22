@@ -1,7 +1,7 @@
 import React from 'react';
 import { Progress, Spin, Row, Col } from 'antd';
 
-const DeploymentProgressBar = ({ progress, filesProcessed, loading }) => {
+const DeploymentProgressBar = ({ progress, filesProcessed, loading, statusMessage }) => {
   return (
     <div>
       <Row>
@@ -16,6 +16,11 @@ const DeploymentProgressBar = ({ progress, filesProcessed, loading }) => {
       </Row>
       <Row>
         <Col span={24}>
+          <div>{statusMessage}</div>
+        </Col>
+      </Row>
+      <Row>
+        <Col span={24}>
           <div>{filesProcessed.length} / 8 files processed</div>
         </Col>
       </Row>
@@ -24,3 +29,4 @@ const DeploymentProgressBar = ({ progress, filesProcessed, loading }) => {
 };
 
 export default DeploymentProgressBar;
+

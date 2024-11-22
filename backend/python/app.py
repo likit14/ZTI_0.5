@@ -7,16 +7,19 @@ import concurrent.futures
 import logging
 from datetime import datetime
 import subprocess
+import requests  # Add this import
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-@app.route('/')
-def home():
-    return "Flask app is running"
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
+@app.route('/')
+def home():
+    return "Flask app is running"
+
+# Function to get the local network IP
 def get_local_network_ip():
     interfaces = netifaces.interfaces()
     for interface in interfaces:
@@ -27,11 +30,13 @@ def get_local_network_ip():
                     return link['addr']
     return None  # Return None if no suitable IP address is found
 
+# Function to get the network range (CIDR)
 def get_network_range(local_ip):
-    ip_interface = ipaddress.IPv4Interface(local_ip + '/24')
+    ip_interface = ipaddress.IPv4Interface(local_ip + '/24')  # Assuming /24 subnet
     network = ip_interface.network
     return network
 
+# Function to scan the network (ARP scan)
 def scan_network(network):
     arp_request = ARP(pdst=str(network))
     broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
@@ -49,13 +54,31 @@ def scan_network(network):
 
     return active_nodes
 
+# Function to send subnet to Express.js backend
+def send_subnet_to_express(subnet, ip):
+    express_url = f"http://{ip}:9909/pxe-config"  # Replace with actual IP
+    headers = {'Content-Type': 'application/json'}
+    payload = {'subnet': str(subnet)}  # Send subnet in the body
+    
+    response = requests.post(express_url, json=payload, headers=headers)
+
+    if response.status_code == 200:
+        return response.json()  # Return the response from the Express backend
+    else:
+        return {"error": "Failed to send subnet to Express backend", "status_code": response.status_code}
+
 @app.route('/scan', methods=['GET'])
 def scan_network_api():
     logging.info("Received scan request")
 
     # Check if a subnet is provided in the query parameters
     subnet = request.args.get('subnet')
+    local_ip = get_local_network_ip()  # Ensure the local IP is retrieved before using it
     
+    if not local_ip:
+        logging.error("Failed to retrieve local network IP address.")
+        return jsonify({"error": "Failed to retrieve local network IP address."}), 500
+
     if subnet:
         try:
             # Validate and parse the subnet
@@ -66,19 +89,18 @@ def scan_network_api():
             return jsonify({"error": "Invalid subnet format."}), 400
     else:
         # Use the local network IP if no subnet is provided
-        local_ip = get_local_network_ip()
-        if not local_ip:
-            logging.error("Failed to retrieve local network IP address.")
-            return jsonify({"error": "Failed to retrieve local network IP address."}), 500
         network = get_network_range(local_ip)
         logging.info(f"Scanning local network: {network}")
+
+    # Send subnet to Express.js backend (optional step)
+    express_response = send_subnet_to_express(network, local_ip)
 
     # Perform the network scan
     active_nodes = scan_network(network)
     logging.info(f"Active nodes found: {active_nodes}")
 
+    # Return both active nodes and the response from Express.js backend
     return jsonify(active_nodes)
-
 
 @app.route('/set_pxe_boot', methods=['POST'])
 def set_pxe_boot():
@@ -108,6 +130,4 @@ def set_pxe_boot():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
-    # subprocess.Popen(['python3', 'script.py'])  # Run script.py in the background
-    # subprocess.Popen(['python3', 'app.py'])  # Run script.py in the background
     app.run(host='0.0.0.0', port=8000, threaded=True)
