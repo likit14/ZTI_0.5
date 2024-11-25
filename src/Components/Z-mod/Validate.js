@@ -83,20 +83,20 @@ const Validation = ({ nodes }) => {
   const statusMessage =
     progress === 100 ? "Successfully Deployed" : "Deployment in Progress";
 
-    useEffect(() => {
-      if (progress === 100 && !notificationShown) {
-        notification.success({
-          message: "Deployment Completed Successfully",
-          description: "Your deployment has been completed successfully.",
-          placement: "top", // Can be topLeft, topRight, bottomLeft, bottomRight
-        });
-  
-        
-  
-        // Mark the notification as shown
-        setNotificationShown(true);
-      }
-    }, [progress, notificationShown]);
+  useEffect(() => {
+    if (progress === 100 && !notificationShown) {
+      notification.success({
+        message: "Deployment Completed Successfully",
+        description: "Your deployment has been completed successfully.",
+        placement: "top", // Can be topLeft, topRight, bottomLeft, bottomRight
+      });
+
+
+
+      // Mark the notification as shown
+      setNotificationShown(true);
+    }
+  }, [progress, notificationShown]);
 
   useEffect(() => {
     if (!isDeploymentStarted || !targetServerIp) return; // Only proceed if deployment has started
@@ -278,15 +278,12 @@ const Validation = ({ nodes }) => {
       .post("http://192.168.249.100:9909/api/boot", { osType: "normal" })
       .then((response) => {
         console.log("Normal OS boot initiated");
-        // You can also handle success here (e.g., show a success message or update state)
       })
       .catch((error) => {
         console.error("Error initiating OS boot:", error);
-        // Optionally handle errors (e.g., show an error message)
       });
 
   };
-
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -533,14 +530,7 @@ const Validation = ({ nodes }) => {
   const handleBmcFormSubmit = async (ip, bmcDetails) => {
     setBmcFormVisible(false);
     setPopoverVisible((prev) => ({ ...prev, [ip]: false }));
-    MySwal.fire({
-      title: "Validation in Progress",
-      html: "Please wait while we process your request...",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
+    showValidationInProgressPopup(); // Show progress popup initially
 
     try {
       axios
@@ -555,15 +545,33 @@ const Validation = ({ nodes }) => {
       console.log("BMC Details submitted:", bmcDetails);
       console.log("Server response:", response.data);
 
-      await new Promise((resolve) => setTimeout(resolve, 120000));
+      await new Promise((resolve) => setTimeout(resolve, 120000)); // 2-minute delay
 
-      await fetchValidationData();
+      await fetchValidationData(); // Initial validation attempt
       setValidated(true); // Mark as validated
     } catch (error) {
       console.error("Error in form submission:", error);
     }
   };
-  const fetchValidationData = async () => {
+
+
+  const showValidationInProgressPopup = () => {
+    MySwal.fire({
+      title: "Validation in Progress",
+      html: "Please wait while we process your request...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+  };
+
+  const fetchValidationData = async (isRetry = false, retryCount = 0) => {
+    const maxRetries = 3; // Maximum number of retries allowed
+    if (isRetry) {
+      showValidationInProgressPopup(); // Show progress popup again when retrying
+    }
+
     try {
       const response = await fetch("/hardware_summary.json");
       if (!response.ok) {
@@ -584,12 +592,11 @@ const Validation = ({ nodes }) => {
         ? data.disk_capacities.map((disk) => {
           const [name, capacity] = Object.entries(disk)[0];
           // Remove the colon (:) from the disk name
-          const cleanedName = name.replace(/:$/, '');
+          const cleanedName = name.replace(/:$/, "");
           return { name: cleanedName, capacity };
         })
         : [];
       setDisks(fetchedDisks);
-
 
       // Compare specifications
       const comparisonResults = compareSpecs(data, requirementData);
@@ -615,30 +622,71 @@ const Validation = ({ nodes }) => {
         },
       }));
 
-      // Show success message
-      Swal.fire({
-        title: "Success",
-        text: "Validation completed successfully!",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#28a745",
-      });
-
-      setBmcFormVisible(false);
-      setFormSubmitted(true);
+      if (overallStatus === "Passed") {
+        // Show success message
+        Swal.fire({
+          title: "Success",
+          text: "Validation completed successfully!",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#28a745",
+        });
+        setBmcFormVisible(false);
+        setFormSubmitted(true);
+        return; // Terminate further retries
+      } else {
+        throw new Error("Validation failed");
+      }
     } catch (error) {
-      console.error("Error setting PXE boot:", error);
-      // Show error message
-      Swal.fire({
-        title: "Failed",
-        text: "Failed to set PXE boot or fetch validation data. Please try again.",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#dc3545",
-      });
+      console.error("Error fetching validation data:", error);
 
-      setBmcFormVisible(false);
-      setFormSubmitted(true);
-    }
-  };
+      Swal.fire({
+        title: "File has not received yet !",
+        text: "Do you want to keep waiting for the file?",
+        showCancelButton: true,
+        confirmButtonText: "Continue",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#007bff",
+        cancelButtonColor: "#dc3545",
+        customClass: {
+          actions: "horizontal-buttons", // Add custom class to actions container
+        },
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          // Close any previous Swal alert before retrying
+          Swal.close();
+      
+          // Show progress popup again before retrying
+          showValidationInProgressPopup();
+      
+          // Wait for 2 minutes before retrying the validation fetch
+          await new Promise((resolve) => setTimeout(resolve, 120000)); // 2-minute delay
+      
+          // Retry fetching validation data
+          await fetchValidationData(true, retryCount + 1); // Retry fetching validation data
+        } else {
+          setBmcFormVisible(false);
+          setFormSubmitted(true);
+        }
+      });
+      
+      // Add styles for horizontal buttons with 80px width
+      const style = document.createElement("style");
+      style.innerHTML = `
+        .swal2-actions.horizontal-buttons {
+          display: flex !important;
+          flex-direction: row !important; /* Arrange buttons in a horizontal row */
+          justify-content: center !important; /* Center align the buttons */
+          gap: 10px; /* Add spacing between the buttons */
+        }
+        .swal2-actions.horizontal-buttons .swal2-confirm,
+        .swal2-actions.horizontal-buttons .swal2-cancel {
+          width: 90px; /* Set the width of both buttons to 80px */
+        }
+      `;
+      document.head.appendChild(style);
+    }};      
+
+
   const handleNextClick = () => {
     if (selectedIp) {
       onDeployTriggered(selectedIp);
