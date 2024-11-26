@@ -34,8 +34,8 @@ def deploy():
         logger.info(f"Successfully connected to {host}")
 
         # Execute the command to run the Python script from the URL
-        # command  = 'sudo apt install curl -y'
-        command = 'sudo apt install curl -y && python3 <(curl -H "Authorization: token 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" -L "https://raw.githubusercontent.com/Pinakastra-Computing/pinaka-zerotouch/main/ZTi_AIO/All-in-one.py" | python3 -)'
+        command  = 'sudo apt install curl -y'
+        # command = 'sudo apt install curl -y && python3 <(curl -H "Authorization: token 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" -L "https://raw.githubusercontent.com/Pinakastra-Computing/pinaka-zerotouch/main/ZTi_AIO/All-in-one.py" | python3 -)'
         logger.info(f"Executing command: {command}")
         stdin, stdout, stderr = ssh.exec_command(command)
 

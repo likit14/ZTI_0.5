@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Divider, Table, Breadcrumb, Button, Popover, Input, Form, Modal, Space, Progress, Select, Spin, notification } from "antd";
-import { HomeOutlined } from "@ant-design/icons";
+import { Divider, Table, Breadcrumb, Button, Popover, Input, Form, Modal, Select, Spin, notification, message } from "antd";
+import { HomeOutlined, LoadingOutlined } from "@ant-design/icons";
 import axios from "axios";
 import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
@@ -170,6 +170,30 @@ const Validation = ({ nodes }) => {
 
   const handleSubmit = async (values) => {
     setLoading(true);
+    try {
+      // Sending form data to backend API
+      const response = await axios.post('http://192.168.249.100:9909/update-config', {
+        ip: values.ip,
+        subnet: values.subnet,
+        gateway: values.gateway,
+        interface: values.interface1,  // Assuming you're using the first interface
+        disk: values.disk,             // Including the disk value
+      });
+
+      // Handle the response from the server
+      if (response.data.message) {
+        console.log(response.data.message);
+        // Optionally close the modal after successful form submission
+        setOpenOSModal(false);
+        alert('Configuration updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating configuration:', error);
+      // Show a user-friendly error message
+      alert('There was an error updating the configuration. Please try again.');
+    } finally {
+      setLoading(false);
+    }
 
     try {
       const response = await fetch("http://192.168.249.100:9909/ssh-connect", {
@@ -206,31 +230,6 @@ const Validation = ({ nodes }) => {
     } catch (error) {
       console.error("Error starting SSH:", error);
       console.error("An unexpected error occurred while starting SSH.");
-    } finally {
-      setLoading(false);
-    }
-
-    try {
-      // Sending form data to backend API
-      const response = await axios.post('http://192.168.249.100:9909/update-config', {
-        ip: values.ip,
-        subnet: values.subnet,
-        gateway: values.gateway,
-        interface: values.interface1,  // Assuming you're using the first interface
-        disk: values.disk,             // Including the disk value
-      });
-
-      // Handle the response from the server
-      if (response.data.message) {
-        console.log(response.data.message);
-        // Optionally close the modal after successful form submission
-        setOpenOSModal(false);
-        alert('Configuration updated successfully!');
-      }
-    } catch (error) {
-      console.error('Error updating configuration:', error);
-      // Show a user-friendly error message
-      alert('There was an error updating the configuration. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -469,6 +468,7 @@ const Validation = ({ nodes }) => {
         title: "Validation in Progress",
         html: "Please wait while we process your request...",
         allowOutsideClick: false,
+        allowEscapeKey: false,
         didOpen: () => {
           Swal.showLoading();
         },
@@ -531,46 +531,57 @@ const Validation = ({ nodes }) => {
     setBmcFormVisible(false);
     setPopoverVisible((prev) => ({ ...prev, [ip]: false }));
     showValidationInProgressPopup(); // Show progress popup initially
-  
+
     try {
       axios
         .post("http://192.168.249.100:9909/api/boot", { osType: "live" })
         .then((response) => console.log("Live OS boot initiated"))
         .catch((error) => console.error("Error in booting Live OS:", error));
-  
+
       const response = await axios.post(
         "http://192.168.249.100:8000/set_pxe_boot",
         bmcDetails
       );
       console.log("BMC Details submitted:", bmcDetails);
       console.log("Server response:", response.data);
-  
+
       await new Promise((resolve) => setTimeout(resolve, 120000)); // 2-minute delay
-  
+
       await fetchValidationData(); // Initial validation attempt
       setValidated(true); // Mark as validated
     } catch (error) {
-      console.error("Error in form submission:", error);
+      Swal.close();
+      message.error("Wrong credentials or check the system's power status.");
     }
   };
-  
+
   const showValidationInProgressPopup = () => {
     MySwal.fire({
       title: "Validation in Progress",
-      html: "Please wait while we process your request...",
+      html: (
+        <div>
+          <div>Please wait while we process your request...</div>
+          <Spin indicator={<LoadingOutlined spin />} size="large" />
+        </div>
+      ), // Add the Spin component here
       allowOutsideClick: false,
+      showConfirmButton: false,
+      allowEscapeKey: false,
       didOpen: () => {
-        Swal.showLoading();
+        // No need to use Swal.showLoading() anymore
       },
     });
   };
-  
+
   const fetchValidationData = async (isRetry = false, retryCount = 0) => {
     const maxRetries = 3; // Maximum number of retries allowed
+
     if (isRetry) {
-      showValidationInProgressPopup(); // Show progress popup again when retrying
+      // Close any previous Swal dialog before retrying
+      Swal.close();
+      showValidationInProgressPopup(); // Show the loading popup only when retrying
     }
-  
+
     try {
       const response = await fetch("/hardware_summary.json");
       if (!response.ok) {
@@ -578,37 +589,37 @@ const Validation = ({ nodes }) => {
       }
       const data = await response.json();
       console.log("Fetched validation data:", data);
-  
+
       setValidationData(data);
-  
+
       // Extract interfaces from the fetched data
       const fetchedInterfaces = data.interfaces
         ? data.interfaces.split(",")
         : [];
       setInterfaces(fetchedInterfaces);
-  
+
       const fetchedDisks = data.disk_capacities
         ? data.disk_capacities.map((disk) => {
-            const [name, capacity] = Object.entries(disk)[0];
-            // Remove the colon (:) from the disk name
-            const cleanedName = name.replace(/:$/, "");
-            return { name: cleanedName, capacity };
-          })
+          const [name, capacity] = Object.entries(disk)[0];
+          // Remove the colon (:) from the disk name
+          const cleanedName = name.replace(/:$/, "");
+          return { name: cleanedName, capacity };
+        })
         : [];
       setDisks(fetchedDisks);
-  
+
       // Compare specifications
       const comparisonResults = compareSpecs(data, requirementData);
       console.log("Comparison Results:", comparisonResults);
-  
+
       const overallStatus =
         comparisonResults.cpuCoresPassed &&
-        comparisonResults.memoryPassed &&
-        comparisonResults.diskPassed &&
-        comparisonResults.nicPassed
+          comparisonResults.memoryPassed &&
+          comparisonResults.diskPassed &&
+          comparisonResults.nicPassed
           ? "Passed"
           : "Failed";
-  
+
       // Update validation results
       setValidationResults((prevResults) => ({
         ...prevResults,
@@ -620,9 +631,11 @@ const Validation = ({ nodes }) => {
           nicPassed: comparisonResults.nicPassed,
         },
       }));
-  
+
       if (overallStatus === "Passed") {
-        // Show success message
+        Swal.close();
+
+        // Success message after validation
         Swal.fire({
           title: "Success",
           text: "Validation completed successfully!",
@@ -637,8 +650,11 @@ const Validation = ({ nodes }) => {
       }
     } catch (error) {
       console.error("Error fetching validation data:", error);
-  
-      // Show retry dialog
+
+      // Close any previous Swal alert before retrying
+      Swal.close();
+
+      // Show retry popup
       Swal.fire({
         title: "File has not received yet!",
         text: "Would you like to continue waiting for the file?",
@@ -654,13 +670,13 @@ const Validation = ({ nodes }) => {
         if (result.isConfirmed) {
           // Close any previous Swal alert before retrying
           Swal.close();
-  
+
           // Show progress popup again before retrying
           showValidationInProgressPopup();
-  
+
           // Wait for 2 minutes before retrying the validation fetch
           await new Promise((resolve) => setTimeout(resolve, 120000)); // 2-minute delay
-  
+
           // Retry fetching validation data
           await fetchValidationData(true, retryCount + 1); // Retry fetching validation data
         } else {
@@ -668,7 +684,7 @@ const Validation = ({ nodes }) => {
           setFormSubmitted(true);
         }
       });
-  
+
       // Add styles for horizontal buttons with 90px width
       const style = document.createElement("style");
       style.innerHTML = `
@@ -686,7 +702,7 @@ const Validation = ({ nodes }) => {
       document.head.appendChild(style);
     }
   };
-    
+
   const handleNextClick = () => {
     if (selectedIp) {
       onDeployTriggered(selectedIp);
@@ -783,9 +799,9 @@ const Validation = ({ nodes }) => {
             <table style="width:100%; border-collapse: collapse; margin-top: 10px; border-radius: 10px; overflow: hidden;">
                 <thead style="background-color: #f8f9fa;">
                     <tr>
-                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">PARAMETER</th>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Parameter</th>
                         <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Min Req </th>
-                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">REC</th>
+                        <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Rec</th>
                         <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 1rem;">Result </th>
                     </tr>
                 </thead>
@@ -1215,6 +1231,22 @@ const Validation = ({ nodes }) => {
                     style: { top: '20vh' },
                     onOk: handleConfirmation,
                     onCancel: () => Modal.destroyAll(),
+                    footer: [
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                        <Button
+                          style={{ width: "80px", marginRight: "10px" }}
+                          onClick={handleConfirmation}
+                        >
+                          Confirm
+                        </Button>
+                        <Button
+                          style={{ width: "80px" }}
+                          onClick={() => Modal.destroyAll()}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ]
                   });
                 }}
               >
@@ -1429,7 +1461,6 @@ const Validation = ({ nodes }) => {
                       <Button
                         type="primary"
                         htmlType="submit"
-                        loading={loading}
                         style={{ width: '80px' }}  // Set width to 80px
                       >
                         Deploy
