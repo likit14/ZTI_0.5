@@ -1,20 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { Breadcrumb, Card } from 'antd';
+import { Breadcrumb, Card, Spin, Alert } from 'antd';
 import { HomeOutlined } from '@ant-design/icons';
 
 const getCloudNameFromMetadata = () => {
   let cloudNameMeta = document.querySelector('meta[name="cloud-name"]');
-  return cloudNameMeta ? cloudNameMeta.content : null;
+  return cloudNameMeta ? cloudNameMeta.content : 'Default Cloud'; // Default value if not found
 };
 
 const Report = ({ ibn }) => {
   const [urls, setUrls] = useState(null); // State to store the URLs
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
   const cloudName = getCloudNameFromMetadata();
 
   // Fetch URLs from the backend API when `ibn` changes
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true); // Set loading to true when starting the fetch
+
       try {
+        // Check if ibn is available
+        if (!ibn) {
+          setError('IBN is missing. Please go back and select a valid IBN.');
+          setLoading(false);
+          return;
+        }
+
         // Fetch the credentials from the backend API using `ibn`
         const response = await fetch("http://192.168.249.100:9909/api/credentials", {
           headers: { 'ibn': ibn } // Pass the `ibn` value in the request headers
@@ -26,8 +37,10 @@ const Report = ({ ibn }) => {
 
         const data = await response.json();
         setUrls(data); // Set the fetched URLs data to the state
+        setLoading(false); // Set loading to false when data is fetched
       } catch (error) {
-        console.error('Error fetching data:', error);
+        setError('Error fetching data: ' + error.message);
+        setLoading(false); // Stop loading on error
       }
     };
 
@@ -36,10 +49,25 @@ const Report = ({ ibn }) => {
     }
   }, [ibn]); // Run the effect when `ibn` changes
 
-  if (!urls) {
-    return <div>Loading...</div>; // Loading state while data is being fetched
+  // Loading state while data is being fetched
+  if (loading) {
+    return <Spin size="large" tip="Loading data..." style={{ marginTop: '20px' }} />;
   }
 
+  // Error state if fetching fails
+  if (error) {
+    return (
+      <Alert
+        message="Error"
+        description={error}
+        type="error"
+        showIcon
+        style={{ marginTop: '20px' }}
+      />
+    );
+  }
+
+  // Render the report card when data is successfully fetched
   return (
     <div style={{ padding: '20px' }}>
       <Breadcrumb style={{ margin: '16px 0' }}>
@@ -64,8 +92,14 @@ const Report = ({ ibn }) => {
             borderRadius: '8px',
           }}
         >
-          <p><b>Skyline Dashboard :</b> <a href={urls.skylineDashboardUrl} target="_blank" rel="noopener noreferrer">{urls.skylineDashboardUrl}</a></p>
-          <p><b>Ceph Dashboard :</b> <a href={urls.cephDashboardUrl} target="_blank" rel="noopener noreferrer">{urls.cephDashboardUrl}</a></p>
+          {urls ? (
+            <>
+              <p><b>Skyline Dashboard :</b> <a href={urls.skylineDashboardUrl} target="_blank" rel="noopener noreferrer">{urls.skylineDashboardUrl}</a></p>
+              <p><b>Ceph Dashboard :</b> <a href={urls.cephDashboardUrl} target="_blank" rel="noopener noreferrer">{urls.cephDashboardUrl}</a></p>
+            </>
+          ) : (
+            <p>No URLs available.</p>
+          )}
         </Card>
       </div>
     </div>

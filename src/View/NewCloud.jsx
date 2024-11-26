@@ -8,8 +8,9 @@ import Report from '../Components/Z-mod/Report';
 
 const App = () => {
   const [activeTab, setActiveTab] = useState("1");
-  const [disabledTabs, setDisabledTabs] = useState({ "2": true, "3": true, "4" : true });
+  const [disabledTabs, setDisabledTabs] = useState({ "2": true, "3": true, "4": true });
   const [selectedNodes, setSelectedNodes] = useState([]); // State for selected nodes
+  const [ibn, setIbn] = useState(''); // State for ibn value
 
   const handleTabStart = (currentTab) => {
     const nextTab = (currentTab + 1).toString();
@@ -29,6 +30,16 @@ const App = () => {
     setActiveTab("3"); // Move to Validation tab
   };
 
+  // Function to update ibn and enable the Report tab
+  const handleIbnUpdate = (newIbn) => {
+    setIbn(newIbn); // Update ibn value
+    setDisabledTabs((prevState) => ({
+      ...prevState,
+      "4": false, // Enable Report tab
+    }));
+    // setActiveTab("4"); // Move to Report tab
+  };
+
   return (
     <Zti>
       <h2>New Cloud</h2>
@@ -40,10 +51,15 @@ const App = () => {
           <Discovery onNodeSelect={handleNodeSelection} onStart={() => handleTabStart(2)} />
         </Tabs.TabPane>
         <Tabs.TabPane tab="Validation" key="3" disabled={disabledTabs["3"]}>
-          <Validation nodes={selectedNodes} onStart={() => handleTabStart(3)}/>
+          <Validation
+            nodes={selectedNodes}
+            onStart={() => handleTabStart(3)}
+            onIbnUpdate={handleIbnUpdate} // Pass the ibn update handler here
+          />
         </Tabs.TabPane>
         <Tabs.TabPane tab="Report" key="4" disabled={disabledTabs["4"]}>
-          <Report nodes={selectedNodes} />
+          {/* Only render Report when the active tab is 4 */}
+          {activeTab === "4" && <Report ibn={ibn} />}
         </Tabs.TabPane>
       </Tabs>
     </Zti>
@@ -51,4 +67,3 @@ const App = () => {
 };
 
 export default App;
-

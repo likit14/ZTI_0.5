@@ -10,14 +10,14 @@ import ProgressModal from './ProgressModal';
 import DeploymentProgressBar from './DeploymentProgressBar'
 import { useLocation, useNavigate } from "react-router-dom";
 import requirementData from "../../Comparison/min_requirements.json";
-import Report from './Report';
+// import Report from './Report';
 
 const getCloudNameFromMetadata = () => {
   let cloudNameMeta = document.querySelector('meta[name="cloud-name"]');
   return cloudNameMeta ? cloudNameMeta.content : null; // Return the content of the meta tag
 };
 
-const Validation = ({ nodes }) => {
+const Validation = ({ nodes, onStart, onIbnUpdate }) => {
   const cloudName = getCloudNameFromMetadata();
   const [validationResults, setValidationResults] = useState({});
   //   const combinedDataSource = [...nodes];
@@ -164,10 +164,6 @@ const Validation = ({ nodes }) => {
     return Promise.resolve();
   };
 
-
-
-
-
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
@@ -186,6 +182,7 @@ const Validation = ({ nodes }) => {
         // Optionally close the modal after successful form submission
         setOpenOSModal(false);
         alert('Configuration updated successfully!');
+        await handleDeployButtonClick();
       }
     } catch (error) {
       console.error('Error updating configuration:', error);
@@ -369,7 +366,7 @@ const Validation = ({ nodes }) => {
       })
       .catch(error => {
         console.error('Error:', error);
-        console.log('Error starting deployment:', error.message); // Log the error
+        console.log('Error starting deployment:', error.message);
       });
   }
 
@@ -559,11 +556,11 @@ const Validation = ({ nodes }) => {
     MySwal.fire({
       title: "Validation in Progress",
       html: (
-        <div>
-          <div>Please wait while we process your request...</div>
+        <div style={{ overflowY: 'hidden' }}>
+          <div style={{ marginBottom: '20px' }}>Please wait while we process your request...</div>
           <Spin indicator={<LoadingOutlined spin />} size="large" />
         </div>
-      ), // Add the Spin component here
+      ),
       allowOutsideClick: false,
       showConfirmButton: false,
       allowEscapeKey: false,
@@ -696,7 +693,7 @@ const Validation = ({ nodes }) => {
         }
         .swal2-actions.horizontal-buttons .swal2-confirm,
         .swal2-actions.horizontal-buttons .swal2-cancel {
-          width: 90px; /* Set the width of both buttons to 90px */
+          width: 100px; /* Set the width of both buttons to 90px */
         }
       `;
       document.head.appendChild(style);
@@ -725,12 +722,12 @@ const Validation = ({ nodes }) => {
         "http://192.168.249.100:8000/set_pxe_boot",
         bmcDetails
       );
-      console.log("BMC Details submitted:", bmcDetails);
-      console.log("Server response:", response.data);
+      console.log("Os Deployment started");
     } catch (error) {
       console.error("Error during deployment:", error);
     }
   };
+
   const handleCancel = () => {
     setBmcFormVisible(false);
     setValidatingNode(null);
@@ -904,8 +901,8 @@ const Validation = ({ nodes }) => {
 
     // Collect the form data from the form values
     const { ibn, gateway, dns, interface1, interface2 } = values;
+    onIbnUpdate(ibn)
     setTargetServerIp(ibn);
-    setIbn(ibn);
     setIsDeploymentStarted(true);
     startDeploymentWithIP(ibn);
 
@@ -1234,7 +1231,7 @@ const Validation = ({ nodes }) => {
                     footer: [
                       <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
                         <Button
-                          style={{ width: "80px", marginRight: "10px" }}
+                          style={{ width: "80px", marginRight: "10px", color: '#007bff' }}
                           onClick={handleConfirmation}
                         >
                           Confirm
@@ -1328,7 +1325,7 @@ const Validation = ({ nodes }) => {
                         <Select placeholder="Select Disk">
                           {disks.map((disk) => (
                             <Select.Option key={disk.name} value={`/dev/${disk.name}`}>
-                              {`/dev/${disk.name} {disk.capacity}`}
+                              {`/dev/${disk.name} ${disk.capacity}`}
                             </Select.Option>
                           ))}
                         </Select>
@@ -1341,10 +1338,14 @@ const Validation = ({ nodes }) => {
                         type="primary"
                         htmlType="submit"
                         loading={loading}
-                        style={{ width: '80px' }} // Set width to 80px
+                        style={{ width: '80px' }}
+                        disabled={
+                          !form.isFieldsTouched(true) ||
+                          form.getFieldsError().some(({ errors }) => errors.length > 0) ||
+                          Object.values(form.getFieldsValue()).some(value => value === undefined || value === '')
+                        }
                         onClick={() => {
                           Modal.destroyAll();
-                          handleDeployButtonClick(node.ip);
                         }}
                       >
                         Boot
@@ -1367,9 +1368,9 @@ const Validation = ({ nodes }) => {
       key: 'deploy',
       align: 'center',
       render: (_, node) => {
-        const result = validationResults[node.ip];
-        if (!result) return null; // If no validation result, return nothing
-        if (result.status === 'Passed') {
+        // const result = validationResults[node.ip];
+        // if (!result) return null; // If no validation result, return nothing
+        // if (result.status === 'Passed') {
           return (
             <>
               <Button type="primary" style={{ width: '80px' }} onClick={showDeployModal}>
@@ -1383,6 +1384,8 @@ const Validation = ({ nodes }) => {
                 footer={null}
                 width={600}
                 destroyOnClose={true}
+                maskClosable={false} 
+                keyboard={false}
               >
                 <Form
                   form={form}
@@ -1406,13 +1409,14 @@ const Validation = ({ nodes }) => {
                         label="Interface 1"
                         rules={[{ required: true, message: 'Please select Interface 1' }]}
                       >
-                        <Select placeholder="Select Interface 1">
+                           <Input placeholder="Enter Gateway" />
+                        {/* <Select placeholder="Select Interface 1">
                           {interfaces.map((iface) => (
                             <Select.Option key={iface} value={iface}>
                               {iface}
                             </Select.Option>
                           ))}
-                        </Select>
+                        </Select> */}
                       </Form.Item>
                     </Col>
                   </Row>
@@ -1433,13 +1437,14 @@ const Validation = ({ nodes }) => {
                         label="Interface 2"
                         rules={[{ required: true, message: 'Please select Interface 2' }]}
                       >
-                        <Select placeholder="Select Interface 2">
+                           <Input placeholder="Enter Gateway" />
+                        {/* <Select placeholder="Select Interface 2">
                           {interfaces.map((iface) => (
                             <Select.Option key={iface} value={iface}>
                               {iface}
                             </Select.Option>
                           ))}
-                        </Select>
+                        </Select> */}
                       </Form.Item>
                     </Col>
                   </Row>
@@ -1536,9 +1541,9 @@ const Validation = ({ nodes }) => {
               </Modal>
             </>
           );
-        } else {
-          return null; // If validation fails, return nothing
-        }
+        // } else {
+        //   return null; // If validation fails, return nothing
+        // }
       },
     },
   ];
@@ -1568,7 +1573,7 @@ const Validation = ({ nodes }) => {
         onClose={() => setProgressVisible(false)}
       // onNext={onDeployTriggered}
       />
-      {ibn && <Report ibn={ibn} />}
+      {/* <Report ibn={ibn} /> */}
     </div>
   );
 };
