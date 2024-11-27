@@ -170,10 +170,10 @@ const Validation = ({ nodes,onIbnUpdate, next }) => {
     try {
       // Sending form data to backend API
       const response = await axios.post('http://192.168.249.100:9909/update-config', {
-        ip: values.ip,
+        ip: values.ibn,
         subnet: values.subnet,
         gateway: values.gateway,
-        interface: values.interface1,  // Assuming you're using the first interface
+        interface: values.interface,  // Assuming you're using the first interface
         disk: values.disk,             // Including the disk value
       });
 
@@ -1274,7 +1274,7 @@ const Validation = ({ nodes,onIbnUpdate, next }) => {
                   <Row gutter={16}>
                     <Col span={12}>
                       <Form.Item
-                        name="ip"
+                        name="ibn"
                         label="IP Address"
                         rules={[{ required: true, message: 'Please enter IP address' }]}
                       >
@@ -1295,8 +1295,8 @@ const Validation = ({ nodes,onIbnUpdate, next }) => {
                   <Row gutter={16}>
                     <Col span={12}>
                       <Form.Item
-                        name="interface1"
-                        label="Interface 1"
+                        name="interface"
+                        label="Interface"
                         rules={[{ required: true, message: 'Please select Interface 1' }]}
                       >
                         <Select placeholder="Select Interface 1">
