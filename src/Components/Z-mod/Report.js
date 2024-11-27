@@ -95,7 +95,7 @@ const Report = ({ ibn }) => {
           {urls ? (
             <>
               <p><b>Skyline Dashboard :</b> <a href={urls.skylineDashboardUrl} target="_blank" rel="noopener noreferrer">{urls.skylineDashboardUrl}</a></p>
-              <p><b>Ceph Dashboard :</b> <a href={urls.cephDashboardUrl} target="_blank" rel="noopener noreferrer">{urls.cephDashboardUrl}</a></p>
+              <p><b>Ceph Dashboard &nbsp;&nbsp; :</b> <a href={urls.cephDashboardUrl} target="_blank" rel="noopener noreferrer">{urls.cephDashboardUrl}</a></p>
             </>
           ) : (
             <p>No URLs available.</p>

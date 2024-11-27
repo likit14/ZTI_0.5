@@ -1485,9 +1485,10 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
               visible={isProgressModalVisible}
               footer={null}
               onCancel={closeProgressModal}
-              title={`Deployment Progress for ${cloudName}`}
-              maskClosable={false}
+              title={progress === 100 ? `Successfully Deployed ${cloudName} Cloud 🎉` : `Deployment in Progress for ${cloudName} Cloud`}
+	      maskClosable={false}
               style={{ position: 'relative' }} // Ensure modal container has relative positioning
+	      keyboard={false}
             >
               {/* Your existing content */}
               <DeploymentProgressBar
@@ -1551,10 +1552,11 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
                   onClick={handleNextButtonClick}
                   style={{
                     position: 'absolute', // Position relative to the modal container
-                    bottom: '16px',
+                    bottom: '0px',
+	            marginBottom: '1px',
                     right: '16px',
-                    width: '75px',
-                    height: '35px',
+                    width: '70px',
+                    height: '30px',
                     background: '#1890ff',
                     color: '#fff',
                     border: 'none',
