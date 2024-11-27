@@ -17,7 +17,7 @@ const getCloudNameFromMetadata = () => {
   return cloudNameMeta ? cloudNameMeta.content : null; // Return the content of the meta tag
 };
 
-const Validation = ({ nodes, onStart, onIbnUpdate }) => {
+const Validation = ({ nodes,onIbnUpdate, next }) => {
   const cloudName = getCloudNameFromMetadata();
   const [validationResults, setValidationResults] = useState({});
   //   const combinedDataSource = [...nodes];
@@ -83,12 +83,13 @@ const Validation = ({ nodes, onStart, onIbnUpdate }) => {
   const statusMessage =
     progress === 100 ? "Successfully Deployed" : "Deployment in Progress";
 
+
   useEffect(() => {
     if (progress === 100 && !notificationShown) {
       notification.success({
         message: "Deployment Completed Successfully",
         description: "Your deployment has been completed successfully.",
-        placement: "top", // Can be topLeft, topRight, bottomLeft, bottomRight
+        placement: "topRight", // Can be topLeft, topRight, bottomLeft, bottomRight
       });
 
 
@@ -514,6 +515,12 @@ const Validation = ({ nodes, onStart, onIbnUpdate }) => {
     setTimeout(() => {
       setLoading(false);
     }, 2000); // Simulate loading time (2 seconds)
+  };
+
+  const handleNextButtonClick = () => {
+    setProgressModalVisible(false);
+    next();
+
   };
 
 
@@ -1371,176 +1378,197 @@ const Validation = ({ nodes, onStart, onIbnUpdate }) => {
         // const result = validationResults[node.ip];
         // if (!result) return null; // If no validation result, return nothing
         // if (result.status === 'Passed') {
-          return (
-            <>
-              <Button type="primary" style={{ width: '80px' }} onClick={showDeployModal}>
-                Deploy
-              </Button>
+        return (
+          <>
+            <Button type="primary" style={{ width: '80px' }} onClick={showDeployModal}>
+              Deploy
+            </Button>
 
-              <Modal
-                title="Deployment Form"
-                visible={open}
-                onCancel={() => setOpen(false)}
-                footer={null}
-                width={600}
-                destroyOnClose={true}
-                maskClosable={false} 
-                keyboard={false}
+            <Modal
+              title="Deployment Form"
+              visible={open}
+              onCancel={() => setOpen(false)}
+              footer={null}
+              width={600}
+              destroyOnClose={true}
+              maskClosable={false}
+              keyboard={false}
+            >
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={onDeployTriggered}
+                initialValues={{}} // Optional initial values
               >
-                <Form
-                  form={form}
-                  layout="vertical"
-                  onFinish={onDeployTriggered}
-                  initialValues={{}} // Optional initial values
-                >
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        name="ibn"
-                        label="IP/CIDR"
-                        rules={[{ required: true, message: 'Please enter IP/CIDR' }]}
-                      >
-                        <Input placeholder="Enter IP/CIDR" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        name="interface1"
-                        label="Interface 1"
-                        rules={[{ required: true, message: 'Please select Interface 1' }]}
-                      >
-                           <Input placeholder="Enter Gateway" />
-                        {/* <Select placeholder="Select Interface 1">
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      name="ibn"
+                      label="IP/CIDR"
+                      rules={[{ required: true, message: 'Please enter IP/CIDR' }]}
+                    >
+                      <Input placeholder="Enter IP/CIDR" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      name="interface1"
+                      label="Interface 1"
+                      rules={[{ required: true, message: 'Please select Interface 1' }]}
+                    >
+                      <Input placeholder="Enter Gateway" />
+                      {/* <Select placeholder="Select Interface 1">
                           {interfaces.map((iface) => (
                             <Select.Option key={iface} value={iface}>
                               {iface}
                             </Select.Option>
                           ))}
                         </Select> */}
-                      </Form.Item>
-                    </Col>
-                  </Row>
+                    </Form.Item>
+                  </Col>
+                </Row>
 
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        name="dns"
-                        label="DNS"
-                        rules={[{ required: true, message: 'Please enter DNS' }]}
-                      >
-                        <Input placeholder="Enter DNS" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        name="interface2"
-                        label="Interface 2"
-                        rules={[{ required: true, message: 'Please select Interface 2' }]}
-                      >
-                           <Input placeholder="Enter Gateway" />
-                        {/* <Select placeholder="Select Interface 2">
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      name="dns"
+                      label="DNS"
+                      rules={[{ required: true, message: 'Please enter DNS' }]}
+                    >
+                      <Input placeholder="Enter DNS" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      name="interface2"
+                      label="Interface 2"
+                      rules={[{ required: true, message: 'Please select Interface 2' }]}
+                    >
+                      <Input placeholder="Enter Gateway" />
+                      {/* <Select placeholder="Select Interface 2">
                           {interfaces.map((iface) => (
                             <Select.Option key={iface} value={iface}>
                               {iface}
                             </Select.Option>
                           ))}
                         </Select> */}
-                      </Form.Item>
-                    </Col>
-                  </Row>
+                    </Form.Item>
+                  </Col>
+                </Row>
 
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        name="gateway"
-                        label="Provider NGW"
-                        rules={[{ required: true, message: 'Please enter Gateway' }]}
-                      >
-                        <Input placeholder="Enter Gateway" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                  {/* Align the button to the right */}
-                  <Form.Item>
-                    <div style={{ textAlign: 'right' }}>
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        style={{ width: '80px' }}  // Set width to 80px
-                      >
-                        Deploy
-                      </Button>
-                    </div>
-                  </Form.Item>
-                </Form>
-              </Modal>
-              <Modal
-                visible={isProgressModalVisible}
-                footer={null}
-                onCancel={closeProgressModal}
-                title={`Deployment Progress for  ${cloudName}`}
-                maskClosable={false}
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      name="gateway"
+                      label="Provider NGW"
+                      rules={[{ required: true, message: 'Please enter Gateway' }]}
+                    >
+                      <Input placeholder="Enter Gateway" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                {/* Align the button to the right */}
+                <Form.Item>
+                  <div style={{ textAlign: 'right' }}>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      style={{ width: '80px' }}  // Set width to 80px
+                    >
+                      Deploy
+                    </Button>
+                  </div>
+                </Form.Item>
+              </Form>
+            </Modal>
+            <Modal
+              visible={isProgressModalVisible}
+              footer={null}
+              onCancel={closeProgressModal}
+              title={`Deployment Progress for ${cloudName}`}
+              maskClosable={false}
+            >
+              {/* Use the DeploymentProgressBar component */}
+              <DeploymentProgressBar
+                progress={progress} // Pass the current progress
+                filesProcessed={filesProcessed} // Pass the processed files
+                loading={loading} // Pass the loading state
+                statusMessage={statusMessage}
+              />
+
+              <button
+                onClick={toggleLogss}
+                style={{
+                  display: 'block',
+                  margin: '10px auto',
+                  background: 'none',
+                  border: 'none',
+                  color: '#1890ff',
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  borderRadius: '4px',
+                  outline: 'none',
+                }}
               >
-                {/* Use the DeploymentProgressBar component */}
-                <DeploymentProgressBar
-                  progress={progress} // Pass the current progress
-                  filesProcessed={filesProcessed} // Pass the processed files
-                  loading={loading} // Pass the loading state
-                  statusMessage={statusMessage}
-                />
+                {isLogsExpanded ? 'Hide Logs' : 'View Logs'}
+              </button>
 
+              {progress === 100 && (
                 <button
-                  onClick={toggleLogss}
+                  onClick={handleNextButtonClick} 
                   style={{
-                    display: 'block',
-                    margin: '10px auto',
-                    background: 'none',
+                    position: 'absolute',
+                    bottom: '16px',
+                    right: '16px',
+                    width: '80px',
+                    height: '40px', // Optional: Specify a height
+                    background: '#1890ff',
+                    color: '#fff',
                     border: 'none',
-                    color: '#1890ff',
+                    borderRadius: '4px',
                     cursor: 'pointer',
-                    textDecoration: 'none',
-                    padding: '10px 20px', // Add padding for button height and width
-                    textAlign: 'center', // Ensure the text is centered
-                    fontSize: '16px', // Set a readable font size
-                    borderRadius: '4px', // Add rounded corners
-                    outline: 'none', // Remove outline to improve button aesthetics
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                    textAlign: 'center',
                   }}
                 >
-                  {isLogsExpanded ? 'Hide Logs' : 'View Logs'}
+                  Next
                 </button>
+              )}
 
-                {isLogsExpanded && (
-                  <div
-                    id="logContainer"
-                    style={{
-                      backgroundColor: "#212529",
-                      color: "white",
-                      padding: "10px",
-                      height: "150px",
-                      width: "100%",
-                      borderRadius: "5px",
-                      overflowY: "hidden",
-                      overflowX: "hidden",
-                      scrollBehavior: "smooth",
-                    }}
-                  >
-                    {/* Display logs dynamically */}
-                    {logs.length === 0 ? (
-                      <p style={{ color: 'gray' }}>Wait for logs to be generated...</p>
-                    ) : (
-                      <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
-                        {logs.map((log, index) => (
-                          <li key={index} className="log-item" style={{ marginBottom: 8 }}>
-                            <span style={{ color: '#6c757d' }}>→</span> {log}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </Modal>
-            </>
-          );
+              {isLogsExpanded && (
+                <div
+                  id="logContainer"
+                  style={{
+                    backgroundColor: "#212529",
+                    color: "white",
+                    padding: "10px",
+                    height: "150px",
+                    width: "100%",
+                    borderRadius: "5px",
+                    overflowY: "hidden",
+                    overflowX: "hidden",
+                    scrollBehavior: "smooth",
+                  }}
+                >
+                  {/* Display logs dynamically */}
+                  {logs.length === 0 ? (
+                    <p style={{ color: 'gray' }}>Wait for logs to be generated...</p>
+                  ) : (
+                    <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                      {logs.map((log, index) => (
+                        <li key={index} className="log-item" style={{ marginBottom: 8 }}>
+                          <span style={{ color: '#6c757d' }}>→</span> {log}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </Modal>
+          </>
+        );
         // } else {
         //   return null; // If validation fails, return nothing
         // }

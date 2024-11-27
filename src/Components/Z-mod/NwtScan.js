@@ -45,7 +45,7 @@ const DataTable = ({ onNodeSelect }) => {
 
   const handleNextClick = () => {
     onNodeSelect(selectedNodes);
-    // onNext();
+
   };
 
   const handleDefaultSubnetScan = async () => {

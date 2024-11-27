@@ -39,6 +39,9 @@ const App = () => {
     }));
     // setActiveTab("4"); // Move to Report tab
   };
+  const handleNextButtonClick = () => {
+    setActiveTab("4"); // Navigate to the Report tab
+  };
 
   return (
     <Zti>
@@ -52,13 +55,13 @@ const App = () => {
         </Tabs.TabPane>
         <Tabs.TabPane tab="Validation" key="3" disabled={disabledTabs["3"]}>
           <Validation
+            next={handleNextButtonClick}
             nodes={selectedNodes}
             onStart={() => handleTabStart(3)}
             onIbnUpdate={handleIbnUpdate} // Pass the ibn update handler here
           />
         </Tabs.TabPane>
         <Tabs.TabPane tab="Report" key="4" disabled={disabledTabs["4"]}>
-          {/* Only render Report when the active tab is 4 */}
           {activeTab === "4" && <Report ibn={ibn} />}
         </Tabs.TabPane>
       </Tabs>
