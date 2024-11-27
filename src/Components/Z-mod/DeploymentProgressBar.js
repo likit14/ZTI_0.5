@@ -1,7 +1,7 @@
 import React from 'react';
 import { Progress, Spin, Row, Col } from 'antd';
 
-const DeploymentProgressBar = ({ progress, filesProcessed, loading, statusMessage }) => {
+const DeploymentProgressBar = ({ progress, filesProcessed, statusMessage }) => {
   return (
     <div>
       <Row>
@@ -11,7 +11,6 @@ const DeploymentProgressBar = ({ progress, filesProcessed, loading, statusMessag
       </Row>
       <Row>
         <Col span={24}>
-          <Spin spinning={loading} />
         </Col>
       </Row>
       <Row>
