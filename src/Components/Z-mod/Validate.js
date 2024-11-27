@@ -1487,12 +1487,13 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
               onCancel={closeProgressModal}
               title={`Deployment Progress for ${cloudName}`}
               maskClosable={false}
+              style={{ position: 'relative' }} // Ensure modal container has relative positioning
             >
-              {/* Use the DeploymentProgressBar component */}
+              {/* Your existing content */}
               <DeploymentProgressBar
-                progress={progress} // Pass the current progress
-                filesProcessed={filesProcessed} // Pass the processed files
-                loading={loading} // Pass the loading state
+                progress={progress}
+                filesProcessed={filesProcessed}
+                loading={loading}
                 statusMessage={statusMessage}
               />
 
@@ -1515,45 +1516,22 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
                 {isLogsExpanded ? 'Hide Logs' : 'View Logs'}
               </button>
 
-              {progress === 100 && (
-                <button
-                  onClick={handleNextButtonClick}
-                  style={{
-                    position: 'absolute',
-                    bottom: '16px',
-                    right: '16px',
-                    width: '75px',
-                    height: '35px', // Optional: Specify a height
-                    background: '#1890ff',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                    textAlign: 'center',
-                    fontSize: '14px'
-                  }}
-                >
-                  Next
-                </button>
-              )}
-
               {isLogsExpanded && (
                 <div
                   id="logContainer"
                   style={{
-                    backgroundColor: "#212529",
-                    color: "white",
-                    padding: "10px",
-                    height: "150px",
-                    width: "100%",
-                    borderRadius: "5px",
-                    overflowY: "hidden",
-                    overflowX: "hidden",
-                    scrollBehavior: "smooth",
+                    backgroundColor: '#212529',
+                    color: 'white',
+                    padding: '10px',
+                    height: '150px',
+                    width: '100%',
+                    borderRadius: '5px',
+                    overflowY: 'hidden',
+                    overflowX: 'hidden',
+                    scrollBehavior: 'smooth',
+                    marginBottom: '16px', // Ensure space between logs and other content
                   }}
                 >
-                  {/* Display logs dynamically */}
                   {logs.length === 0 ? (
                     <p style={{ color: 'gray' }}>Wait for logs to be generated...</p>
                   ) : (
@@ -1566,6 +1544,32 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
                     </ul>
                   )}
                 </div>
+              )}
+
+              {progress === 100 && (
+                <button
+                  onClick={handleNextButtonClick}
+                  style={{
+                    position: 'absolute', // Position relative to the modal container
+                    bottom: '16px',
+                    right: '16px',
+                    width: '75px',
+                    height: '35px',
+                    background: '#1890ff',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                    display: 'flex', // Flexbox for centering text
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                  }}
+                >
+                  Next
+                </button>
               )}
             </Modal>
           </>
