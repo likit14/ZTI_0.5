@@ -17,7 +17,7 @@ const getCloudNameFromMetadata = () => {
   return cloudNameMeta ? cloudNameMeta.content : null; // Return the content of the meta tag
 };
 
-const Validation = ({ nodes,onIbnUpdate, next }) => {
+const Validation = ({ nodes, onIbnUpdate, next }) => {
   const cloudName = getCloudNameFromMetadata();
   const [validationResults, setValidationResults] = useState({});
   //   const combinedDataSource = [...nodes];
@@ -1517,13 +1517,13 @@ const Validation = ({ nodes,onIbnUpdate, next }) => {
 
               {progress === 100 && (
                 <button
-                  onClick={handleNextButtonClick} 
+                  onClick={handleNextButtonClick}
                   style={{
                     position: 'absolute',
                     bottom: '16px',
                     right: '16px',
-                    width: '80px',
-                    height: '40px', // Optional: Specify a height
+                    width: '75px',
+                    height: '35px', // Optional: Specify a height
                     background: '#1890ff',
                     color: '#fff',
                     border: 'none',
@@ -1531,6 +1531,7 @@ const Validation = ({ nodes,onIbnUpdate, next }) => {
                     cursor: 'pointer',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                     textAlign: 'center',
+                    fontSize: '14px'
                   }}
                 >
                   Next
