@@ -1,6 +1,6 @@
 import React from 'react';
 import Layout1 from '../Components/layout';
-import { theme, Layout, Result } from 'antd';
+import { theme, Layout, Result, Divider } from 'antd';
 
 const { Content } = Layout;
 
@@ -19,9 +19,10 @@ const Iaas = () => {
             background: colorBgContainer,
             borderRadius: borderRadiusLG,
           }}>
-          <h2>Infrastructure as a Service (Iaas)</h2> 
-          </div>
-        </Content>
+          <h3 style={{marginTop: '20px'}}>Infrastructure as a Service (IaaS)</h3> 
+	  <Divider />
+	  </div>
+	</Content>
       </Layout>
     </Layout1>
   );

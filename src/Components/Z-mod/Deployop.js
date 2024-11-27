@@ -94,7 +94,7 @@ const DeploymentOptions = ({ onStart }) => {
       </div>
 
       <Modal
-        title="Enter Your Cloud Name"
+        title="Cloud Name"
         visible={isModalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
@@ -103,7 +103,7 @@ const DeploymentOptions = ({ onStart }) => {
         style={{ maxWidth: '400px' }} // Optional: limits the modal width
       >
         <Input
-          placeholder="Enter cloud name"
+          placeholder="Enter your Cloud Name"
           value={cloudName}
           onChange={(e) => setCloudName(e.target.value)}
         />
