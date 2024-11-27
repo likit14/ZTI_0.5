@@ -19,11 +19,7 @@ const Iaas = () => {
             background: colorBgContainer,
             borderRadius: borderRadiusLG,
           }}>
-            <Result
-              status="404"
-              // title="404"
-              // subTitle="Sorry, the page you visited does not exist."
-            />
+          <h2>Infrastructure as a Service (Iaas)</h2> 
           </div>
         </Content>
       </Layout>
