@@ -986,7 +986,12 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
       cloudName,
       ip: ibn,
       deploymentTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),  // Custom format      
-      userId: userId
+      userId: userId,
+      bmcDetails: {
+        ip: bmcDetails.ip,
+        username: bmcDetails.username,
+        password: bmcDetails.password, // If sensitive, consider masking or hashing before storing
+      },
     });
     setIp(ibn)
     onIbnUpdate(ibn)
@@ -1693,3 +1698,4 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   );
 };
 export default Validation;
+
