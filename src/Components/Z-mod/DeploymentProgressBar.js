@@ -20,7 +20,8 @@ const DeploymentProgressBar = ({ progress, filesProcessed, statusMessage }) => {
       </Row>
       <Row>
         <Col span={24}>
-          <div>{filesProcessed.length} / 8 files processed</div>
+          <div>{filesProcessed.length} / 9
+             files processed</div>
         </Col>
       </Row>
     </div>

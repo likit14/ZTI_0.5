@@ -25,7 +25,7 @@ logger.info("Starting Flask app...")
 # Define expected_files globally so that it's accessible to all functions
 expected_files = [
     'script1_done', 'script2_done', 'script3_done', 'script4_done',
-    'script5_done', 'script6_done', 'script7_done', 'script8_done'
+    'script5_done', 'script6_done', 'script7_done', 'credentials.json','script8_done'
 ]
 
 # Function to handle tailing in a separate thread

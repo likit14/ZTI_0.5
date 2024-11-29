@@ -10,6 +10,7 @@ import ProgressModal from './ProgressModal';
 import DeploymentProgressBar from './DeploymentProgressBar'
 import { useLocation, useNavigate } from "react-router-dom";
 import requirementData from "../../Comparison/min_requirements.json";
+import dayjs from 'dayjs';
 // import Report from './Report';
 
 const getCloudNameFromMetadata = () => {
@@ -24,6 +25,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   const [popoverVisible, setPopoverVisible] = useState({});
   const [isRevalidate, setIsRevalidate] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [urls, setUrls] = useState(null); // To store the fetched URLs
   const [notificationShown, setNotificationShown] = useState(false);
   const [isLogsExpanded, setIsLogsExpanded] = useState(false);
   const [openOSModal, setOpenOSModal] = useState(false);
@@ -66,6 +68,13 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   const [isProgressModalVisible, setProgressModalVisible] = useState(false);
   const [filesProcessed, setFilesProcessed] = useState([]);
   const logContainerRef = useRef(null); // Reference for the log container to manage scrolling
+  const [deploymentDetails, setDeploymentDetails] = useState(null);
+  const [Ip, setIp] = useState({});
+  const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
+  const userId = loginDetails ? loginDetails.data.id : null;
+  const [fetchedUrls, setFetchedUrls] = useState(false);
+  const [detailsSaved, setDetailsSaved] = useState(false);
+
 
   const validateNode = (nodes) => {
     setValidatingNode(nodes);
@@ -79,6 +88,62 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
       setIsRevalidate(true);
     }
   };
+
+
+  useEffect(() => {
+    if (progress === 100 && Ip && !fetchedUrls) {
+      console.log("Triggering URL fetch with progress 100 and IBN:", Ip);
+      fetch("http://192.168.249.100:9909/api/credentials", {
+        headers: { ibn: Ip },
+      })
+        .then((response) => response.json())
+        .then((urls) => {
+          console.log("Fetched URLs:", urls);
+
+          if (!urls.skylineDashboardUrl || !urls.cephDashboardUrl) {
+            throw new Error("Missing required URLs in response");
+          }
+
+          setDeploymentDetails((prevDetails) => ({
+            ...prevDetails,
+            skylineUrl: urls.skylineDashboardUrl,
+            cephUrl: urls.cephDashboardUrl,
+          }));
+          setFetchedUrls(true); // Mark URLs as fetched
+        })
+        .catch((error) => {
+          console.error("Error fetching URLs:", error);
+        });
+    }
+  }, [progress, Ip, fetchedUrls]);
+
+
+  useEffect(() => {
+    if (
+      progress === 100 &&
+      deploymentDetails.skylineUrl &&
+      deploymentDetails.cephUrl &&
+      !detailsSaved
+    ) {
+      console.log("Saving deployment details:", deploymentDetails);
+
+      fetch("http://192.168.249.100:5000/api/saveDeploymentDetails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(deploymentDetails),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Deployment details saved:", data);
+          setDetailsSaved(true); // Mark details as saved
+        })
+        .catch((error) => {
+          console.error("Error saving deployment details:", error);
+        });
+    }
+  }, [progress, deploymentDetails, detailsSaved]);
 
   const statusMessage =
     progress === 100 ? "Successfully Deployed" : "Deployment in Progress";
@@ -98,6 +163,14 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
       setNotificationShown(true);
     }
   }, [progress, notificationShown]);
+
+  useEffect(() => {
+    if (progress === 0) {
+      setFetchedUrls(false);
+      setDetailsSaved(false);
+    }
+  }, [progress]);
+
 
   useEffect(() => {
     if (!isDeploymentStarted || !targetServerIp) return; // Only proceed if deployment has started
@@ -900,7 +973,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
     };
   }, [targetServerIp]);
 
-  const onDeployTriggered = (values) => {
+  const onDeployTriggered = async (values) => {
     setLoading(true);
     setVisible(false);
     setOpen(false);
@@ -908,6 +981,14 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
 
     // Collect the form data from the form values
     const { ibn, gateway, dns, interface1, interface2 } = values;
+
+    setDeploymentDetails({
+      cloudName,
+      ip: ibn,
+      deploymentTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),  // Custom format      
+      userId: userId
+    });
+    setIp(ibn)
     onIbnUpdate(ibn)
     setTargetServerIp(ibn);
     setIsDeploymentStarted(true);
@@ -1001,7 +1082,6 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   // const startDeployment = () => {
   //   setLoading(true);
   // };
-
 
   const paginatedNodes = nodes.slice(
     (currentPage - 1) * itemsPerPage,
@@ -1486,9 +1566,9 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
               footer={null}
               onCancel={closeProgressModal}
               title={progress === 100 ? `Successfully Deployed ${cloudName} Cloud 🎉` : `Deployment in Progress for ${cloudName} Cloud`}
-	      maskClosable={false}
+              maskClosable={false}
               style={{ position: 'relative' }} // Ensure modal container has relative positioning
-	      keyboard={false}
+              keyboard={false}
             >
               {/* Your existing content */}
               <DeploymentProgressBar
@@ -1553,7 +1633,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
                   style={{
                     position: 'absolute', // Position relative to the modal container
                     bottom: '0px',
-	            marginBottom: '1px',
+                    marginBottom: '1px',
                     right: '16px',
                     width: '70px',
                     height: '30px',
