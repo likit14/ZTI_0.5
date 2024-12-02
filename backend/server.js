@@ -89,6 +89,27 @@ db.connect((err) => {
   });
 });
 
+// Create hardware_info table if not exists
+const hardwareInfoTableSQL = `
+  CREATE TABLE IF NOT EXISTS hardware_info (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id CHAR(21),
+    server_ip VARCHAR(15),
+    cpu_cores INT,
+    memory VARCHAR(50), -- e.g., '16GB', '32GB'
+    disk VARCHAR(255), -- e.g., '500GB SSD, 1TB HDD'
+    nic_1g INT, -- Number of 1G NICs
+    nic_10g INT, -- Number of 10G NICs
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )
+`;
+
+db.query(hardwareInfoTableSQL, (err, result) => {
+  if (err) throw err;
+  console.log("Hardware_info table checked/created...");
+});
+
+
 // Nodemailer setup
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -173,6 +194,40 @@ app.post("/api/saveDeploymentDetails", (req, res) => {
 
       console.log("Deployment details saved successfully:", result);
       res.status(200).json({ message: "Deployment details saved successfully" });
+    }
+  );
+});
+
+app.post("/api/saveHardwareInfo", (req, res) => {
+  const { userId, serverIp, cpuCores, memory, disk, nic1g, nic10g } = req.body;
+
+  const sql = `
+    INSERT INTO hardware_info (
+      user_id, 
+      server_ip, 
+      cpu_cores, 
+      memory, 
+      disk, 
+      nic_1g, 
+      nic_10g
+    ) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    sql,
+    [userId, serverIp, cpuCores, memory, disk, nic1g, nic10g],
+    (err, result) => {
+      if (err) {
+        console.error("Error saving hardware info:", err);
+        return res.status(500).json({
+          error: "Failed to save hardware info",
+          details: err.message,
+        });
+      }
+
+      console.log("Hardware info saved successfully:", result);
+      res.status(200).json({ message: "Hardware info saved successfully" });
     }
   );
 });
