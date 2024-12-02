@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout1 from '../Components/layout';
-import { theme, Layout, Card, Collapse, Empty, Spin } from 'antd';
+import { theme, Layout, Card, Collapse, Empty, Spin, Button, Modal } from 'antd';
 import { Tabs } from 'antd';
 
 const { Content } = Layout;
@@ -15,7 +15,8 @@ const Iaas = () => {
   const [serverInfoAllInOne, setServerInfoAllInOne] = useState(null);
   const [serverInfoMultinode, setServerInfoMultinode] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [actionType, setActionType] = useState(null);
 
   // Simulate fetching data from a database
   useEffect(() => {
@@ -43,6 +44,26 @@ const Iaas = () => {
     }, 2000); // Simulating a 2-second API response time
   }, []);
 
+  // Show confirmation modal for server actions (Power On, Power Off, Power Reset)
+  const showConfirmationModal = (action) => {
+    setActionType(action);
+    setIsModalVisible(true);
+  };
+
+  // Handle the confirmation action
+  const handleConfirmAction = () => {
+    setIsModalVisible(false);
+    if (actionType) {
+      console.log(`${actionType} action confirmed for All-in-One Server`);
+      // Add your logic for Power Off, Power On, or Power Reset here
+    }
+  };
+
+  // Handle cancel action for modal
+  const handleCancelAction = () => {
+    setIsModalVisible(false);
+  };
+
   // Function to render server details
   const renderServerDetails = (serverInfo) => {
     if (loading) {
@@ -63,6 +84,33 @@ const Iaas = () => {
           borderRadius: borderRadiusLG,
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
         }}
+        extra={
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Button
+              color="danger" variant="solid"
+              size="small"
+              style={{ marginRight: 8 }}
+              onClick={() => showConfirmationModal('Power Off')}
+            >
+              Power Off
+            </Button>
+            <Button
+              type="primary"
+              size="small"
+              style={{ marginRight: 8 }}
+              onClick={() => showConfirmationModal('Power On')}
+            >
+              Power On
+            </Button>
+            <Button
+              type="default"
+              size="small"
+              onClick={() => showConfirmationModal('Power Reset')}
+            >
+              Power Reset
+            </Button>
+          </div>
+        }
       >
         <Collapse bordered={false} ghost>
           <Panel header="Server Details" key="1">
@@ -115,12 +163,9 @@ const Iaas = () => {
                   <div
                     style={{
                       padding: "10px 30px",
-                      // background: activeTab === "1" ? "#1677ff" : colorBgContainer,
-                      // color: activeTab === "1" ? "#fff" : "#000",
                       color:'#000',
                       borderRadius: borderRadiusLG,
                       textAlign: "center",
-                      // fontWeight: activeTab === "1" ? "bold" : "normal",
                       cursor: "pointer",
                       width: "100%",
                       marginRight: "600px",
@@ -144,12 +189,9 @@ const Iaas = () => {
                   <div
                     style={{
                       padding: "10px 30px",
-                      // background: activeTab === "2" ? "#1677ff" : colorBgContainer,
-                      // color: activeTab === "2" ? "#fff" : "#000",
                       color:"#000",
                       borderRadius: borderRadiusLG,
                       textAlign: "center",
-                      // fontWeight: activeTab === "2" ? "bold" : "normal",
                       cursor: 'unset',
                       width: "100%",
                       marginRight: '600px',
@@ -169,6 +211,18 @@ const Iaas = () => {
             </Tabs>
           </div>
         </Content>
+
+        {/* Modal for confirmation */}
+        <Modal
+          title={`Confirm ${actionType}`}
+          visible={isModalVisible}
+          onOk={handleConfirmAction}
+          onCancel={handleCancelAction}
+          okText="Confirm"
+          cancelText="Cancel"
+        >
+          <p>Are you sure you want to {actionType?.toLowerCase()} the server?</p>
+        </Modal>
       </Layout>
     </Layout1>
   );
