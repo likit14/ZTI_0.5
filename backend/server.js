@@ -37,7 +37,8 @@ app.use(
   })
 );
 
-// MySQL connection
+
+// Create a MySQL connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -46,6 +47,7 @@ const db = mysql.createConnection({
   port: 3306,
 });
 
+// Connect to the MySQL database
 db.connect((err) => {
   if (err) {
     console.error("Error connecting to the database:", err);
@@ -60,7 +62,7 @@ db.connect((err) => {
       companyName VARCHAR(255),
       email VARCHAR(255),
       password VARCHAR(255)
-    )
+    ) ENGINE=InnoDB;  -- Ensure InnoDB engine for foreign key support
   `;
   db.query(usersTableSQL, (err, result) => {
     if (err) throw err;
@@ -80,33 +82,33 @@ db.connect((err) => {
       FOREIGN KEY (user_id) REFERENCES users(id),
       bmc_ip VARCHAR(15),           
       bmc_username VARCHAR(255),   
-      bmc_password VARCHAR(255) 
-    )
+      bmc_password VARCHAR(255)
+    ) ENGINE=InnoDB;  -- Ensure InnoDB engine for foreign key support
   `;
   db.query(deploymentsTableSQL, (err, result) => {
     if (err) throw err;
     console.log("All_in_one table checked/created...");
   });
-});
 
-// Create hardware_info table if not exists
-const hardwareInfoTableSQL = `
-  CREATE TABLE IF NOT EXISTS hardware_info (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id CHAR(21),
-    server_ip VARCHAR(15),
-    cpu_cores INT,
-    memory VARCHAR(50), -- e.g., '16GB', '32GB'
-    disk VARCHAR(255), -- e.g., '500GB SSD, 1TB HDD'
-    nic_1g INT, -- Number of 1G NICs
-    nic_10g INT, -- Number of 10G NICs
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  )
-`;
+  // Create hardware_info table if not exists
+  const hardwareInfoTableSQL = `
+    CREATE TABLE IF NOT EXISTS hardware_info (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id CHAR(21),
+      server_ip VARCHAR(15),
+      cpu_cores INT,
+      memory VARCHAR(50), -- e.g., '16GB', '32GB'
+      disk VARCHAR(255), -- e.g., '500GB SSD, 1TB HDD'
+      nic_1g INT, -- Number of 1G NICs
+      nic_10g INT, -- Number of 10G NICs
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    ) ENGINE=InnoDB;  -- Ensure InnoDB engine for foreign key support
+  `;
 
-db.query(hardwareInfoTableSQL, (err, result) => {
-  if (err) throw err;
-  console.log("Hardware_info table checked/created...");
+  db.query(hardwareInfoTableSQL, (err, result) => {
+    if (err) throw err;
+    console.log("Hardware_info table checked/created...");
+  });
 });
 
 
