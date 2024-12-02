@@ -11,37 +11,38 @@ const Iaas = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const [activeTab, setActiveTab] = useState("1");
-  const [disabledTabs] = useState({ "1": true });
+  const [disabledTabs] = useState({ "1": false });
   const [serverInfoAllInOne, setServerInfoAllInOne] = useState(null);
   const [serverInfoMultinode, setServerInfoMultinode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [actionType, setActionType] = useState(null);
 
-  // Simulate fetching data from a database
+  // Fetch real data from the backend
   useEffect(() => {
     setLoading(true);
 
-    // Mock API call
-    setTimeout(() => {
-      // Simulate fetched data
-      const fetchedAllInOne = {
-        cloudName: "All-in-One Cloud",
-        ip: "192.168.1.1",
-        skylineUrl: "http://skyline.example.com",
-        cephUrl: "http://ceph.example.com",
-        mysqlTimestamp: "2024-11-29 10:00:00",
-        bmcIp: "192.168.1.2",
-        bmcUsername: "admin",
-        bmcPassword: "password123",
-      };
+    // Fetch All-in-One server data
+    fetch('http://192.168.249.100:5000/api/allinone')
+      .then((response) => response.json())
+      .then((data) => {
+        setServerInfoAllInOne(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching All-in-One data:', error);
+        setLoading(false);
+      });
 
-      const fetchedMultinode = null; // Simulate no data for Multinode
-
-      setServerInfoAllInOne(fetchedAllInOne);
-      setServerInfoMultinode(fetchedMultinode);
-      setLoading(false);
-    }, 2000); // Simulating a 2-second API response time
+    // Fetch Multinode server data
+    fetch('/api/multinode')
+      .then((response) => response.json())
+      .then((data) => {
+        setServerInfoMultinode(data);
+      })
+      .catch((error) => {
+        console.error('Error fetching Multinode data:', error);
+      });
   }, []);
 
   // Show confirmation modal for server actions (Power On, Power Off, Power Reset)
@@ -70,11 +71,11 @@ const Iaas = () => {
       return <Spin tip="Loading server information..." />;
     }
 
-    if (!serverInfo) {
-      return <Empty description="No server information available." />;
+    if (!serverInfo || serverInfo.length === 0) {
+      return <Empty description="No deployment available." />;
     }
 
-    const { cloudName, ip, skylineUrl, cephUrl, mysqlTimestamp, bmcIp, bmcUsername, bmcPassword } = serverInfo;
+    const { cloudName, ip, skylineUrl, cephUrl, mysqlTimestamp, bmcIp, bmcUsername, bmcPassword } = serverInfo[0];
 
     return (
       <Card
@@ -178,7 +179,7 @@ const Iaas = () => {
                 key="1"
               >
                 <div style={{ padding: 20 }}>
-                  <h4>All-in-One Content</h4>
+                  <h4>All-in-One Deployment</h4>
                   {renderServerDetails(serverInfoAllInOne)}
                 </div>
               </Tabs.TabPane>
@@ -204,7 +205,7 @@ const Iaas = () => {
                 key="2"
               >
                 <div style={{ padding: 20 }}>
-                  <h4>Multinode Content</h4>
+                  <h4>Multinode Deployment</h4>
                   {renderServerDetails(serverInfoMultinode)}
                 </div>
               </Tabs.TabPane>
