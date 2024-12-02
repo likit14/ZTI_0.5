@@ -11,9 +11,11 @@ const Iaas = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const [activeTab, setActiveTab] = useState("1");
+  const [disabledTabs] = useState({ "1": true });
   const [serverInfoAllInOne, setServerInfoAllInOne] = useState(null);
   const [serverInfoMultinode, setServerInfoMultinode] = useState(null);
   const [loading, setLoading] = useState(true);
+
 
   // Simulate fetching data from a database
   useEffect(() => {
@@ -112,14 +114,17 @@ const Iaas = () => {
                 tab={
                   <div
                     style={{
-                      padding: "10px 20px",
-                      background: activeTab === "1" ? "#1677ff" : colorBgContainer,
-                      color: activeTab === "1" ? "#fff" : "#000",
+                      padding: "10px 30px",
+                      // background: activeTab === "1" ? "#1677ff" : colorBgContainer,
+                      // color: activeTab === "1" ? "#fff" : "#000",
+                      color:'#000',
                       borderRadius: borderRadiusLG,
                       textAlign: "center",
-                      fontWeight: activeTab === "1" ? "bold" : "normal",
+                      // fontWeight: activeTab === "1" ? "bold" : "normal",
                       cursor: "pointer",
                       width: "100%",
+                      marginRight: "600px",
+                      fontSize: "15px", // Increase text size here
                     }}
                   >
                     All-in-One
@@ -134,18 +139,21 @@ const Iaas = () => {
               </Tabs.TabPane>
 
               {/* Multinode Tab */}
-              <Tabs.TabPane
+              <Tabs.TabPane disabled={disabledTabs["1"]}
                 tab={
                   <div
                     style={{
-                      padding: "10px 20px",
-                      background: activeTab === "2" ? "#1677ff" : colorBgContainer,
-                      color: activeTab === "2" ? "#fff" : "#000",
+                      padding: "10px 30px",
+                      // background: activeTab === "2" ? "#1677ff" : colorBgContainer,
+                      // color: activeTab === "2" ? "#fff" : "#000",
+                      color:"#000",
                       borderRadius: borderRadiusLG,
                       textAlign: "center",
-                      fontWeight: activeTab === "2" ? "bold" : "normal",
-                      cursor: "pointer",
+                      // fontWeight: activeTab === "2" ? "bold" : "normal",
+                      cursor: 'unset',
                       width: "100%",
+                      marginRight: '600px',
+                      fontSize: "15px", // Increase text size here
                     }}
                   >
                     Multinode
