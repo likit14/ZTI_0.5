@@ -51,6 +51,11 @@ const Iaas = () => {
     }
   };
 
+  const formatDate = (dateStr) => {
+    const formattedDate = dateStr.replace('T', ' ').replace('Z', '').replace(/\.\d+$/, '');
+    return formattedDate; 
+  };
+  
   const handleCancelAction = () => {
     setIsModalVisible(false);
   };
@@ -108,7 +113,7 @@ const Iaas = () => {
             <Panel header="Server Details" key={index}>
               <p><strong>Skyline URL:</strong> <a href={SkylineURL}>{SkylineURL}</a></p>
               <p><strong>Ceph URL:</strong> <a href={CephURL}>{CephURL}</a></p>
-              <p><strong>Deployment Time:</strong> {deployment_time}</p>
+              <p><strong>Deployment Time:</strong> {formatDate(deployment_time)}</p>
               <p><strong>BMC IP:</strong> {bmc_ip}</p>
               <p><strong>BMC Username:</strong> {bmc_username}</p>
               <p><strong>BMC Password:</strong> {bmc_password}</p>
