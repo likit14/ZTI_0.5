@@ -446,7 +446,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
 
 
 
-  function cancelDeployment() {
+  function cancelDeploymentProgress() {
     fetch('http://192.168.249.100:5055/cancel-deployment', {
       method: 'POST',
       headers: {
@@ -484,7 +484,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   }
 
   function closeProgressModal() {
-    cancelDeployment(); // Cancel the deployment
+    cancelDeploymentProgress(); // Cancel the deployment
     setProgressModalVisible(false);
   }
 
@@ -591,6 +591,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   };
 
   const handleNextButtonClick = () => {
+    cancelDeploymentProgress(); // Cancel the deployment
     setProgressModalVisible(false);
     next();
 

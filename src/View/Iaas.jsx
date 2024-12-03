@@ -70,12 +70,12 @@ const Iaas = () => {
     }
 
     return serverInfo.map((server, index) => {
-      const { cloudName, Ip, SkylineURL, CephURL, deployment_time, bmc_ip, bmc_username, bmc_password } = server;
+      const { cloudName, Ip, SkylineURL, CephURL, deployment_time, bmc_ip} = server;
 
       return (
         <Card
           key={index}
-          title={`${cloudName} (${Ip})`}
+          title={`${cloudName} Cloud (${Ip})`}
           style={{
             marginTop: 20,
             borderRadius: borderRadiusLG,
@@ -112,11 +112,9 @@ const Iaas = () => {
           <Collapse bordered={false} ghost>
             <Panel header="Server Details" key={index}>
               <p><strong>Skyline URL:</strong> <a href={SkylineURL}>{SkylineURL}</a></p>
-              <p><strong>Ceph URL:</strong> <a href={CephURL}>{CephURL}</a></p>
+              <p><strong>Ceph URL&nbsp;&nbsp;&nbsp;:</strong> <a href={CephURL}>{CephURL}</a></p>
               <p><strong>Deployment Time:</strong> {formatDate(deployment_time)}</p>
               <p><strong>BMC IP:</strong> {bmc_ip}</p>
-              <p><strong>BMC Username:</strong> {bmc_username}</p>
-              <p><strong>BMC Password:</strong> {bmc_password}</p>
             </Panel>
           </Collapse>
         </Card>
@@ -208,7 +206,7 @@ const Iaas = () => {
               >
                 <div style={{ padding: 20 }}>
                   <h4>Multinode Deployment</h4>
-                  {/* {renderServerDetails(serverInfoMultinode)} */}
+                  <Empty description="No deployment available." />
                 </div>
               </Tabs.TabPane>
             </Tabs>

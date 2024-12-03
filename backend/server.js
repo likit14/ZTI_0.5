@@ -241,7 +241,7 @@ app.get('/api/allinone', (req, res) => {
       console.error('Error fetching All-in-One data:', err);
       return res.status(500).json({ error: 'Failed to fetch All-in-One data' });
     }
-    console.log('Fetched data:', results);  // Log the results here
+    // console.log('Fetched data:', results);  // Log the results here
     res.json(results);
   });
 });
