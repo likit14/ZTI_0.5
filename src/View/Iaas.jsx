@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout1 from '../Components/layout';
-import { theme, Layout, Card, Collapse, Empty, Spin, Button, Modal } from 'antd';
-import { Tabs } from 'antd';
+import { theme, Layout, Card, Collapse, Empty, Spin, Button, Modal, Tabs } from 'antd';
 
 const { Content } = Layout;
 const { Panel } = Collapse;
@@ -18,13 +17,12 @@ const Iaas = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [actionType, setActionType] = useState(null);
 
-  // Fetch All-in-One server data
   useEffect(() => {
     setLoading(true);
 
     fetch('http://192.168.249.100:5000/api/allinone')
       .then((response) => {
-        console.log('Full response:', response);  // Check the entire response
+        console.log('Full response:', response);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
@@ -41,22 +39,18 @@ const Iaas = () => {
       });
   }, []);
 
-  // Show confirmation modal for server actions (Power On, Power Off, Power Reset)
   const showConfirmationModal = (action) => {
     setActionType(action);
     setIsModalVisible(true);
   };
 
-  // Handle the confirmation action
   const handleConfirmAction = () => {
     setIsModalVisible(false);
     if (actionType) {
       console.log(`${actionType} action confirmed for All-in-One Server`);
-      // Add your logic for Power Off, Power On, or Power Reset here
     }
   };
 
-  // Handle cancel action for modal
   const handleCancelAction = () => {
     setIsModalVisible(false);
   };
@@ -160,6 +154,7 @@ const Iaas = () => {
                 padding: "10px",
               }}
               centered
+              style={{ border: 'none' }} // Remove extra borders
             >
               {/* All-in-One Tab */}
               <Tabs.TabPane
@@ -172,8 +167,7 @@ const Iaas = () => {
                       textAlign: "center",
                       cursor: "pointer",
                       width: "100%",
-                      marginRight: "600px",
-                      fontSize: "15px", // Increase text size here
+                      fontSize: "15px",
                     }}
                   >
                     All-in-One
@@ -199,7 +193,6 @@ const Iaas = () => {
                       textAlign: "center",
                       cursor: 'unset',
                       width: "100%",
-                      marginRight: '600px',
                       fontSize: "15px", // Increase text size here
                     }}
                   >
@@ -216,8 +209,6 @@ const Iaas = () => {
             </Tabs>
           </div>
         </Content>
-
-        {/* Modal for confirmation */}
         <Modal
           title={`Confirm ${actionType}`}
           visible={isModalVisible}
@@ -225,30 +216,30 @@ const Iaas = () => {
           onCancel={handleCancelAction}
           okText="Confirm"
           cancelText="Cancel"
-          footer={[
-            <Button
-              key="cancel"
-              onClick={handleCancelAction}
-              style={{
-                width: '80px',
-                float: 'right', // Move to the right
-              }}
-            >
-              Cancel
-            </Button>,
-            <Button
-              key="confirm"
-              type="primary"
-              onClick={handleConfirmAction}
-              style={{
-                width: '80px',
-                float: 'right', // Move to the right
-                marginRight: '8px', // Add a margin to create some space between buttons
-              }}
-            >
-              Confirm
-            </Button>
-          ]}
+          footer={
+            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+              <Button
+                key="cancel"
+                onClick={handleCancelAction}
+                style={{
+                  width: '80px',
+                  marginRight: '8px', // Adds space between the buttons
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                key="confirm"
+                type="primary"
+                onClick={handleConfirmAction}
+                style={{
+                  width: '80px',
+                }}
+              >
+                Confirm
+              </Button>
+            </div>
+          }
         >
           <p>Are you sure you want to {actionType} the server?</p>
         </Modal>
