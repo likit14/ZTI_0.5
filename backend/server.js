@@ -234,7 +234,6 @@ app.post("/api/saveHardwareInfo", (req, res) => {
   );
 });
 
-// API endpoint to fetch All-in-One server data
 app.get('/api/allinone', (req, res) => {
   const query = 'SELECT * FROM all_in_one';
   db.query(query, (err, results) => {
@@ -242,6 +241,7 @@ app.get('/api/allinone', (req, res) => {
       console.error('Error fetching All-in-One data:', err);
       return res.status(500).json({ error: 'Failed to fetch All-in-One data' });
     }
+    console.log('Fetched data:', results);  // Log the results here
     res.json(results);
   });
 });

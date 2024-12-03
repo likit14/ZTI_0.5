@@ -10,38 +10,34 @@ const Iaas = () => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+
   const [activeTab, setActiveTab] = useState("1");
   const [disabledTabs] = useState({ "1": false });
   const [serverInfoAllInOne, setServerInfoAllInOne] = useState(null);
-  const [serverInfoMultinode, setServerInfoMultinode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [actionType, setActionType] = useState(null);
 
-  // Fetch real data from the backend
+  // Fetch All-in-One server data
   useEffect(() => {
     setLoading(true);
 
-    // Fetch All-in-One server data
     fetch('http://192.168.249.100:5000/api/allinone')
-      .then((response) => response.json())
+      .then((response) => {
+        console.log('Full response:', response);  // Check the entire response
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then((data) => {
+        console.log('Received data from API:', data);
         setServerInfoAllInOne(data);
         setLoading(false);
       })
       .catch((error) => {
         console.error('Error fetching All-in-One data:', error);
         setLoading(false);
-      });
-
-    // Fetch Multinode server data
-    fetch('/api/multinode')
-      .then((response) => response.json())
-      .then((data) => {
-        setServerInfoMultinode(data);
-      })
-      .catch((error) => {
-        console.error('Error fetching Multinode data:', error);
       });
   }, []);
 
@@ -65,7 +61,6 @@ const Iaas = () => {
     setIsModalVisible(false);
   };
 
-  // Function to render server details
   const renderServerDetails = (serverInfo) => {
     if (loading) {
       return <Spin tip="Loading server information..." />;
@@ -75,77 +70,85 @@ const Iaas = () => {
       return <Empty description="No deployment available." />;
     }
 
-    const { cloudName, ip, skylineUrl, cephUrl, mysqlTimestamp, bmcIp, bmcUsername, bmcPassword } = serverInfo[0];
+    return serverInfo.map((server, index) => {
+      const { cloudName, Ip, SkylineURL, CephURL, deployment_time, bmc_ip, bmc_username, bmc_password } = server;
 
-    return (
-      <Card
-        title={`${cloudName} (${ip})`}
-        style={{
-          marginTop: 20,
-          borderRadius: borderRadiusLG,
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-        }}
-        extra={
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button
-              color="danger" variant="solid"
-              size="small"
-              style={{ marginRight: 8 }}
-              onClick={() => showConfirmationModal('Power Off')}
-            >
-              Power Off
-            </Button>
-            <Button
-              type="primary"
-              size="small"
-              style={{ marginRight: 8 }}
-              onClick={() => showConfirmationModal('Power On')}
-            >
-              Power On
-            </Button>
-            <Button
-              type="default"
-              size="small"
-              onClick={() => showConfirmationModal('Power Reset')}
-            >
-              Power Reset
-            </Button>
-          </div>
-        }
-      >
-        <Collapse bordered={false} ghost>
-          <Panel header="Server Details" key="1">
-            <p><strong>Skyline URL:</strong> <a href={skylineUrl}>{skylineUrl}</a></p>
-            <p><strong>Ceph URL:</strong> <a href={cephUrl}>{cephUrl}</a></p>
-            <p><strong>MySQL Timestamp:</strong> {mysqlTimestamp}</p>
-            <p><strong>BMC IP:</strong> {bmcIp}</p>
-            <p><strong>BMC Username:</strong> {bmcUsername}</p>
-            <p><strong>BMC Password:</strong> {bmcPassword}</p>
-          </Panel>
-        </Collapse>
-      </Card>
-    );
+      return (
+        <Card
+          key={index}
+          title={`${cloudName} (${Ip})`}
+          style={{
+            marginTop: 20,
+            borderRadius: borderRadiusLG,
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+          }}
+          extra={
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Button
+                color="danger" variant="solid"
+                size="small"
+                style={{ marginRight: 8 }}
+                onClick={() => showConfirmationModal('Power Off')}
+              >
+                Power Off
+              </Button>
+              <Button
+                type="primary"
+                size="small"
+                style={{ marginRight: 8 }}
+                onClick={() => showConfirmationModal('Power On')}
+              >
+                Power On
+              </Button>
+              <Button
+                type="default"
+                size="small"
+                onClick={() => showConfirmationModal('Power Reset')}
+              >
+                Power Reset
+              </Button>
+            </div>
+          }
+        >
+          <Collapse bordered={false} ghost>
+            <Panel header="Server Details" key={index}>
+              <p><strong>Skyline URL:</strong> <a href={SkylineURL}>{SkylineURL}</a></p>
+              <p><strong>Ceph URL:</strong> <a href={CephURL}>{CephURL}</a></p>
+              <p><strong>Deployment Time:</strong> {deployment_time}</p>
+              <p><strong>BMC IP:</strong> {bmc_ip}</p>
+              <p><strong>BMC Username:</strong> {bmc_username}</p>
+              <p><strong>BMC Password:</strong> {bmc_password}</p>
+            </Panel>
+          </Collapse>
+        </Card>
+      );
+    });
   };
 
   return (
     <Layout1>
       <Layout>
         <Content style={{ margin: "16px 16px" }}>
-          <div style={{
-            padding: 30,
-            minHeight: "auto",
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-          }}>
+          <div
+            style={{
+              padding: 30,
+              minHeight: "auto",
+              background: colorBgContainer,
+              borderRadius: borderRadiusLG,
+            }}
+          >
             <h3 style={{ marginTop: '20px' }}>Infrastructure as a Service (IaaS)</h3>
           </div>
-          <div style={{
-            marginTop: 10,
-            padding: 30,
-            minHeight: "auto",
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-          }}>
+
+          <div
+            style={{
+              marginTop: 10,
+              padding: 30,
+              minHeight: "auto",
+              background: colorBgContainer,
+              borderRadius: borderRadiusLG,
+            }}
+          >
             <Tabs
               activeKey={activeTab}
               onChange={(key) => setActiveTab(key)}
@@ -164,7 +167,7 @@ const Iaas = () => {
                   <div
                     style={{
                       padding: "10px 30px",
-                      color:'#000',
+                      color: '#000',
                       borderRadius: borderRadiusLG,
                       textAlign: "center",
                       cursor: "pointer",
@@ -185,12 +188,13 @@ const Iaas = () => {
               </Tabs.TabPane>
 
               {/* Multinode Tab */}
-              <Tabs.TabPane disabled={disabledTabs["1"]}
+              <Tabs.TabPane
+                disabled={disabledTabs["1"]}
                 tab={
                   <div
                     style={{
                       padding: "10px 30px",
-                      color:"#000",
+                      color: "#000",
                       borderRadius: borderRadiusLG,
                       textAlign: "center",
                       cursor: 'unset',
@@ -206,7 +210,7 @@ const Iaas = () => {
               >
                 <div style={{ padding: 20 }}>
                   <h4>Multinode Deployment</h4>
-                  {renderServerDetails(serverInfoMultinode)}
+                  {/* {renderServerDetails(serverInfoMultinode)} */}
                 </div>
               </Tabs.TabPane>
             </Tabs>
@@ -221,8 +225,32 @@ const Iaas = () => {
           onCancel={handleCancelAction}
           okText="Confirm"
           cancelText="Cancel"
+          footer={[
+            <Button
+              key="cancel"
+              onClick={handleCancelAction}
+              style={{
+                width: '80px',
+                float: 'right', // Move to the right
+              }}
+            >
+              Cancel
+            </Button>,
+            <Button
+              key="confirm"
+              type="primary"
+              onClick={handleConfirmAction}
+              style={{
+                width: '80px',
+                float: 'right', // Move to the right
+                marginRight: '8px', // Add a margin to create some space between buttons
+              }}
+            >
+              Confirm
+            </Button>
+          ]}
         >
-          <p>Are you sure you want to {actionType?.toLowerCase()} the server?</p>
+          <p>Are you sure you want to {actionType} the server?</p>
         </Modal>
       </Layout>
     </Layout1>
