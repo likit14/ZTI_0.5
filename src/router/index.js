@@ -20,6 +20,7 @@ import Validation from "../View/Validation";
 import Vdi from "../View/Vdi";
 import Hpc from "../View/Hpc";
 import Marketplace from "../View/Marketplace";
+import Inventory from "../View/Inventory";
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
       {
         path: "/iaas",
         element: <Iaas />,
+      },
+      {
+        path: "/inventory",
+        element: <Inventory />,
       },
       {
         path: "/aiworkbench",
