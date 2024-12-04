@@ -18,9 +18,17 @@ const Iaas = () => {
   const [actionType, setActionType] = useState(null);
 
   useEffect(() => {
+    const userID = localStorage.getItem('userID'); // Retrieve userID from local storage
+  
+    if (!userID) {
+      console.error("User ID not found in local storage");
+      setLoading(false);
+      return;
+    }
+  
     setLoading(true);
-
-    fetch('http://192.168.249.100:5000/api/allinone')
+  
+    fetch(`http://192.168.249.100:5000/api/allinone?userID=${userID}`)
       .then((response) => {
         console.log('Full response:', response);
         if (!response.ok) {
@@ -38,7 +46,7 @@ const Iaas = () => {
         setLoading(false);
       });
   }, []);
-
+  
   const showConfirmationModal = (action) => {
     setActionType(action);
     setIsModalVisible(true);

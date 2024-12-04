@@ -273,7 +273,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          osip: values.ip, // Pass the entered IP as `osip`
+          osip: values.ibn, // Pass the entered IP as `osip`
         }),
       });
 

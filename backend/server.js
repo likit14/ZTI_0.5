@@ -234,17 +234,52 @@ app.post("/api/saveHardwareInfo", (req, res) => {
   );
 });
 
+// API to fetch deployment data from the `all_in_one` table
 app.get('/api/allinone', (req, res) => {
-  const query = 'SELECT * FROM all_in_one';
-  db.query(query, (err, results) => {
+  const userID = req.query.userID; // Extract userID from query parameters
+
+  if (!userID) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  const query = 'SELECT * FROM all_in_one WHERE user_id = ?'; // Adjust your query to filter by userID
+  db.query(query, [userID], (err, results) => {
     if (err) {
       console.error('Error fetching All-in-One data:', err);
       return res.status(500).json({ error: 'Failed to fetch All-in-One data' });
     }
-    // console.log('Fetched data:', results);  // Log the results here
+
+    console.log('Fetched data:', results); // Log the results for debugging
     res.json(results);
   });
 });
+
+// API to fetch bmc data from the `all_in_one` table
+app.post("/api/get-power-details", (req, res) => {
+  const { userID } = req.body;
+
+  if (!userID) {
+    return res.status(400).json({ error: "Missing userID" });
+  }
+
+  // Query to fetch data
+  const query = "SELECT bmc_ip, bmc_username, bmc_password FROM all_in_one WHERE user_id = ?";
+  db.query(query, [userID], (err, results) => {
+    if (err) {
+      console.error("Database query error:", err);
+      return res.status(500).json({ error: "Database query failed" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "No data found for the given userID" });
+    }
+
+    // Return the first matching record
+    const { ip, username, password } = results[0];
+    res.json({ ip, username, password });
+  });
+});
+
 
 // Register user endpoint
 app.post("/register", async (req, res) => {
@@ -282,21 +317,57 @@ app.post("/register", async (req, res) => {
       cc: ["support@pinakastra.cloud"],
       subject: "Welcome to Pinakastra!",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-          <div style="background-color: #002147; padding: 20px; text-align: center;">
-            <img src="https://pinakastra.com/assets/images/logo/logo.png" alt="Pinakastra" style="height: 50px;">
-          </div>
-          <div style="background-color: #f5f5f5; padding: 30px; text-align: center;">
-            <h2 style="color: #1f75b6;">Welcome to Pinakastra!</h2>
-            <p>Hello <strong>${companyName}</strong>,</p>
-            <p>Your account has been successfully registered. Your User ID is:</p>
-            <p><strong>${id}</strong></p>
-            <p>If you have any questions, feel free to contact us!</p>
-          </div>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+      
+      <!-- Banner/Header -->
+      <div style="background-color: #002147; padding: 20px; text-align: center;">
+        <img src="https://pinakastra.com/assets/images/logo/logo.png" alt="Pinakastra" style="height: 50px;">
+      </div>
+      
+      <!-- Main Content -->
+      <div style="background-color: #f5f5f5; padding: 30px; text-align: center;">
+        <h2 style="color: #1f75b6;">Welcome to Pinakastra!</h2>
+        <p style="font-size: 16px; color: #333;">
+          Hello <strong>${companyName}</strong>,
+        </p>
+        <p style="font-size: 16px; color: #333;">
+          Thank you for joining us! Your account has been successfully registered.
+        </p>
+        <div style="background-color: #ffffff; border-radius: 10px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+          <p style="font-size: 14px; color: #555; margin: 0;">
+            <strong>Your User ID :</strong>
+          </p>
+          <p style="font-size: 16px; color: #333; margin: 10px 0;">
+          </p>
+          <p style="font-size: 24px; color: #1f75b6; font-weight: bold; margin: 0;">
+            ${id}
+          </p>
         </div>
-      `,
+        <p style="font-size: 14px; color: #555;">
+          Please keep this information secure.
+        </p>
+        <p style="font-size: 14px; color: #555;">
+          If you have any questions or need assistance, feel free to contact our support team.
+        </p>
+      </div>
+      
+      <!-- Footer -->
+      <div style="background-color: #002147; padding: 10px; text-align: center; color: #fff;">
+        <p style="margin: 0;">Pinakastra Cloud </p>
+        <p style="margin: 0;">
+          <a href="mailto:cloud@pinakastra.com" style="color: #ffeb3b; text-decoration: none;">support@pinakastra.cloud</a>
+        </p>
+        <div style="margin-top: 10px;">
+          <a href="https://www.facebook.com/profile.php?id=61552535922993&mibextid=kFxxJD" style="margin: 0 5px; color: #fff; text-decoration: none;">Facebook</a>
+          <a href="https://x.com/pinakastra" style="margin: 0 5px; color: #fff; text-decoration: none;">X</a>
+          <a href="https://linkedin.com/company/pinakastra-computing" style="margin: 0 5px; color: #fff; text-decoration: none;">LinkedIn</a>
+        </div>
+        <p style="margin-top: 10px; font-size: 12px;">&copy; Copyright  2021, All Right Reserved Pinakastra</p>
+      </div>
+    </div>
+  `
     };
-
+    
     await new Promise((resolve, reject) => {
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
