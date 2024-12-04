@@ -129,36 +129,46 @@ def set_pxe_boot():
     except subprocess.CalledProcessError as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
-        # Replace with your Express.js API endpoint
 EXPRESS_API_URL = "http://192.168.249.100:5000/api/get-power-details"
 
 @app.route("/power-status", methods=["POST"])
 def power_status():
-    """
-    Handles power status operations for servers.
-    """
     try:
+        # Get the data from the request
         data = request.json
+        print(f"Received request data: {data}")  # Log the received data for debugging
+
         user_id = data.get("userID")
-        action = data.get("action")  # on, off, reset, status
+        action = data.get("action")  # This will be either None or a valid action like 'on', 'off', etc.
 
-        if not user_id or not action:
-            return jsonify({"error": "Missing userID or action"}), 400
+        if not user_id:
+            return jsonify({"error": "Missing userID"}), 400
 
-        # Fetch server details from Express.js API
+        # Fetch server details once from Express API
         response = requests.post(EXPRESS_API_URL, json={"userID": user_id})
         if response.status_code != 200:
-            return jsonify({"error": "Failed to fetch server details"}), 500
+            return jsonify({"error": "Failed to fetch server details from Express API"}), 500
 
         server_details = response.json()
+        print(f"Fetched server details: {server_details}")  # Log the server details
+
+        cloud_name = server_details.get("cloudName")
         ip = server_details.get("ip")
         username = server_details.get("username")
         password = server_details.get("password")
 
-        if not ip or not username or not password:
-            return jsonify({"error": "Invalid server details"}), 400
+        if not ip or not username or not password or not cloud_name:
+            return jsonify({"error": "Invalid server details from Express API"}), 400
 
-        # Map action to ipmitool command
+        # If no action is provided, just return the server details
+        if not action:
+            return jsonify({
+                "cloudName": cloud_name,
+                "bmc_ip": ip,
+                "message": "Server details fetched successfully"
+            })
+
+        # Mapping the action to the appropriate IPMI command
         command_map = {
             "on": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power on",
             "off": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power off",
@@ -166,27 +176,30 @@ def power_status():
             "status": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power status",
         }
 
+        # If the action is not valid, return an error
         command = command_map.get(action)
         if not command:
-            return jsonify({"error": "Invalid action"}), 400
+            return jsonify({"error": "Invalid action. Valid actions are: 'on', 'off', 'reset', 'status'"}), 400
 
-        # Execute the command
+        # Running the IPMI command using subprocess
         result = subprocess.run(command, shell=True, text=True, capture_output=True)
+        print(f"Command: {command}")
+        print(f"Return code: {result.returncode}")
+        print(f"Standard Output: {result.stdout}")
+        print(f"Standard Error: {result.stderr}")
 
         if result.returncode != 0:
             return jsonify({"error": "Failed to execute command", "details": result.stderr}), 500
 
-        # Get the current timestamp
-        timestamp = datetime.datetime.now().isoformat()
-
         return jsonify({
             "message": result.stdout.strip(),
-            "timestamp": timestamp,
+            "timestamp": datetime.datetime.now().isoformat(),
+            "cloudName": cloud_name,
+            "bmc_ip": ip
         })
 
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, threaded=True)
+    app.run(host='0.0.0.0', port=8000, threaded=True, debug=True)

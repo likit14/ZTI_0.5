@@ -263,7 +263,7 @@ app.post("/api/get-power-details", (req, res) => {
   }
 
   // Query to fetch data
-  const query = "SELECT bmc_ip, bmc_username, bmc_password FROM all_in_one WHERE user_id = ?";
+  const query = "SELECT bmc_ip AS ip, bmc_username AS username, bmc_password AS password, cloudName FROM all_in_one WHERE user_id = ?";
   db.query(query, [userID], (err, results) => {
     if (err) {
       console.error("Database query error:", err);
@@ -275,8 +275,7 @@ app.post("/api/get-power-details", (req, res) => {
     }
 
     // Return the first matching record
-    const { ip, username, password } = results[0];
-    res.json({ ip, username, password });
+    res.json(results[0]);
   });
 });
 

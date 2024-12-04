@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Layout1 from "../Components/layout";
-import { theme, Layout, Card, Button, Modal, Spin, Empty } from "antd";
+import { theme, Layout, Card, Button, Modal, Spin, Empty, message } from "antd";
 
 const { Content } = Layout;
 
@@ -9,52 +9,98 @@ const Inventory = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  const [serverData, setServerData] = useState(null);
-  const [serverInfoAllInOne, setServerInfoAllInOne] = useState(null);
+  const [serverData, setServerData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [actionType, setActionType] = useState(null);
+  const [selectedServer, setSelectedServer] = useState(null);
 
+  // Fetch server data on component mount
+  useEffect(() => {
+    const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
+    const userID = loginDetails ? loginDetails.data.id : null;
 
-useEffect(() => {
-    const userID = localStorage.getItem('id'); // Retrieve userID from local storage
-  
     if (!userID) {
       console.error("User ID not found in local storage");
       setLoading(false);
       return;
     }
-  
+
     setLoading(true);
-  
-    fetch(`http://192.168.249.100:5000/api/allinone?userID=${userID}`)
+    console.log('Fetching data with userID:', userID);
+    fetch("http://192.168.249.100:8000/power-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userID }),  // Only send userID on initial load, no action
+    })
       .then((response) => {
-        console.log('Full response:', response);
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error("Network response was not ok");
         }
         return response.json();
       })
       .then((data) => {
-        console.log('Received data from API:', data);
-        setServerInfoAllInOne(data);
+        if (data.cloudName && data.bmc_ip) {
+          // Ensure data is an array
+          setServerData([data]);  // Wrap the single server object in an array
+        } else {
+          setServerData([]);  // Set an empty array if no server data
+        }
         setLoading(false);
       })
       .catch((error) => {
-        console.error('Error fetching All-in-One data:', error);
+        console.error("Error fetching server data:", error);
+        setServerData([]);
         setLoading(false);
       });
   }, []);
 
-  const showConfirmationModal = (action) => {
+  const sendPowerRequest = async (action) => {
+    const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
+    const userID = loginDetails ? loginDetails.data.id : null;
+
+    if (!userID) {
+      message.error("User ID not found");
+      return;
+    }
+    if (!["on", "off", "reset", "status"].includes(action)) {
+      message.error("Invalid action");
+      return;
+    }
+
+    setLoading(true);
+
+    fetch("http://192.168.249.100:8000/power-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userID, action }), // Correctly sending a string as action
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.message) {
+          message.success(`${action} action successful: ${data.message}`);
+        } else {
+          message.error(`Failed to ${action} the server: ${data.error || "Unknown error"}`);
+        }
+      })
+      .catch((error) => {
+        console.error("Error sending power request:", error);
+        message.error("An error occurred while sending the request.");
+      })
+      .finally(() => setLoading(false));
+  };
+
+  const showConfirmationModal = (action, server) => {
     setActionType(action);
+    setSelectedServer(server);
     setIsModalVisible(true);
   };
 
   const handleConfirmAction = () => {
     setIsModalVisible(false);
-    if (actionType) {
-      console.log(`${actionType} action confirmed.`);
+    if (actionType && selectedServer) {
+      sendPowerRequest(actionType); // Only pass the actionType
+
     }
   };
 
@@ -74,7 +120,7 @@ useEffect(() => {
     return serverData.map((server, index) => (
       <Card
         key={index}
-        title={`Server ${index + 1}`}
+        title={`Cloud: ${server.cloud_name} - Server ${index + 1}`}
         style={{
           marginTop: 20,
           borderRadius: borderRadiusLG,
@@ -82,38 +128,40 @@ useEffect(() => {
         }}
       >
         <div style={{ display: "flex", justifyContent: "flex-start", gap: "8px" }}>
+          <h6>{server.bmc_ip}</h6>
           <Button
-            color="danger"
+            danger
             size="small"
             style={{ width: "80px" }}
-            onClick={() => showConfirmationModal("Power Off")}
+            onClick={() => showConfirmationModal("on", server)}  // Pass actionType "on"
           >
-            Power Off
+            Power On
           </Button>
           <Button
             type="primary"
             size="small"
             style={{ width: "80px" }}
-            onClick={() => showConfirmationModal("Power On")}
+            onClick={() => showConfirmationModal("off", server)}  // Pass actionType "off"
           >
-            Power On
+            Power Off
           </Button>
           <Button
             type="default"
             size="small"
             style={{ width: "80px" }}
-            onClick={() => showConfirmationModal("Power Reset")}
+            onClick={() => showConfirmationModal("reset", server)}  // Pass actionType "reset"
           >
-            Power Reset
+            Reset
           </Button>
           <Button
             type="dashed"
             size="small"
             style={{ width: "80px" }}
-            onClick={() => showConfirmationModal("Check Status")}
+            onClick={() => showConfirmationModal("status", server)}  // Pass actionType "status"
           >
-            Check Status
+            Status
           </Button>
+
         </div>
       </Card>
     ));
@@ -146,7 +194,6 @@ useEffect(() => {
           </div>
         </Content>
 
-        {/* Modal for Confirmation */}
         <Modal
           title={`Confirm ${actionType}`}
           visible={isModalVisible}
@@ -155,11 +202,14 @@ useEffect(() => {
           okText="Confirm"
           cancelText="Cancel"
           footer={
-            <div style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
               <Button
                 key="cancel"
                 onClick={handleCancelAction}
-                style={{ width: "80px", marginRight: "8px" }}
+                style={{
+                  width: '80px',
+                  marginRight: '8px', // Adds space between the buttons
+                }}
               >
                 Cancel
               </Button>
@@ -167,7 +217,9 @@ useEffect(() => {
                 key="confirm"
                 type="primary"
                 onClick={handleConfirmAction}
-                style={{ width: "80px" }}
+                style={{
+                  width: '80px',
+                }}
               >
                 Confirm
               </Button>
