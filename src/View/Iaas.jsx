@@ -18,7 +18,8 @@ const Iaas = () => {
   const [actionType, setActionType] = useState(null);
 
   useEffect(() => {
-    const userID = localStorage.getItem('userID'); // Retrieve userID from local storage
+    const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
+    const userID = loginDetails ? loginDetails.data.id : null;
   
     if (!userID) {
       console.error("User ID not found in local storage");
