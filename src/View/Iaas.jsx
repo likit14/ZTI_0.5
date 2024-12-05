@@ -90,33 +90,6 @@ const Iaas = () => {
             borderRadius: borderRadiusLG,
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
           }}
-          extra={
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Button
-                color="danger" variant="solid"
-                size="small"
-                style={{ marginRight: 8 }}
-                onClick={() => showConfirmationModal('Power Off')}
-              >
-                Power Off
-              </Button>
-              <Button
-                type="primary"
-                size="small"
-                style={{ marginRight: 8 }}
-                onClick={() => showConfirmationModal('Power On')}
-              >
-                Power On
-              </Button>
-              <Button
-                type="default"
-                size="small"
-                onClick={() => showConfirmationModal('Power Reset')}
-              >
-                Power Reset
-              </Button>
-            </div>
-          }
         >
           <Collapse bordered={false} ghost>
             <Panel header="Server Details" key={index}>
@@ -221,40 +194,6 @@ const Iaas = () => {
             </Tabs>
           </div>
         </Content>
-        <Modal
-          title={`Confirm ${actionType}`}
-          visible={isModalVisible}
-          onOk={handleConfirmAction}
-          onCancel={handleCancelAction}
-          okText="Confirm"
-          cancelText="Cancel"
-          footer={
-            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-              <Button
-                key="cancel"
-                onClick={handleCancelAction}
-                style={{
-                  width: '80px',
-                  marginRight: '8px', // Adds space between the buttons
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                key="confirm"
-                type="primary"
-                onClick={handleConfirmAction}
-                style={{
-                  width: '80px',
-                }}
-              >
-                Confirm
-              </Button>
-            </div>
-          }
-        >
-          <p>Are you sure you want to {actionType} the server?</p>
-        </Modal>
       </Layout>
     </Layout1>
   );

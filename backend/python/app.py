@@ -130,13 +130,15 @@ def set_pxe_boot():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 EXPRESS_API_URL = "http://192.168.249.100:5000/api/get-power-details"
-
 @app.route("/power-status", methods=["POST"])
 def power_status():
     try:
         # Get the data from the request
         data = request.json
         print(f"Received request data: {data}")  # Log the received data for debugging
+
+        if not data:
+            return jsonify({"error": "No data received"}), 400
 
         user_id = data.get("userID")
         action = data.get("action")  # This will be either None or a valid action like 'on', 'off', etc.
@@ -147,6 +149,7 @@ def power_status():
         # Fetch server details once from Express API
         response = requests.post(EXPRESS_API_URL, json={"userID": user_id})
         if response.status_code != 200:
+            print(f"Error fetching server details from Express API: {response.status_code}")
             return jsonify({"error": "Failed to fetch server details from Express API"}), 500
 
         server_details = response.json()
@@ -189,17 +192,21 @@ def power_status():
         print(f"Standard Error: {result.stderr}")
 
         if result.returncode != 0:
+            print(f"Error executing command: {result.stderr}")
             return jsonify({"error": "Failed to execute command", "details": result.stderr}), 500
 
         return jsonify({
             "message": result.stdout.strip(),
-            "timestamp": datetime.datetime.now().isoformat(),
+            "timestamp": datetime.now().isoformat(),  # Use datetime now()
             "cloudName": cloud_name,
             "bmc_ip": ip
         })
 
     except Exception as e:
+        # Print the error for debugging
+        print(f"Error occurred: {str(e)}")
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, threaded=True, debug=True)
+    app.run(host='0.0.0.0', port=8000, threaded=True)
