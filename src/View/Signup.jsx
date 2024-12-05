@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import '../Styles/Signup.css';
 import { LockOutlined, HomeOutlined, MailOutlined } from '@ant-design/icons';
-import { Button, Input, Alert } from 'antd';
+import { Button, Input, Alert, notification, Spin } from 'antd'; // Added Spin component for global loader
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
 import tick from '../Images/tick.gif';
 import img1 from '../Images/ZTi.png';
-import { Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 
 const Signup = () => {
-    // const navigate = useNavigate();
     const [formData, setFormData] = useState({
         companyName: '',
         email: '',
@@ -20,7 +20,10 @@ const Signup = () => {
     const [error, setError] = useState('');
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
     const [registeredUser, setRegisteredUser] = useState('');
-    const [setUserId] = useState('');
+    const [loading, setLoading] = useState(false); // Loading state for button and global loader
+    const [passwordVisible, setPasswordVisible] = useState(false);
+    const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+
 
     const handleChange = (e) => {
         setFormData({
@@ -34,8 +37,9 @@ const Signup = () => {
         e.preventDefault();
         const { companyName, email, password, confirmPassword } = formData;
 
+        // Validation checks
         if (password !== confirmPassword) {
-            setError("Passwords do not match");
+            setError('Passwords do not match');
             return;
         }
 
@@ -64,31 +68,34 @@ const Signup = () => {
             return;
         }
 
+        // Show the loading spinner when user clicks register
+        setLoading(true);
+
         try {
             const response = await axios.post('http://192.168.249.100:5000/register', { companyName, email, password });
             setRegistrationSuccess(true);
             setRegisteredUser(companyName);
-            setUserId(response.data.userId);
+            notification.success({
+                message: 'Registration Successful',
+                description: 'You have successfully registered. Please check your email for your UserID.',
+                duration: 3, // Show notification for 3 seconds
+            });
+
             setFormData({
                 companyName: '',
                 email: '',
                 password: '',
                 confirmPassword: '',
             });
+
             setError('');
+            setLoading(false); // Stop loading once registration is complete
         } catch (err) {
             console.error(err);
             setError('Error registering user');
+            setLoading(false); // Stop loading in case of error
         }
     };
-
-    // const handleNavigate = () => {
-    //     const loginDetails = {
-    //         loginStatus: false
-    //     };
-    //     localStorage.setItem('loginDetails', JSON.stringify(loginDetails));
-    //     navigate('/');
-    // };
 
     return (
         <div className="App">
@@ -97,7 +104,6 @@ const Signup = () => {
                     <div className="d-md-flex col-md-8 col-lg-6 bg-image"></div>
                     <div className="col-md-8 col-lg-6">
                         <div className="container">
-                            {/* <div className="form-container"> */}
                             <div className="registration-form">
                                 <img src={img1} alt="Logo" className="logo" />
                                 {registrationSuccess ? (
@@ -111,70 +117,101 @@ const Signup = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                <form onSubmit={handleSubmit}>
-                                    <div className="form-group">
-                                        <label>Company Name:</label>
-                                        <Input
-                                            prefix={<HomeOutlined style={{ marginRight: 8 }} />}
-                                            type="text"
-                                            name="companyName"
-                                            value={formData.companyName}
-                                            onChange={handleChange}
-                                            placeholder="Enter your company name"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Email:</label>
-                                        <Input
-                                            prefix={<MailOutlined style={{ marginRight: 8 }}/>}
-                                            type="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            placeholder="Enter your email address"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Password:</label>
-                                        <Input
-                                            prefix={<LockOutlined style={{ marginRight: 8 }} />}
-                                            type="password"
-                                            name="password"
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            placeholder="Enter your password"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Confirm Password:</label>
-                                        <Input
-                                            prefix={<LockOutlined  style={{ marginRight: 8 }}/>}
-                                            type="password"
-                                            name="confirmPassword"
-                                            value={formData.confirmPassword}
-                                            onChange={handleChange}
-                                            placeholder="Confirm your password"
-                                            required
-                                        />
-                                    </div>
-                                    {error && <Alert message={error} type="error" showIcon />}
-                                    <Button type="primary" htmlType="submit">Register</Button>
-                                </form>
+                                    <form onSubmit={handleSubmit}>
+                                        <div className="form-group">
+                                            <label>Company Name:</label>
+                                            <Input
+                                                prefix={<HomeOutlined style={{ marginRight: 8 }} />}
+                                                type="text"
+                                                name="companyName"
+                                                value={formData.companyName}
+                                                onChange={handleChange}
+                                                placeholder="Enter your company name"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Email:</label>
+                                            <Input
+                                                prefix={<MailOutlined style={{ marginRight: 8 }} />}
+                                                type="email"
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleChange}
+                                                placeholder="Enter your email address"
+                                                required
+                                            />
+                                        </div>
+
+
+                                        <div className="form-group">
+                                            <label>Password:</label>
+                                            <Input
+                                                prefix={<LockOutlined style={{ marginRight: 8 }} />}
+                                                type={passwordVisible ? 'text' : 'password'}
+                                                name="password"
+                                                value={formData.password}
+                                                onChange={handleChange}
+                                                placeholder="Enter your password"
+                                                required
+                                                suffix={
+                                                    <div
+                                                        onClick={() => setPasswordVisible(!passwordVisible)}
+                                                        style={{ cursor: 'pointer', opacity: 0.6 }} // Adjust the opacity here
+                                                    >
+                                                        {passwordVisible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                                                    </div>
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Confirm Password:</label>
+                                            <Input
+                                                prefix={<LockOutlined style={{ marginRight: 8 }} />}
+                                                type={confirmPasswordVisible ? 'text' : 'password'}
+                                                name="confirmPassword"
+                                                value={formData.confirmPassword}
+                                                onChange={handleChange}
+                                                placeholder="Confirm your password"
+                                                required
+                                                suffix={
+                                                    <div
+                                                        onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                                                        style={{ cursor: 'pointer', opacity: 0.6 }} // Adjust the opacity here
+                                                    >
+                                                        {confirmPasswordVisible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                                                    </div>
+                                                }
+                                            />
+                                        </div>
+                                        {error && <Alert message={error} type="error" showIcon />}
+
+                                        {/* Loader applied directly to the Register button */}
+                                        <Button
+                                            type="primary"
+                                            htmlType="submit"
+                                            loading={loading} // Show spinner when loading is true
+                                            disabled={loading} // Disable button while loading
+                                        >
+                                            Register
+                                        </Button>
+                                    </form>
                                 )}
                                 {!registrationSuccess && (
-                                <div className="login-prompt">
-                                    <p>or</p>
-                                    <p><Link to="/">Already Registered?/Login</Link></p>
-                                </div>
+                                    <div className="login-prompt">
+                                        <p>or</p>
+                                        <p><Link to="/">Already Registered?/Login</Link></p>
+                                    </div>
                                 )}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Global loader visible when registration is in progress */}
+
         </div>
     );
 };
