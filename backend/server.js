@@ -274,10 +274,11 @@ app.post("/api/get-power-details", (req, res) => {
       return res.status(404).json({ error: "No data found for the given userID" });
     }
 
-    // Return the first matching record
-    res.json(results[0]);
+    // Return all matching records
+    res.json(results);  // Return the entire results array
   });
 });
+
 
 
 // Register user endpoint

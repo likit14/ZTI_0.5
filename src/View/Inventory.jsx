@@ -14,12 +14,11 @@ const Inventory = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [actionType, setActionType] = useState(null);
   const [selectedServer, setSelectedServer] = useState(null);
-  const [powerStatus, setPowerStatus] = useState(null);  // Initially null, no power status set
-  const [lastChecked, setLastChecked] = useState(null);   // Track last checked time
+  const [serverStatus, setServerStatus] = useState({}); // Track power status and last checked per server
 
   // Fetch server data on component mount
   useEffect(() => {
-    const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
+    const loginDetails = JSON.parse(localStorage.getItem("loginDetails"));
     const userID = loginDetails ? loginDetails.data.id : null;
 
     if (!userID) {
@@ -29,11 +28,11 @@ const Inventory = () => {
     }
 
     setLoading(true);
-    console.log('Fetching data with userID:', userID);
+    console.log("Fetching data with userID:", userID);
     fetch("http://192.168.249.100:8000/power-status", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userID }),  // Only send userID on initial load, no action
+      body: JSON.stringify({ userID }), // Only send userID on initial load, no action
     })
       .then((response) => {
         if (!response.ok) {
@@ -42,11 +41,10 @@ const Inventory = () => {
         return response.json();
       })
       .then((data) => {
-        if (data.cloudName && data.bmc_ip) {
-          // Ensure data is an array
-          setServerData([data]);  // Wrap the single server object in an array
+        if (Array.isArray(data) && data.length > 0) {
+          setServerData(data); // Directly set the array of servers
         } else {
-          setServerData([]);  // Set an empty array if no server data
+          setServerData([]); // Set an empty array if no data is found
         }
         setLoading(false);
       })
@@ -57,28 +55,41 @@ const Inventory = () => {
       });
   }, []);
 
-  // Retrieve power status and last checked time from sessionStorage
+  // Retrieve power status and last checked time for each server from sessionStorage
   useEffect(() => {
-    const storedPowerStatus = sessionStorage.getItem("powerStatus");
-    const storedLastChecked = sessionStorage.getItem("lastChecked");
+    const statusData = {};
+    serverData.forEach((server) => {
+      const storedPowerStatus = sessionStorage.getItem(`powerStatus_${server.bmc_ip}`);
+      const storedLastChecked = sessionStorage.getItem(`lastChecked_${server.bmc_ip}`);
+      if (storedPowerStatus) {
+        statusData[server.bmc_ip] = {
+          powerStatus: storedPowerStatus,
+          lastChecked: storedLastChecked,
+        };
+      }
+    });
+    setServerStatus(statusData);
+  }, [serverData]);
 
-    if (storedPowerStatus) {
-      setPowerStatus(storedPowerStatus);
-    }
+  const storeServerStatus = (server, newPowerStatus, formattedTime) => {
+    sessionStorage.setItem(`powerStatus_${server.bmc_ip}`, newPowerStatus);
+    sessionStorage.setItem(`lastChecked_${server.bmc_ip}`, formattedTime);
 
-    if (storedLastChecked) {
-      setLastChecked(storedLastChecked);
-    }
-  }, []);
+    setServerStatus((prev) => ({
+      ...prev,
+      [server.bmc_ip]: { powerStatus: newPowerStatus, lastChecked: formattedTime },
+    }));
+  };
 
-  const sendPowerRequest = async (action) => {
-    const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
+  const sendPowerRequest = async (action, server) => {
+    const loginDetails = JSON.parse(localStorage.getItem("loginDetails"));
     const userID = loginDetails ? loginDetails.data.id : null;
 
     if (!userID) {
       message.error("User ID not found");
       return;
     }
+
     if (!["on", "off", "reset", "status"].includes(action)) {
       message.error("Invalid action");
       return;
@@ -89,26 +100,32 @@ const Inventory = () => {
     fetch("http://192.168.249.100:8000/power-status", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userID, action }), 
+      body: JSON.stringify({ userID, action, serverIP: server.bmc_ip, cloudName: server.cloudName }), // Pass cloudName
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
       .then((data) => {
-        if (data.message) {
-          message.success(`${data.message}`);
-          if (action === 'status') {
-            const currentDate = new Date();
-            const formattedTime = `${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}`;
-            const newPowerStatus = data.message.includes('on') ? 'on' : 'off';
-            
-            // Store power status and last checked time in sessionStorage
-            sessionStorage.setItem("powerStatus", newPowerStatus);
-            sessionStorage.setItem("lastChecked", formattedTime);
+        console.log("Response from Flask server:", data); // Debugging log
 
-            setPowerStatus(newPowerStatus); 
-            setLastChecked(formattedTime); 
+        if (Array.isArray(data) && data.length > 0) {
+          const serverResponse = data[0]; // Access the first server object from the response
+          if (serverResponse.message) {
+            message.success(`${serverResponse.message}`);
+            if (action === "status") {
+              const currentDate = new Date();
+              const formattedTime = `${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}`;
+              const newPowerStatus = serverResponse.message.includes("on") ? "on" : "off";
+
+              // Store power status and last checked time for the server
+              storeServerStatus(server, newPowerStatus, formattedTime);
+            }
           }
         } else {
-          message.error(`Failed to ${action} the server: ${data.error || "Unknown error"}`);
+          message.error(`Failed to ${action} the server: No valid response data`);
         }
       })
       .catch((error) => {
@@ -127,7 +144,7 @@ const Inventory = () => {
   const handleConfirmAction = () => {
     setIsModalVisible(false);
     if (actionType && selectedServer) {
-      sendPowerRequest(actionType); // Only pass the actionType
+      sendPowerRequest(actionType, selectedServer); // Pass the server object here
     }
   };
 
@@ -144,9 +161,9 @@ const Inventory = () => {
       return <Empty description="No servers available." />;
     }
 
-    return serverData.map((server, index) => (
+    return serverData.map((server) => (
       <Card
-        key={index}
+        key={server.bmc_ip} // Use bmc_ip as a unique key
         title={`${server.cloudName} Cloud - ${server.bmc_ip}`}
         style={{
           marginTop: 20,
@@ -155,21 +172,21 @@ const Inventory = () => {
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", gap: "16px" }}>
-          {/* Left Section for Buttons */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            <Button
-              danger
-              size="small"
-              style={{ width: "80px" }}
-              onClick={() => showConfirmationModal("on", server)}  // Pass actionType "on"
-            >
-              Power On
-            </Button>
             <Button
               type="primary"
               size="small"
               style={{ width: "80px" }}
-              onClick={() => showConfirmationModal("off", server)}  // Pass actionType "off"
+              onClick={() => showConfirmationModal("on", server)}
+            >
+              Power On
+            </Button>
+            <Button
+              danger
+              type="primary"
+              size="small"
+              style={{ width: "80px" }}
+              onClick={() => showConfirmationModal("off", server)}
             >
               Power Off
             </Button>
@@ -177,7 +194,7 @@ const Inventory = () => {
               type="default"
               size="small"
               style={{ width: "80px" }}
-              onClick={() => showConfirmationModal("reset", server)}  // Pass actionType "reset"
+              onClick={() => showConfirmationModal("reset", server)}
             >
               Reset
             </Button>
@@ -185,21 +202,28 @@ const Inventory = () => {
               type="dashed"
               size="small"
               style={{ width: "80px" }}
-              onClick={() => showConfirmationModal("status", server)}  // Pass actionType "status"
+              onClick={() => showConfirmationModal("status", server)}
             >
               Status
             </Button>
           </div>
 
-          {/* Only show power status after "Status" button is clicked */}
-          {powerStatus !== null && (
+          {serverStatus[server.bmc_ip] && (
             <div style={{ marginTop: "10px", display: "flex", alignItems: "center" }}>
-              {powerStatus === 'on' ? (
-                <Tag color="green" style={{ marginLeft: '10px' }}><span style={{ marginRight: '5px' }}>•</span> Power On</Tag>
+              {serverStatus[server.bmc_ip].powerStatus === "on" ? (
+                <Tag color="green" style={{ marginLeft: "10px" }}>
+                  <span style={{ marginRight: "5px" }}>•</span> Power On
+                </Tag>
               ) : (
-                <Tag color="red" style={{ marginLeft: '10px' }}><span style={{ marginRight: '5px' }}>•</span> Power Off</Tag>
+                <Tag color="red" style={{ marginLeft: "10px" }}>
+                  <span style={{ marginRight: "5px" }}>•</span> Power Off
+                </Tag>
               )}
-              {lastChecked && <span style={{ marginLeft: '10px', fontStyle: 'italic' }}>Last checked: {lastChecked}</span>}
+              {serverStatus[server.bmc_ip].lastChecked && (
+                <span style={{ marginLeft: "10px", fontStyle: "italic" }}>
+                  Last checked: {serverStatus[server.bmc_ip].lastChecked}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -242,31 +266,17 @@ const Inventory = () => {
           okText="Confirm"
           cancelText="Cancel"
           footer={
-            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-              <Button
-                key="cancel"
-                onClick={handleCancelAction}
-                style={{
-                  width: '80px',
-                  marginRight: '8px', // Adds space between the buttons
-                }}
-              >
+            <div style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
+              <Button onClick={handleCancelAction} style={{ marginRight: 8 }}>
                 Cancel
               </Button>
-              <Button
-                key="confirm"
-                type="primary"
-                onClick={handleConfirmAction}
-                style={{
-                  width: '80px',
-                }}
-              >
+              <Button onClick={handleConfirmAction} type="primary">
                 Confirm
               </Button>
             </div>
           }
         >
-          <p>Are you sure you want to {actionType} the server?</p>
+          <p>Are you sure you want to {actionType} the server {selectedServer && selectedServer.bmc_ip}?</p>
         </Modal>
       </Layout>
     </Layout1>

@@ -130,10 +130,10 @@ def set_pxe_boot():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 EXPRESS_API_URL = "http://192.168.249.100:5000/api/get-power-details"
+
 @app.route("/power-status", methods=["POST"])
 def power_status():
     try:
-        # Get the data from the request
         data = request.json
         print(f"Received request data: {data}")  # Log the received data for debugging
 
@@ -141,72 +141,83 @@ def power_status():
             return jsonify({"error": "No data received"}), 400
 
         user_id = data.get("userID")
-        action = data.get("action")  # This will be either None or a valid action like 'on', 'off', etc.
+        action = data.get("action")
+        cloud_name = data.get("cloudName")  # Added cloudName to the data
 
         if not user_id:
             return jsonify({"error": "Missing userID"}), 400
 
-        # Fetch server details once from Express API
+        # Fetch server details from the Express API
         response = requests.post(EXPRESS_API_URL, json={"userID": user_id})
         if response.status_code != 200:
             print(f"Error fetching server details from Express API: {response.status_code}")
             return jsonify({"error": "Failed to fetch server details from Express API"}), 500
 
-        server_details = response.json()
-        print(f"Fetched server details: {server_details}")  # Log the server details
+        server_details_list = response.json()
+        print(f"Fetched server details: {server_details_list}")  # Log the server details
 
-        cloud_name = server_details.get("cloudName")
-        ip = server_details.get("ip")
-        username = server_details.get("username")
-        password = server_details.get("password")
+        if not server_details_list:
+            return jsonify({"error": "No server details found for the given userID"}), 404
 
-        if not ip or not username or not password or not cloud_name:
-            return jsonify({"error": "Invalid server details from Express API"}), 400
+        results = []
+        for server_details in server_details_list:
+            # Fetch server details
+            server_cloud_name = server_details.get("cloudName")
+            ip = server_details.get("ip")
+            username = server_details.get("username")
+            password = server_details.get("password")
 
-        # If no action is provided, just return the server details
-        if not action:
-            return jsonify({
-                "cloudName": cloud_name,
-                "bmc_ip": ip,
-                "message": "Server details fetched successfully"
-            })
+            # Check if necessary details exist
+            if not ip or not username or not password or not server_cloud_name:
+                return jsonify({"error": "Invalid server details from Express API"}), 400
 
-        # Mapping the action to the appropriate IPMI command
-        command_map = {
-            "on": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power on",
-            "off": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power off",
-            "reset": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power reset",
-            "status": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power status",
-        }
+            # Match the cloud name if provided
+            if cloud_name and cloud_name != server_cloud_name:
+                continue  # Skip the server if the cloud name doesn't match
 
-        # If the action is not valid, return an error
-        command = command_map.get(action)
-        if not command:
-            return jsonify({"error": "Invalid action. Valid actions are: 'on', 'off', 'reset', 'status'"}), 400
+            if not action:
+                # If no action is provided, just return the server details
+                results.append({
+                    "cloudName": server_cloud_name,
+                    "bmc_ip": ip,
+                    "message": "Server details fetched successfully"
+                })
+            else:
+                # Mapping actions to commands
+                command_map = {
+                    "on": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power on",
+                    "off": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power off",
+                    "reset": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power reset",
+                    "status": f"ipmitool -I lanplus -H {ip} -U {username} -P {password} chassis power status",
+                }
 
-        # Running the IPMI command using subprocess
-        result = subprocess.run(command, shell=True, text=True, capture_output=True)
-        print(f"Command: {command}")
-        print(f"Return code: {result.returncode}")
-        print(f"Standard Output: {result.stdout}")
-        print(f"Standard Error: {result.stderr}")
+                command = command_map.get(action)
+                if not command:
+                    return jsonify({"error": "Invalid action. Valid actions are: 'on', 'off', 'reset', 'status'"}), 400
 
-        if result.returncode != 0:
-            print(f"Error executing command: {result.stderr}")
-            return jsonify({"error": "Failed to execute command", "details": result.stderr}), 500
+                # Execute the command
+                result = subprocess.run(command, shell=True, text=True, capture_output=True)
+                print(f"Command: {command}")
+                print(f"Return code: {result.returncode}")
+                print(f"Standard Output: {result.stdout}")
+                print(f"Standard Error: {result.stderr}")
 
-        return jsonify({
-            "message": result.stdout.strip(),
-            "timestamp": datetime.now().isoformat(),  # Use datetime now()
-            "cloudName": cloud_name,
-            "bmc_ip": ip
-        })
+                if result.returncode != 0:
+                    print(f"Error executing command: {result.stderr}")
+                    return jsonify({"error": "Failed to execute command", "details": result.stderr}), 500
+
+                results.append({
+                    "message": result.stdout.strip(),
+                    "timestamp": datetime.now().isoformat(),
+                    "cloudName": server_cloud_name,
+                    "bmc_ip": ip
+                })
+
+        return jsonify(results)
 
     except Exception as e:
-        # Print the error for debugging
         print(f"Error occurred: {str(e)}")
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, threaded=True)
+    app.run(host='0.0.0.0', port=8000, threaded=True, debug=True)
