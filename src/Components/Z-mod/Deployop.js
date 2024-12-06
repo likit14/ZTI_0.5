@@ -34,22 +34,36 @@ const DeploymentOptions = ({ onStart }) => {
 
   const handleModalOk = async () => {
     try {
-      // Update metadata with the entered cloud name
-      updateMetadata(cloudName);
-
-
-      // Call the onStart function with the entered cloud name
-      onStart(cloudName);
-
-      // Close the modal
-      setIsModalVisible(false);
-      setCloudName(''); // Clear the input
+      // Check if the cloud name already exists in the database
+      const response = await axios.post("http://192.168.249.100:5000/check-cloud-name", {
+        cloudName,
+      });
+  
+      if (response.status === 200) {
+        // Cloud name is available, proceed with the setup
+        updateMetadata(cloudName);
+        onStart(cloudName);
+  
+        // Close the modal
+        setIsModalVisible(false);
+        setCloudName(""); // Clear the input
+      }
     } catch (error) {
-      console.error('Error storing cloud name:', error);
-      // Optionally, show an error message to the user
+      if (error.response && error.response.status === 400) {
+        Modal.error({
+          title: "Cloud Name Unavailable",
+          content: error.response.data.message,
+        });
+      } else {
+        console.error("Error checking cloud name:", error);
+        Modal.error({
+          title: "Error",
+          content: "An error occurred while checking the cloud name. Please try again later.",
+        });
+      }
     }
   };
-
+  
   const handleModalCancel = () => {
     setIsModalVisible(false); // Close the modal
     setCloudName(''); // Clear the input

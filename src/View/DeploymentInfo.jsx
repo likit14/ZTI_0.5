@@ -14,7 +14,7 @@ const DeploymentInfo = () => {
     }, []);
 
     const fetchData = () => {
-        fetch('http://localhost:5000/get_data')  // Adjust URL based on your backend setup
+        fetch('http://192.168.249.100:5000/get_data')  // Adjust URL based on your backend setup
             .then(response => response.json())
             .then(data => {
                 setData(data);
@@ -35,7 +35,7 @@ const DeploymentInfo = () => {
     const handleDeploy = () => {
         if (!selectedRow) return;
 
-        fetch('http://localhost:5000/deploy', {
+        fetch('http://192.168.249.100:5000/deploy', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

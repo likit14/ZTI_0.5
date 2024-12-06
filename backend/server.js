@@ -254,6 +254,33 @@ app.get('/api/allinone', (req, res) => {
   });
 });
 
+app.post("/check-cloud-name", async (req, res) => {
+  const { cloudName } = req.body;
+
+  try {
+    const existingCloud = await new Promise((resolve, reject) => {
+      const query = "SELECT * FROM all_in_one WHERE cloudName = ?";
+      db.query(query, [cloudName], (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+
+    if (existingCloud.length > 0) {
+      return res.status(400).json({ message: "Cloud name already exists. Please choose a different name." });
+    }
+
+    res.status(200).json({ message: "Cloud name is available." });
+  } catch (error) {
+    console.error("Error checking cloud name:", error);
+    res.status(500).json({ message: "An error occurred while checking the cloud name." });
+  }
+});
+
+
 // API to fetch bmc data from the `all_in_one` table
 app.post("/api/get-power-details", (req, res) => {
   const { userID } = req.body;
@@ -281,11 +308,26 @@ app.post("/api/get-power-details", (req, res) => {
 
 
 
-// Register user endpoint
 app.post("/register", async (req, res) => {
   const { companyName, email, password } = req.body;
 
   try {
+    // Check if the email already exists
+    const existingUser = await new Promise((resolve, reject) => {
+      const checkEmailSql = "SELECT * FROM users WHERE email = ?";
+      db.query(checkEmailSql, [email], (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+
+    if (existingUser.length > 0) {
+      return res.status(400).json({ message: "Email already exists !" });
+    }
+
     // Dynamically import nanoid with custom alphabet
     const { customAlphabet } = await import("nanoid");
     const nanoid = customAlphabet("ABCDEVSR0123456789abcdefgzkh", 6);
@@ -306,6 +348,7 @@ app.post("/register", async (req, res) => {
         }
       });
     });
+
 
     // Set the user session after registration
     req.session.userId = id;
@@ -367,7 +410,7 @@ app.post("/register", async (req, res) => {
     </div>
   `
     };
-    
+
     await new Promise((resolve, reject) => {
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {

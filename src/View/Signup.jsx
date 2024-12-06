@@ -87,15 +87,18 @@ const Signup = () => {
                 password: '',
                 confirmPassword: '',
             });
-
             setError('');
             setLoading(false); // Stop loading once registration is complete
         } catch (err) {
-            console.error(err);
-            setError('Error registering user');
-            setLoading(false); // Stop loading in case of error
+            setLoading(false);
+            if (err.response && err.response.status === 400) {
+                setError(err.response.data.message); // Display "Email already registered"
+            } else {
+                setError('Error registering user');
+            }
         }
     };
+
 
     return (
         <div className="App">
