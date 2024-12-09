@@ -15,7 +15,7 @@ services:
 
   node-backend:
     build:
-      context: ./backend
+      context: ./backend/db
     ports:
       - "5000:5000"
     depends_on:
