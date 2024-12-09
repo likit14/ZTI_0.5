@@ -19,7 +19,7 @@ const ProgressModal = ({ visible, onNext }) => {
       // Start the progress bar
       const interval = setInterval(() => {
         setProgress((prev) => {
-          if (prev < 100) return prev + 1;
+          if (prev < 98) return prev + 1;
           clearInterval(interval);
           setIsComplete(true);
           return prev;

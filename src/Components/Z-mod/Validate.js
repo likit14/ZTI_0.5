@@ -246,8 +246,8 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
         ip: values.ibn,
         subnet: values.subnet,
         gateway: values.gateway,
-        interface: values.interface,  // Assuming you're using the first interface
-        disk: values.disk,             // Including the disk value
+        interface: values.interface,  
+        disk: values.disk,
       });
 
       // Handle the response from the server
@@ -284,7 +284,8 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
 
         // Assuming the result message contains "SSH successful" or similar, we show SweetAlert
         if (result.message === "SSH connection established successfully.") {
-          setTimeout(() => {
+          setIsModalVisible(false);
+          setTimeout(() => {  
             Swal.fire({
               title: "Success!",
               text: "SSH connection established successfully!",
@@ -1355,7 +1356,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
                 <Form
                   form={form}
                   layout="vertical"
-                  onFinish={handleSubmit} // Handle form submission
+                  onFinish={handleSubmit} 
                 >
                   <Row gutter={16}>
                     <Col span={12}>
