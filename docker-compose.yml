@@ -12,7 +12,7 @@ services:
     networks:
       - pinakastra-cloud_my-network
     environment:
-      - REACT_APP_HOST_IP=${HOST_IP}  # Dynamically pass the HOST_IP
+      - REACT_APP_HOST_IP=${REACT_APP_HOST_IP}  # Dynamically pass the HOST_IP
     volumes:
       - shared-data:/usr/share/nginx/html
 
@@ -42,7 +42,7 @@ services:
       - mysql-db
     network_mode: host
     environment:
-      - HOST_IP=${HOST_IP}  # Add the host IP variable
+      - HOST_IP=${REACT_APP_HOST_IP}  # Add the host IP variable
 
   script-service:
     build:
