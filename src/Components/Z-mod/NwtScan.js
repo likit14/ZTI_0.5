@@ -40,6 +40,7 @@ const DataTable = ({ onNodeSelect }) => {
   const [messageApi, contextHolder] = message.useMessage();
   const [warningMessage, setWarningMessage] = useState(null);
   const hostIP = process.env.REACT_APP_HOST_IP;
+ const errorMessage = "Please enter a subnet to scan"; 
 
   useEffect(() => {
     scanNetwork();
@@ -74,8 +75,20 @@ const DataTable = ({ onNodeSelect }) => {
   const scanNetwork = async (subnet = "") => {
     setIsScanning(true); // Start loading
     try {
-      if (!subnet) {
-        setWarningMessage("Please enter a subnet to scan.");
+     if (!subnet) {
+        setWarningMessage(
+          <div
+            style={{
+              color: "red",
+              fontSize: "12px",
+              whiteSpace: "nowrap", // Prevent wrapping of the text
+              overflow: "hidden", // Hide any overflowing text if it exceeds container width
+              textOverflow: "ellipsis", // Add ellipsis for overflow text
+            }}
+          >
+            {errorMessage}
+          </div>
+      );
         return;
       }
 
@@ -107,7 +120,19 @@ const DataTable = ({ onNodeSelect }) => {
     if (value) {
       setWarningMessage(null);
     } else {
-      setWarningMessage("Please enter a subnet to scan.");
+            setWarningMessage(
+        <div
+          style={{
+            color: "red",
+            fontSize: "12px",
+            whiteSpace: "nowrap", // Prevent wrapping of the text
+            overflow: "hidden", // Hide any overflowing text if it exceeds container width
+            textOverflow: "ellipsis", // Add ellipsis for overflow text
+          }}
+        >
+          {errorMessage}
+        </div>
+      );
     }
   };
 
