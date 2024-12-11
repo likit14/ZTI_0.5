@@ -8,8 +8,18 @@ const loginRoutes = require("./loginRoutes"); // New file for login
 const nodemailer = require("nodemailer"); // Import nodemailer library
 const bcrypt = require("bcrypt"); // Import bcrypt library
 require("dotenv").config(); // Load environment variables
+const Agenda = require('agenda');
 
 const app = express();
+
+const mongoConnectionString = 'mongodb://192.168.249.100:27017/agenda_jobs';
+const agenda = new Agenda({ db: { address: mongoConnectionString } });
+
+agenda.on('ready', () => {
+  console.log('Agenda connected to MongoDB');
+});
+
+
 
 app.use(
   cors({
@@ -121,7 +131,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-app.post("/api/saveDeploymentDetails", (req, res) => {
+//Save Deployment API 
+app.post("/api/saveDeploymentDetails", async (req, res) => {
   const {
     userId,
     cloudName,
@@ -134,28 +145,52 @@ app.post("/api/saveDeploymentDetails", (req, res) => {
 
   console.log("Received deployment details:", req.body);
 
+  try {
+    // Add the job to the Agenda queue
+    await agenda.now("saveDeploymentDetails", {
+      userId,
+      cloudName,
+      ip,
+      skylineUrl,
+      cephUrl,
+      deploymentTime,
+      bmcDetails,
+    });
+
+    res.status(200).json({
+      message: "Deployment details job queued successfully. It will be processed shortly.",
+    });
+  } catch (error) {
+    console.error("Error queuing deployment details job:", error);
+    res.status(500).json({
+      error: "Failed to queue deployment details job",
+      details: error.message,
+    });
+  }
+});
+
+
+//Agenda Save Deployment Job
+agenda.define("saveDeploymentDetails", async (job) => {
+  const {
+    userId,
+    cloudName,
+    ip,
+    skylineUrl,
+    cephUrl,
+    deploymentTime,
+    bmcDetails,
+  } = job.attrs.data;
+
   // Convert ISO 8601 timestamp to MySQL-compatible format
   const mysqlTimestamp = new Date(deploymentTime)
     .toISOString()
     .slice(0, 19)
     .replace("T", " ");
 
-  // Handle missing bmcDetails gracefully
   const bmcIp = bmcDetails ? bmcDetails.ip : null;
   const bmcUsername = bmcDetails ? bmcDetails.username : null;
   const bmcPassword = bmcDetails ? bmcDetails.password : null;
-
-  console.log("Prepared SQL parameters:", [
-    userId,
-    cloudName,
-    ip,
-    skylineUrl,
-    cephUrl,
-    mysqlTimestamp,
-    bmcIp,
-    bmcUsername,
-    bmcPassword,
-  ]);
 
   const sql = `
     INSERT INTO all_in_one (
@@ -172,32 +207,31 @@ app.post("/api/saveDeploymentDetails", (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(
-    sql,
-    [
-      userId,
-      cloudName,
-      ip,
-      skylineUrl,
-      cephUrl,
-      mysqlTimestamp,
-      bmcIp,
-      bmcUsername,
-      bmcPassword,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("Error saving deployment details:", err);
-        return res.status(500).json({
-          error: "Failed to save deployment details",
-          details: err.message,
-        });
+  // Save details to the database
+  return new Promise((resolve, reject) => {
+    db.query(
+      sql,
+      [
+        userId,
+        cloudName,
+        ip,
+        skylineUrl,
+        cephUrl,
+        mysqlTimestamp,
+        bmcIp,
+        bmcUsername,
+        bmcPassword,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Error saving deployment details:", err);
+          return reject(err);
+        }
+        console.log("Deployment details saved successfully:", result);
+        resolve(result);
       }
-
-      console.log("Deployment details saved successfully:", result);
-      res.status(200).json({ message: "Deployment details saved successfully" });
-    }
-  );
+    );
+  });
 });
 
 app.post("/api/saveHardwareInfo", (req, res) => {
@@ -254,32 +288,32 @@ app.get('/api/allinone', (req, res) => {
   });
 });
 
-app.post("/check-cloud-name", async (req, res) => {
+// API route for checking cloud name
+app.post('/check-cloud-name', async (req, res) => {
   const { cloudName } = req.body;
 
   try {
-    const existingCloud = await new Promise((resolve, reject) => {
-      const query = "SELECT * FROM all_in_one WHERE cloudName = ?";
-      db.query(query, [cloudName], (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result);
-        }
-      });
-    });
-
-    if (existingCloud.length > 0) {
-      return res.status(400).json({ message: "Cloud name already exists. Please choose a different name." });
-    }
-
-    res.status(200).json({ message: "Cloud name is available." });
+    const result = await agenda.now('checkCloudName', { cloudName });
+    res.status(200).json({ message: result });
   } catch (error) {
-    console.error("Error checking cloud name:", error);
-    res.status(500).json({ message: "An error occurred while checking the cloud name." });
+    res.status(500).json({ error: 'Failed to queue check cloud name job', details: error.message });
   }
 });
 
+// Queue for checking cloud name
+agenda.define('checkCloudName', async (job) => {
+  const { cloudName } = job.attrs.data;
+
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT * FROM all_in_one WHERE cloudName = ?';
+    db.query(query, [cloudName], (err, result) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(result.length > 0 ? 'Cloud name exists' : 'Cloud name available');
+    });
+  });
+});
 
 // API to fetch bmc data from the `all_in_one` table
 app.post("/api/get-power-details", (req, res) => {
@@ -429,6 +463,10 @@ app.post("/register", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Error registering user" });
   }
+});
+
+agenda.start().then(() => {
+  console.log('Agenda started processing jobs');
 });
 
 const PORT = 5000;

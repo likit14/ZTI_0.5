@@ -12,7 +12,7 @@ services:
     networks:
       - pinakastra-cloud_my-network
     environment:
-      - REACT_APP_HOST_IP=${REACT_APP_HOST_IP}  # Dynamically pass the HOST_IP
+      - REACT_APP_HOST_IP=${REACT_APP_HOST_IP} # Dynamically pass the HOST_IP
     volumes:
       - shared-data:/usr/share/nginx/html
 
@@ -31,7 +31,7 @@ services:
       - EMAIL_USER=pinakastra.join@gmail.com
       - EMAIL_PASS=sqei dbiv vxou ddsy
       - SESSION_SECRET=your-secret-key
-    entrypoint: ["/bin/sh", "-c", "./wait-for-it-script.sh mysql-db node server.js"]
+    entrypoint: [ "/bin/sh", "-c", "./wait-for-it-script.sh mysql-db node server.js" ]
     networks:
       - pinakastra-cloud_my-network
 
@@ -42,7 +42,7 @@ services:
       - mysql-db
     network_mode: host
     environment:
-      - HOST_IP=${REACT_APP_HOST_IP}  # Add the host IP variable
+      - HOST_IP=${REACT_APP_HOST_IP} # Add the host IP variable
 
   script-service:
     build:
@@ -60,16 +60,16 @@ services:
       - mysql-db
     network_mode: host
     volumes:
-      - /var/log:/var/log 
+      - /var/log:/var/log
       - /home/pinaka/markers:/home/pinaka/markers
 
-  deploy-service: 
+  deploy-service:
     build:
       context: ./backend/python/ssh
     depends_on:
       - mysql-db
     network_mode: host
-  
+
   mysql-db:
     image: mysql:8.0
     ports:
@@ -80,16 +80,30 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - pinakastra-cloud_my-network
 
+  mongodb:
+    image: mongo:latest # Using the latest stable MongoDB image from Docker Hub
+    container_name: mongodb_container
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=pinaka
+    ports:
+      - "27017:27017" # Exposing MongoDB's default port to the host machine
+    volumes:
+      - mongodb_data:/data/db # Persist MongoDB data even after container restarts
+    networks:
+      - pinakastra-cloud_my-network
+
 volumes:
   mysql-data:
   shared-data:
+
 
 networks:
   pinakastra-cloud_my-network:
