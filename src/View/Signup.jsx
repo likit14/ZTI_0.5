@@ -23,6 +23,8 @@ const Signup = () => {
     const [loading, setLoading] = useState(false); // Loading state for button and global loader
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+   const hostIP = process.env.REACT_APP_HOST_IP || "localhost";  //retrive host ip
+
 
 
     const handleChange = (e) => {
@@ -72,7 +74,7 @@ const Signup = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post('http://192.168.249.100:5000/register', { companyName, email, password });
+            const response = await axios.post(`http://${hostIP}:5000/register`, { companyName, email, password });
             setRegistrationSuccess(true);
             setRegisteredUser(companyName);
             notification.success({

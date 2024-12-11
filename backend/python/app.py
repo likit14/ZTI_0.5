@@ -8,12 +8,17 @@ import logging
 from datetime import datetime
 import subprocess
 import requests  # Add this import
+import os
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
+
+# Get the host IP from an environment variable (e.g., "HOST_IP")
+host_ip = os.getenv('HOST_IP', 'localhost')  # Default to 'localhost' if not set
+
 
 @app.route('/')
 def home():
@@ -129,7 +134,7 @@ def set_pxe_boot():
     except subprocess.CalledProcessError as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
-EXPRESS_API_URL = "http://192.168.249.100:5000/api/get-power-details"
+EXPRESS_API_URL = f"http://{host_ip}:5000/api/get-power-details"
 
 @app.route("/power-status", methods=["POST"])
 def power_status():

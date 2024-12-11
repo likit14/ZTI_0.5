@@ -7,6 +7,8 @@ const getCloudNameFromMetadata = () => {
   return cloudNameMeta ? cloudNameMeta.content : 'Default Cloud'; // Default value if not found
 };
 
+const hostIP = process.env.REACT_APP_HOST_IP; //retrive host ip
+
 const Report = ({ ibn }) => {
   const [urls, setUrls] = useState(null); // State to store the URLs
   const [loading, setLoading] = useState(true); // Loading state
@@ -27,7 +29,7 @@ const Report = ({ ibn }) => {
         }
 
         // Fetch the credentials from the backend API using `ibn`
-        const response = await fetch("http://192.168.249.100:9909/api/credentials", {
+        const response = await fetch(`http://${hostIP}:9909/api/credentials`, {
           headers: { 'ibn': ibn } // Pass the `ibn` value in the request headers
         });
 

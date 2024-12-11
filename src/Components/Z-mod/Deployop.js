@@ -4,10 +4,12 @@ import { Breadcrumb, Button, Modal, Input } from 'antd';
 import axios from 'axios';  // Import axios for making HTTP requests
 import '../../Styles/DeploymentOptions.css';
 
+
 const DeploymentOptions = ({ onStart }) => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [cloudName, setCloudName] = useState('');
+  const hostIP = process.env.REACT_APP_HOST_IP || "localhost";  //retrive host ip
 
   const handleOptionClick = (option) => {
     setSelectedOption(option === selectedOption ? null : option);
@@ -21,7 +23,7 @@ const DeploymentOptions = ({ onStart }) => {
   const updateMetadata = (name) => {
     // Check if a meta tag for the cloud name exists
     let cloudNameMeta = document.querySelector('meta[name="cloud-name"]');
-    
+
     if (!cloudNameMeta) {
       // Create the meta tag if it doesn't exist
       cloudNameMeta = document.createElement('meta');
@@ -35,15 +37,15 @@ const DeploymentOptions = ({ onStart }) => {
   const handleModalOk = async () => {
     try {
       // Check if the cloud name already exists in the database
-      const response = await axios.post("http://192.168.249.100:5000/check-cloud-name", {
+      const response = await axios.post(`http://${hostIP}:5000/check-cloud-name`, {
         cloudName,
       });
-  
+
       if (response.status === 200) {
         // Cloud name is available, proceed with the setup
         updateMetadata(cloudName);
         onStart(cloudName);
-  
+
         // Close the modal
         setIsModalVisible(false);
         setCloudName(""); // Clear the input
@@ -63,7 +65,7 @@ const DeploymentOptions = ({ onStart }) => {
       }
     }
   };
-  
+
   const handleModalCancel = () => {
     setIsModalVisible(false); // Close the modal
     setCloudName(''); // Clear the input

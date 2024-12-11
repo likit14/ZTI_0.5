@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Progress, Button, Alert } from 'antd';
 import Swal from 'sweetalert2';
 
+
 const ProgressModal = ({ visible, onNext }) => {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(visible);
   const [logs, setLogs] = useState([]);
   const [isLogsExpanded, setIsLogsExpanded] = useState(false);
+ const hostIP = process.env.REACT_APP_HOST_IP || "localhost";  //retrive host ip
 
   useEffect(() => {
     if (visible) {
@@ -27,7 +29,7 @@ const ProgressModal = ({ visible, onNext }) => {
       }, 10800); // Adjust progress interval time as needed
 
       // Create a new EventSource connection to the backend
-      const newEventSource = new EventSource('http://192.168.249.100:5055/events');
+      const newEventSource = new EventSource(`http://${hostIP}:5055/events`);
 
       // Handle server messages
       newEventSource.onmessage = (event) => {

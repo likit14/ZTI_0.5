@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Layout1 from "../Components/layout";
 import { theme, Layout, Card, Button, Modal, Spin, Empty, message, Tag } from "antd";
 
+
 const { Content } = Layout;
 
 const Inventory = () => {
@@ -15,6 +16,7 @@ const Inventory = () => {
   const [actionType, setActionType] = useState(null);
   const [selectedServer, setSelectedServer] = useState(null);
   const [serverStatus, setServerStatus] = useState({}); // Track power status and last checked per server
+ const hostIP = process.env.REACT_APP_HOST_IP || "localhost";  //retrive host ip
 
   // Fetch server data on component mount
   useEffect(() => {
@@ -29,7 +31,7 @@ const Inventory = () => {
 
     setLoading(true);
     console.log("Fetching data with userID:", userID);
-    fetch("http://192.168.249.100:8000/power-status", {
+    fetch(`http://${hostIP}:8000/power-status`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userID }), // Only send userID on initial load, no action
@@ -97,7 +99,7 @@ const Inventory = () => {
 
     setLoading(true);
 
-    fetch("http://192.168.249.100:8000/power-status", {
+    fetch(`http://${hostIP}:8000/power-status`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userID, action, serverIP: server.bmc_ip, cloudName: server.cloudName }), // Pass cloudName

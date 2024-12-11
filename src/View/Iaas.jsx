@@ -16,20 +16,22 @@ const Iaas = () => {
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [actionType, setActionType] = useState(null);
+ const hostIP = process.env.REACT_APP_HOST_IP || "localhost";  //retrive host ip
+
 
   useEffect(() => {
     const loginDetails = JSON.parse(localStorage.getItem('loginDetails'));
     const userID = loginDetails ? loginDetails.data.id : null;
-  
+
     if (!userID) {
       console.error("User ID not found in local storage");
       setLoading(false);
       return;
     }
-  
+
     setLoading(true);
-  
-    fetch(`http://192.168.249.100:5000/api/allinone?userID=${userID}`)
+
+    fetch(`http://${hostIP}:5000/api/allinone?userID=${userID}`)
       .then((response) => {
         console.log('Full response:', response);
         if (!response.ok) {
@@ -47,7 +49,7 @@ const Iaas = () => {
         setLoading(false);
       });
   }, []);
-  
+
   const showConfirmationModal = (action) => {
     setActionType(action);
     setIsModalVisible(true);
@@ -62,9 +64,9 @@ const Iaas = () => {
 
   const formatDate = (dateStr) => {
     const formattedDate = dateStr.replace('T', ' ').replace('Z', '').replace(/\.\d+$/, '');
-    return formattedDate; 
+    return formattedDate;
   };
-  
+
   const handleCancelAction = () => {
     setIsModalVisible(false);
   };
@@ -79,7 +81,7 @@ const Iaas = () => {
     }
 
     return serverInfo.map((server, index) => {
-      const { cloudName, Ip, SkylineURL, CephURL, deployment_time, bmc_ip} = server;
+      const { cloudName, Ip, SkylineURL, CephURL, deployment_time, bmc_ip } = server;
 
       return (
         <Card

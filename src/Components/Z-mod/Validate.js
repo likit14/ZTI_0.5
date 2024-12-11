@@ -11,6 +11,7 @@ import DeploymentProgressBar from './DeploymentProgressBar'
 import { useLocation, useNavigate } from "react-router-dom";
 import requirementData from "../../Comparison/min_requirements.json";
 import dayjs from 'dayjs';
+
 // import Report from './Report';
 
 const getCloudNameFromMetadata = () => {
@@ -74,6 +75,8 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   const userId = loginDetails ? loginDetails.data.id : null;
   const [fetchedUrls, setFetchedUrls] = useState(false);
   const [detailsSaved, setDetailsSaved] = useState(false);
+  const hostIP = process.env.REACT_APP_HOST_IP || "localhost";  //retrive host ip
+
 
 
   const validateNode = (nodes) => {
@@ -93,7 +96,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   useEffect(() => {
     if (progress === 100 && Ip && !fetchedUrls) {
       console.log("Triggering URL fetch with progress 100 and IBN:", Ip);
-      fetch("http://192.168.249.100:9909/api/credentials", {
+      fetch(`http://${hostIP}:9909/api/credentials`, {
         headers: { ibn: Ip },
       })
         .then((response) => response.json())
@@ -127,7 +130,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
     ) {
       console.log("Saving deployment details:", deploymentDetails);
 
-      fetch("http://192.168.249.100:5000/api/saveDeploymentDetails", {
+      fetch(`http://${hostIP}:5000/api/saveDeploymentDetails`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,7 +178,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   useEffect(() => {
     if (!isDeploymentStarted || !targetServerIp) return; // Only proceed if deployment has started
 
-    const eventSource = new EventSource(`http://192.168.249.100:5055/tail-logs?targetserver_ip=${targetServerIp}`);
+    const eventSource = new EventSource(`http://${hostIP}:5055/tail-logs?targetserver_ip=${targetServerIp}`);
 
     eventSource.onmessage = (event) => {
       const newLog = event.data;
@@ -242,11 +245,11 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
     setLoading(true);
     try {
       // Sending form data to backend API
-      const response = await axios.post('http://192.168.249.100:9909/update-config', {
+      const response = await axios.post(`http://${hostIP}:9909/update-config`, {
         ip: values.ibn,
         subnet: values.subnet,
         gateway: values.gateway,
-        interface: values.interface,  
+        interface: values.interface,
         disk: values.disk,
       });
 
@@ -267,7 +270,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
     }
 
     try {
-      const response = await fetch("http://192.168.249.100:9909/ssh-connect", {
+      const response = await fetch(`http://${hostIP}:9909/ssh-connect`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -285,7 +288,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
         // Assuming the result message contains "SSH successful" or similar, we show SweetAlert
         if (result.message === "SSH connection established successfully.") {
           setIsModalVisible(false);
-          setTimeout(() => {  
+          setTimeout(() => {
             Swal.fire({
               title: "Success!",
               text: "SSH connection established successfully!",
@@ -346,7 +349,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
     Modal.destroyAll();
     showOSModal();
     axios
-      .post("http://192.168.249.100:9909/api/boot", { osType: "normal" })
+      .post(`http://${hostIP}:9909/api/boot`, { osType: "normal" })
       .then((response) => {
         console.log("Normal OS boot initiated");
       })
@@ -384,7 +387,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
     progressRequestControllerRef.current = new AbortController();
     const { signal } = progressRequestControllerRef.current;
 
-    fetch(`http://192.168.249.100:5055/get-progress?targetserver_ip=${targetServerIP}`, { signal })
+    fetch(`http://${hostIP}:5055/get-progress?targetserver_ip=${targetServerIP}`, { signal })
       .then((response) => {
         if (!response.ok) {
           throw new Error('Request canceled or failed');
@@ -415,7 +418,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   function startDeployment(ip) {
     console.log('Sending request with targetServerIp:', ip);
     setLoading(true);
-    fetch('http://192.168.249.100:5055/start-deployment', {
+    fetch(`http://${hostIP}:5055/start-deployment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -448,7 +451,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
 
 
   function cancelDeploymentProgress() {
-    fetch('http://192.168.249.100:5055/cancel-deployment', {
+    fetch(`http://${hostIP}:5055/cancel-deployment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -498,7 +501,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
   const startPolling = (targetServerIp) => {
 
     const progressInterval = setInterval(() => {
-      fetch(`http://192.168.249.100:5055/get-progress?targetserver_ip=${targetServerIp}`)
+      fetch(`http://${hostIP}:5055/get-progress?targetserver_ip=${targetServerIp}`)
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -613,12 +616,12 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
 
     try {
       axios
-        .post("http://192.168.249.100:9909/api/boot", { osType: "live" })
+        .post(`http://${hostIP}:9909/api/boot`, { osType: "live" })
         .then((response) => console.log("Live OS boot initiated"))
         .catch((error) => console.error("Error in booting Live OS:", error));
 
       const response = await axios.post(
-        "http://192.168.249.100:8000/set_pxe_boot",
+        `http://${hostIP}:8000/set_pxe_boot`,
         bmcDetails
       );
       console.log("BMC Details submitted:", bmcDetails);
@@ -795,13 +798,13 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
     try {
       // First API: Initiate Live OS boot
       await axios
-        .post("http://192.168.249.100:9909/api/boot", { osType: "normal" })
+        .post(`http://${hostIP}:9909/api/boot`, { osType: "normal" })
         .then((response) => console.log("Normal OS boot initiated"))
         .catch((error) => console.error("Error in booting Live OS:", error));
 
       // Second API: Submit BMC details (reusing the same details)
       const response = await axios.post(
-        "http://192.168.249.100:8000/set_pxe_boot",
+        `http://${hostIP}:8000/set_pxe_boot`,
         bmcDetails
       );
       console.log("Os Deployment started");
@@ -1034,7 +1037,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
     // Send the FormData object (file and other form data) to the backend
 
     // Sending the form data via POST request
-    fetch("http://192.168.249.100:9909/upload", {
+    fetch(`http://${hostIP}:9909/upload`, {
       method: "POST",
       body: formDataToSend, // Send FormData as the request body
     })
@@ -1063,7 +1066,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
 
 
     // Additional fetch request for deployment
-    fetch("http://192.168.249.100:8080/deploy", {
+    fetch(`http://${hostIP}:8080/deploy`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1189,7 +1192,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
               onClick={() => {
                 // Perform the Axios request first
                 axios
-                  .post("http://192.168.249.100:9909/api/boot", { osType: "live" })
+                  .post(`http://${hostIP}:9909/api/boot`, { osType: "live" })
                   .then((response) => {
                     console.log("Live OS boot initiated");
 
@@ -1356,7 +1359,7 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
                 <Form
                   form={form}
                   layout="vertical"
-                  onFinish={handleSubmit} 
+                  onFinish={handleSubmit}
                 >
                   <Row gutter={16}>
                     <Col span={12}>

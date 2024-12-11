@@ -7,9 +7,12 @@ import axios from 'axios';
 import img1 from '../Images/ZTi.png';
 import { Link, useNavigate } from 'react-router-dom';
 
+
 const Login = (props) => {
   const { checkLogin } = props;
   const navigate = useNavigate(); // Use useNavigate instead of useHistory
+ const hostIP = process.env.REACT_APP_HOST_IP || "localhost";  //retrive host ip
+
 
   const [formData, setFormData] = useState({
     id: '',
@@ -30,9 +33,9 @@ const Login = (props) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { id, companyName, password } = formData;
-  
+
     try {
-      const response = await axios.post('http://192.168.249.100:5000/api/login', { id, companyName, password });
+      const response = await axios.post(`http://${hostIP}:5000/api/login`, { id, companyName, password });
       if (response.data.success) {
         const loginDetails = {
           loginStatus: true,
@@ -41,7 +44,7 @@ const Login = (props) => {
         localStorage.setItem('loginDetails', JSON.stringify(loginDetails));
         localStorage.setItem('loginNotification', 'true'); // Set the login notification flag
         checkLogin(true);
-        
+
         // Redirect to dashboard
         navigate('/', { state: { notification: 'Login Successful! Welcome back!' } });
       } else {
@@ -66,7 +69,7 @@ const Login = (props) => {
                   <div className={styles.formGroup}>
                     <label>User ID:</label>
                     <Input
-                      prefix={<UserOutlined style={{ marginRight: 8 }}/>}
+                      prefix={<UserOutlined style={{ marginRight: 8 }} />}
                       type="text"
                       name="id"
                       value={formData.id}
@@ -90,7 +93,7 @@ const Login = (props) => {
                   <div className={styles.formGroup}>
                     <label>Password:</label>
                     <Input.Password
-                      prefix={<LockOutlined style={{ marginRight: 8 }}/>}
+                      prefix={<LockOutlined style={{ marginRight: 8 }} />}
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
