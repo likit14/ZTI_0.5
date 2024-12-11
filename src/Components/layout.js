@@ -13,13 +13,15 @@ import {
   SyncOutlined,
   TruckOutlined,
   CloudServerOutlined,
-  // FormOutlined,
   SettingOutlined,
   FileDoneOutlined,
   DatabaseOutlined,
   WifiOutlined,
   FileSearchOutlined,
   ProfileOutlined,
+  FundOutlined,
+  InteractionOutlined
+
 } from "@ant-design/icons";
 import { Button, Layout, Menu, theme, Dropdown } from "antd";
 
@@ -27,7 +29,7 @@ const { Header, Content, Footer, Sider } = Layout;
 
 const AppLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(
-    () => JSON.parse(localStorage.getItem("isSiderCollapsed")) || false
+    () => JSON.parse(sessionStorage.getItem("isSiderCollapsed")) || false
   );
   const [selectedKey, setSelectedKey] = useState("1");
   const [userData, setUserData] = useState({});
@@ -39,7 +41,7 @@ const AppLayout = ({ children }) => {
   } = theme.useToken();
 
   useEffect(() => {
-    const savedSelectedKey = localStorage.getItem("selectedMenuKey");
+    const savedSelectedKey = sessionStorage.getItem("selectedMenuKey");
     if (savedSelectedKey) {
       setSelectedKey(savedSelectedKey);
     }
@@ -47,12 +49,13 @@ const AppLayout = ({ children }) => {
 
   const handleLogout = () => {
     localStorage.clear();
+    sessionStorage.clear();
     window.location.reload();
   };
 
   const handleMenuClick = (e) => {
     setSelectedKey(e.key);
-    localStorage.setItem("selectedMenuKey", e.key);
+    sessionStorage.setItem("selectedMenuKey", e.key);
     forceUpdate();
   };
 
@@ -118,7 +121,7 @@ const AppLayout = ({ children }) => {
     },
     {
       key: "4",
-      icon: <CloudServerOutlined />,
+      icon: <ProfileOutlined />,
       label: (
         <Link to="/inventory" style={{ textDecoration: "none" }}>
           Inventory
@@ -136,7 +139,7 @@ const AppLayout = ({ children }) => {
     },
     {
       key: "6",
-      icon: <FileDoneOutlined />,
+      icon: <InteractionOutlined />,
       label: (
         <Link to="/aiworkbench" style={{ textDecoration: "none" }}>
           AI Workbench
@@ -199,7 +202,7 @@ const AppLayout = ({ children }) => {
     },
     {
       key: "13",
-      icon: <CheckCircleOutlined />,
+      icon: <FundOutlined />,
       label: (
         <Link to="/marketplace" style={{ textDecoration: "none" }}>
           Marketplace
@@ -217,7 +220,7 @@ const AppLayout = ({ children }) => {
     },
     {
       key: "15",
-      icon: <ProfileOutlined />,
+      icon: <UserOutlined />,
       label: (
         <Link to="/administration" style={{ textDecoration: "none" }}>
           Administration
@@ -228,12 +231,12 @@ const AppLayout = ({ children }) => {
 
   useEffect(() => {
     try {
-      const data = JSON.parse(localStorage.getItem("loginDetails"));
+      const data = JSON.parse(sessionStorage.getItem("loginDetails"));
       if (data && data.data) {
         setUserData(data.data);
       }
     } catch (error) {
-      console.error("Error parsing login details from localStorage:", error);
+      console.error("Error parsing login details from sessionStorage:", error);
     }
   }, []);
 
