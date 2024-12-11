@@ -9,7 +9,7 @@ const ProgressModal = ({ visible, onNext }) => {
   const [isModalVisible, setIsModalVisible] = useState(visible);
   const [logs, setLogs] = useState([]);
   const [isLogsExpanded, setIsLogsExpanded] = useState(false);
- const hostIP = process.env.REACT_APP_HOST_IP || "localhost";  //retrive host ip
+  const hostIP = process.env.REACT_APP_HOST_IP || "localhost";  //retrive host ip
 
   useEffect(() => {
     if (visible) {

@@ -40,7 +40,7 @@ const DataTable = ({ onNodeSelect }) => {
   const [messageApi, contextHolder] = message.useMessage();
   const [warningMessage, setWarningMessage] = useState(null);
   const hostIP = process.env.REACT_APP_HOST_IP;
- const errorMessage = "Please enter a subnet to scan"; 
+  const errorMessage = "Please enter a subnet to scan";
 
   useEffect(() => {
     scanNetwork();
@@ -56,7 +56,7 @@ const DataTable = ({ onNodeSelect }) => {
     try {
       // Fetch the active nodes from the backend
       const response = await axios.get(`http://${hostIP}:8000/scan`);
-  
+
       if (response.data && Array.isArray(response.data)) {
         setSubnet("");
         setNodes(response.data); // Directly update nodes with the fetched data
@@ -70,12 +70,12 @@ const DataTable = ({ onNodeSelect }) => {
       setIsScanning(false); // End loading
     }
   };
-  
+
 
   const scanNetwork = async (subnet = "") => {
     setIsScanning(true); // Start loading
     try {
-     if (!subnet) {
+      if (!subnet) {
         setWarningMessage(
           <div
             style={{
@@ -88,7 +88,7 @@ const DataTable = ({ onNodeSelect }) => {
           >
             {errorMessage}
           </div>
-      );
+        );
         return;
       }
 
@@ -120,7 +120,7 @@ const DataTable = ({ onNodeSelect }) => {
     if (value) {
       setWarningMessage(null);
     } else {
-            setWarningMessage(
+      setWarningMessage(
         <div
           style={{
             color: "red",
@@ -136,7 +136,7 @@ const DataTable = ({ onNodeSelect }) => {
     }
   };
 
-  const handleSubnetScan = async() => {
+  const handleSubnetScan = async () => {
     setIsProcessing(true); // Start processing
     try {
       // Call the backend to scan the subnet
@@ -151,8 +151,8 @@ const DataTable = ({ onNodeSelect }) => {
       const data = await response.json();
 
       if (data.success) {
-       console.log('Subnet found! Proceeding with configuration...');
-        
+        console.log('Subnet found! Proceeding with configuration...');
+
         // Call the backend to update the configuration file
         const configUpdateResponse = await fetch(`http://${hostIP}:9909/pxe-config`, {
           method: 'POST',
@@ -293,7 +293,7 @@ const DataTable = ({ onNodeSelect }) => {
       {contextHolder}
       <h5>
         <CloudOutlined />
-        &nbsp; &nbsp;{cloudName} Cloud 
+        &nbsp; &nbsp;{cloudName} Cloud
       </h5>
       <Breadcrumb style={{ marginBottom: "16px" }}>
         <Breadcrumb.Item>
@@ -349,7 +349,7 @@ const DataTable = ({ onNodeSelect }) => {
             onClick={handleSubnetScan}
             disabled={!subnet}
           >
-          Scan Subnet
+            Scan Subnet
           </Button>
           <Button
             type="default"
