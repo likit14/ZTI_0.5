@@ -131,6 +131,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// ----------------------------------- API's ------------------------------------------
+
 //Save Deployment API 
 app.post("/api/saveDeploymentDetails", async (req, res) => {
   const {
@@ -169,71 +171,6 @@ app.post("/api/saveDeploymentDetails", async (req, res) => {
   }
 });
 
-
-//Agenda Save Deployment Job
-agenda.define("saveDeploymentDetails", async (job) => {
-  const {
-    userId,
-    cloudName,
-    ip,
-    skylineUrl,
-    cephUrl,
-    deploymentTime,
-    bmcDetails,
-  } = job.attrs.data;
-
-  // Convert ISO 8601 timestamp to MySQL-compatible format
-  const mysqlTimestamp = new Date(deploymentTime)
-    .toISOString()
-    .slice(0, 19)
-    .replace("T", " ");
-
-  const bmcIp = bmcDetails ? bmcDetails.ip : null;
-  const bmcUsername = bmcDetails ? bmcDetails.username : null;
-  const bmcPassword = bmcDetails ? bmcDetails.password : null;
-
-  const sql = `
-    INSERT INTO all_in_one (
-      user_id, 
-      cloudName, 
-      ip, 
-      skylineUrl, 
-      cephUrl, 
-      deployment_time, 
-      bmc_ip, 
-      bmc_username, 
-      bmc_password
-    ) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  // Save details to the database
-  return new Promise((resolve, reject) => {
-    db.query(
-      sql,
-      [
-        userId,
-        cloudName,
-        ip,
-        skylineUrl,
-        cephUrl,
-        mysqlTimestamp,
-        bmcIp,
-        bmcUsername,
-        bmcPassword,
-      ],
-      (err, result) => {
-        if (err) {
-          console.error("Error saving deployment details:", err);
-          return reject(err);
-        }
-        console.log("Deployment details saved successfully:", result);
-        resolve(result);
-      }
-    );
-  });
-});
-
 app.post("/api/saveHardwareInfo", (req, res) => {
   const { userId, serverIp, cpuCores, memory, disk, nic1g, nic10g } = req.body;
 
@@ -268,25 +205,23 @@ app.post("/api/saveHardwareInfo", (req, res) => {
   );
 });
 
-// API to fetch deployment data from the `all_in_one` table
-app.get('/api/allinone', (req, res) => {
-  const userID = req.query.userID; // Extract userID from query parameters
+// API to fetch deployment data of AIO 
+app.get('/api/allinone', async (req, res) => {
+  const userID = req.query.userID;
 
   if (!userID) {
     return res.status(400).json({ error: 'User ID is required' });
   }
 
-  const query = 'SELECT * FROM all_in_one WHERE user_id = ?'; // Adjust your query to filter by userID
-  db.query(query, [userID], (err, results) => {
-    if (err) {
-      console.error('Error fetching All-in-One data:', err);
-      return res.status(500).json({ error: 'Failed to fetch All-in-One data' });
-    }
-
-    console.log('Fetched data:', results); // Log the results for debugging
-    res.json(results);
-  });
+  try {
+    await agenda.schedule('in 1 minute', 'fetch allinone data', { userID });
+    res.status(200).json({ message: `Job scheduled to fetch All-in-One data for userID: ${userID}` });
+  } catch (error) {
+    console.error('Failed to schedule job:', error);
+    res.status(500).json({ error: 'Failed to schedule job' });
+  }
 });
+
 
 // API route for checking cloud name
 app.post('/check-cloud-name', async (req, res) => {
@@ -300,47 +235,22 @@ app.post('/check-cloud-name', async (req, res) => {
   }
 });
 
-// Queue for checking cloud name
-agenda.define('checkCloudName', async (job) => {
-  const { cloudName } = job.attrs.data;
-
-  return new Promise((resolve, reject) => {
-    const query = 'SELECT * FROM all_in_one WHERE cloudName = ?';
-    db.query(query, [cloudName], (err, result) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(result.length > 0 ? 'Cloud name exists' : 'Cloud name available');
-    });
-  });
-});
-
-// API to fetch bmc data from the `all_in_one` table
-app.post("/api/get-power-details", (req, res) => {
+// API to get power detail data
+app.post('/api/get-power-details', async (req, res) => {
   const { userID } = req.body;
 
   if (!userID) {
     return res.status(400).json({ error: "Missing userID" });
   }
 
-  // Query to fetch data
-  const query = "SELECT bmc_ip AS ip, bmc_username AS username, bmc_password AS password, cloudName FROM all_in_one WHERE user_id = ?";
-  db.query(query, [userID], (err, results) => {
-    if (err) {
-      console.error("Database query error:", err);
-      return res.status(500).json({ error: "Database query failed" });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: "No data found for the given userID" });
-    }
-
-    // Return all matching records
-    res.json(results);  // Return the entire results array
-  });
+  try {
+    await agenda.schedule('in 2 minutes', 'fetch bmc data', { userID });
+    res.status(200).json({ message: `Job scheduled to fetch BMC data for userID: ${userID}` });
+  } catch (error) {
+    console.error('Failed to schedule job:', error);
+    res.status(500).json({ error: "Failed to schedule job" });
+  }
 });
-
-
 
 app.post("/register", async (req, res) => {
   const { companyName, email, password } = req.body;
@@ -383,7 +293,7 @@ app.post("/register", async (req, res) => {
       });
     });
 
-
+// ------------------------------------------------ E-MAIL -------------------------------------------------------------------
     // Set the user session after registration
     req.session.userId = id;
 
@@ -463,6 +373,130 @@ app.post("/register", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Error registering user" });
   }
+});
+
+
+//------------------------------------------------------JOBS-----------------------------------------------------
+
+//Agenda Save Deployment Job
+agenda.define("saveDeploymentDetails", async (job) => {
+  const {
+    userId,
+    cloudName,
+    ip,
+    skylineUrl,
+    cephUrl,
+    deploymentTime,
+    bmcDetails,
+  } = job.attrs.data;
+
+  // Convert ISO 8601 timestamp to MySQL-compatible format
+  const mysqlTimestamp = new Date(deploymentTime)
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", " ");
+
+  const bmcIp = bmcDetails ? bmcDetails.ip : null;
+  const bmcUsername = bmcDetails ? bmcDetails.username : null;
+  const bmcPassword = bmcDetails ? bmcDetails.password : null;
+
+  const sql = `
+    INSERT INTO all_in_one (
+      user_id, 
+      cloudName, 
+      ip, 
+      skylineUrl, 
+      cephUrl, 
+      deployment_time, 
+      bmc_ip, 
+      bmc_username, 
+      bmc_password
+    ) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  // Save details to the database
+  return new Promise((resolve, reject) => {
+    db.query(
+      sql,
+      [
+        userId,
+        cloudName,
+        ip,
+        skylineUrl,
+        cephUrl,
+        mysqlTimestamp,
+        bmcIp,
+        bmcUsername,
+        bmcPassword,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Error saving deployment details:", err);
+          return reject(err);
+        }
+        console.log("Deployment details saved successfully:", result);
+        resolve(result);
+      }
+    );
+  });
+});
+
+// Queue for checking cloud name
+agenda.define('checkCloudName', async (job) => {
+  const { cloudName } = job.attrs.data;
+
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT * FROM all_in_one WHERE cloudName = ?';
+    db.query(query, [cloudName], (err, result) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(result.length > 0 ? 'Cloud name exists' : 'Cloud name available');
+    });
+  });
+});
+
+// Define the job to fetch BMC data
+agenda.define('fetch bmc data', async (job) => {
+  const { userID } = job.attrs.data;
+
+  const query = "SELECT bmc_ip AS ip, bmc_username AS username, bmc_password AS password, cloudName FROM all_in_one WHERE user_id = ?";
+  db.query(query, [userID], (err, results) => {
+    if (err) {
+      console.error("Database query error:", err);
+      return;
+    }
+
+    if (results.length === 0) {
+      console.log(`No data found for userID: ${userID}`);
+      return;
+    }
+
+    console.log(`Fetched BMC data for userID: ${userID}`, results);
+    // Add any additional processing logic here (e.g., saving results to another system)
+  });
+});
+
+// Define the job to fetch All-in-One data
+agenda.define('fetch allinone data', async (job) => {
+  const { userID } = job.attrs.data;
+
+  const query = 'SELECT * FROM all_in_one WHERE user_id = ?';
+  db.query(query, [userID], (err, results) => {
+    if (err) {
+      console.error('Error fetching All-in-One data:', err);
+      return;
+    }
+
+    if (results.length === 0) {
+      console.log(`No data found for userID: ${userID}`);
+      return;
+    }
+
+    console.log(`Fetched All-in-One data for userID: ${userID}`, results);
+    // Add additional processing logic here (e.g., saving results to a file or another database)
+  });
 });
 
 agenda.start().then(() => {
