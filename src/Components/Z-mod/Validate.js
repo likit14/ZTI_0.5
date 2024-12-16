@@ -1465,9 +1465,9 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
       key: 'deploy',
       align: 'center',
       render: (_, node) => {
-        // const result = validationResults[node.ip];
-        // if (!result) return null; // If no validation result, return nothing
-        // if (result.status === 'Passed') {
+        const result = validationResults[node.ip];
+        if (!result) return null; // If no validation result, return nothing
+        if (result.status === 'Passed') {
         return (
           <>
             <Button type="primary" style={{ width: '80px' }} onClick={showDeployModal}>
@@ -1506,14 +1506,14 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
                       label="Interface 1"
                       rules={[{ required: true, message: 'Please select Interface 1' }]}
                     >
-                      <Input placeholder="Enter Gateway" />
-                      {/* <Select placeholder="Select Interface 1">
+                      {/* <Input placeholder="Enter Gateway" /> */}
+                      <Select placeholder="Select Interface 1">
                           {interfaces.map((iface) => (
                             <Select.Option key={iface} value={iface}>
                               {iface}
                             </Select.Option>
                           ))}
-                        </Select> */}
+                        </Select>
                     </Form.Item>
                   </Col>
                 </Row>
@@ -1534,14 +1534,14 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
                       label="Interface 2"
                       rules={[{ required: true, message: 'Please select Interface 2' }]}
                     >
-                      <Input placeholder="Enter Gateway" />
-                      {/* <Select placeholder="Select Interface 2">
+                      {/* <Input placeholder="Enter Gateway" /> */}
+                      <Select placeholder="Select Interface 2">
                           {interfaces.map((iface) => (
                             <Select.Option key={iface} value={iface}>
                               {iface}
                             </Select.Option>
                           ))}
-                        </Select> */}
+                        </Select>
                     </Form.Item>
                   </Col>
                 </Row>
@@ -1666,9 +1666,9 @@ const Validation = ({ nodes, onIbnUpdate, next }) => {
             </Modal>
           </>
         );
-        // } else {
-        //   return null; // If validation fails, return nothing
-        // }
+        } else {
+          return null; // If validation fails, return nothing
+        }
       },
     },
   ];
